@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package kira.micro.service.auth;
+
+option go_package = "../pb";
+
+message AuthRequest {
+    string userid = 1;
+    string username = 2;
+}
+
+message AuthResponse {
+    bool succ = 1;
+    string msg = 2;
+    string token = 3;
+}
+
+message TokenRequest {
+    string token = 1;
+}
+
+message ValidResponse {
+    bool succ = 1;
+    string msg = 2;
+    bool valid = 3;
+    string userId = 4;
+    string userRole=5;
+}
+
+service AuthService {
+    rpc Auth(AuthRequest) returns (AuthResponse) {}
+    rpc Valid(TokenRequest) returns (ValidResponse) {}
+    rpc Refresh(TokenRequest) returns (AuthResponse) {}
+}
