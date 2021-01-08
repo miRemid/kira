@@ -27,7 +27,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Request UserID: %s\n Valid UserID: %s\n", "asdf", resp2.UserId)
+	log.Printf("Request UserID: %s\n Valid UserID: %s\n", "asdf", resp2.UserID)
 
 	log.Println("Waiting 5 seconds for freshing token test")
 	time.Sleep(time.Second * 3)

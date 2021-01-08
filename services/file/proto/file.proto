@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package kira.micro.service.file;
+
+option go_package = "../pb";
+
+message File {
+    string fileID = 1;
+    string fileName = 2;
+    int64 fileSize = 3;
+    string fileExt = 4;
+    string fileHash = 5;
+    string fileURL = 6;
+}
+
+message TokenUserReq {
+    string userid = 1;
+}
+
+message TokenUserRes {
+    bool succ = 1;
+    string msg = 2;
+    string token = 3;
+}
+
+message GetHistoryReq {
+    //@inject_tag: form:"token"
+    string token = 1;
+    int64 offset = 2;
+    int64 limit = 3;
+}
+
+message GetHistoryRes {
+    int64 total = 1;
+    repeated File files = 2;
+    bool succ = 3;
+    string msg = 4;
+}
+
+message DeleteFileReq {
+    //@inject_tag: form:"token"
+    string token = 1;
+    //@inject_tag: form:"file_id"
+    string fileID = 2;
+}
+
+message DeleteFileRes {
+    bool succ = 1;
+    string msg = 2;
+}
+
+message UploadFileReq {
+    string fileName = 1;
+    string fileExt = 2;
+    int64 fileSize = 3;
+    
+    bytes fileBody = 4;
+    string token = 5;
+}
+
+message UploadFileRes {
+    bool succ = 1;
+    string msg = 2;
+    File file = 3;
+}
+
+service FileService {
+    // RPC
+    rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
+    rpc RefreshToken(TokenUserReq) returns (TokenUserRes);
+
+    // API
+    // /file/getHistory
+    rpc GetHistory(GetHistoryReq) returns(GetHistoryRes);
+    // /file/delete
+    rpc DeleteFile(DeleteFileReq) returns(DeleteFileRes);
+    // /file/upload
+    rpc UploadFile(UploadFileReq) returns(UploadFileRes);
+}

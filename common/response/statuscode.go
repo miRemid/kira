@@ -7,4 +7,6 @@ const (
 
 	StatusOK
 	StatusInternalError
+	StatusUnauthorized
+	StatusBadParams
 )

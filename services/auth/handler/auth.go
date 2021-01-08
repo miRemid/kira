@@ -15,7 +15,7 @@ type AuthHandler struct {
 }
 
 func (handler AuthHandler) Auth(ctx context.Context, in *pb.AuthRequest, res *pb.AuthResponse) error {
-	tokenString, err := handler.Repo.Auth(ctx, in.Userid, in.Username)
+	tokenString, err := handler.Repo.Auth(ctx, in.UserID, in.UserRole)
 	if err != nil {
 		res.Succ = false
 		res.Msg = err.Error()
@@ -37,7 +37,7 @@ func (handler AuthHandler) Valid(ctx context.Context, in *pb.TokenRequest, res *
 	res.Succ = true
 	res.Msg = "valid token"
 	claims := tk.Claims.(*token.AuthClaims)
-	res.UserId = claims.UserID
+	res.UserID = claims.UserID
 	res.UserRole = claims.Role
 	return nil
 }

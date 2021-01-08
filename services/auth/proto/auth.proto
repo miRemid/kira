@@ -5,8 +5,8 @@ package kira.micro.service.auth;
 option go_package = "../pb";
 
 message AuthRequest {
-    string userid = 1;
-    string username = 2;
+    string userID = 1;
+    string userRole = 2;
 }
 
 message AuthResponse {
@@ -23,7 +23,7 @@ message ValidResponse {
     bool succ = 1;
     string msg = 2;
     bool valid = 3;
-    string userId = 4;
+    string userID = 4;
     string userRole=5;
 }
 

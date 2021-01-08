@@ -18,10 +18,10 @@ func NewAuthClient(service micro.Service) *AuthClient {
 	return &client
 }
 
-func (client *AuthClient) Auth(userid, username string) (*pb.AuthResponse, error) {
+func (client *AuthClient) Auth(userid, userRole string) (*pb.AuthResponse, error) {
 	return client.service.Auth(context.TODO(), &pb.AuthRequest{
-		Userid:   userid,
-		Username: username,
+		UserID:   userid,
+		UserRole: userRole,
 	})
 }
 
