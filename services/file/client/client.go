@@ -4,21 +4,29 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log"
 	"mime/multipart"
+	"time"
 
 	"github.com/miRemid/kira/services/file/pb"
-	"github.com/micro/go-micro/v2/client"
+	microClient "github.com/micro/go-micro/v2/client"
 )
 
 type FileClient struct {
 	service pb.FileService
 }
 
-func NewFileClient(service client.Client) FileClient {
+func NewFileClient(service microClient.Client) FileClient {
 	var cli FileClient
 	srv := pb.NewFileService("kira.micro.service.file", service)
 	cli.service = srv
 	return cli
+}
+
+func (cli FileClient) GetImage(fileid string) (*pb.GetImageRes, error) {
+	return cli.service.GetImage(context.TODO(), &pb.GetImageReq{
+		FileID: fileid,
+	})
 }
 
 func (cli FileClient) GenerateToken(userid string) (*pb.TokenUserRes, error) {
@@ -44,7 +52,10 @@ func (cli FileClient) GetHistory(token string, limit, offset int64) (*pb.GetHist
 func (cli FileClient) UploadFile(token string, fileName, fileExt string, file multipart.File) (*pb.UploadFileRes, error) {
 	var buf bytes.Buffer
 	size, _ := io.Copy(&buf, file)
-	return cli.service.UploadFile(context.TODO(), &pb.UploadFileReq{
+	log.Println(len(buf.Bytes()))
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
+	defer cancel()
+	return cli.service.UploadFile(ctx, &pb.UploadFileReq{
 		FileName: fileName,
 		FileExt:  fileExt,
 		FileBody: buf.Bytes(),

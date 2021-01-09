@@ -64,6 +64,18 @@ message UploadFileRes {
     File file = 3;
 }
 
+message GetImageReq {
+    string fileID = 1;
+}
+
+message GetImageRes {
+    bool succ = 1;
+    string msg = 2;
+    string fileExt = 3;
+    string fileName = 4;
+    bytes image = 5;
+}
+
 service FileService {
     // RPC
     rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
@@ -76,4 +88,6 @@ service FileService {
     rpc DeleteFile(DeleteFileReq) returns(DeleteFileRes);
     // /file/upload
     rpc UploadFile(UploadFileReq) returns(UploadFileRes);
+    // /:filehash
+    rpc GetImage(GetImageReq) returns(GetImageRes);
 }

@@ -9,7 +9,7 @@ import (
 
 const (
 	userid = "zxykm"
-	token  = "1mmJzTeI51bGYVS69f001rrD1tG"
+	token  = "1moZvJ0kvpsUr3SVGo99O3CNKAN"
 )
 
 var cli client.FileClient
@@ -30,7 +30,7 @@ func main() {
 	srv.Init()
 	cli = client.NewFileClient(srv.Client())
 
-	res, err := cli.RefreshToken(userid)
+	res, err := cli.GenerateToken(userid)
 	if err != nil {
 		log.Fatal(err)
 	}

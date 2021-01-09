@@ -1,6 +1,7 @@
 package route
 
 import (
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -80,6 +81,7 @@ func UploadFile(ctx *gin.Context) {
 
 	res, err := cli.UploadFile(token.(string), fileName, fileExt, file)
 	if err != nil || !res.Succ {
+		log.Print(err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
@@ -119,4 +121,28 @@ func DeleteFile(ctx *gin.Context) {
 		Code:    response.StatusOK,
 		Message: res.Msg,
 	})
+}
+
+func GetImage(ctx *gin.Context) {
+	fileID := ctx.Param("fileid")
+	if fileID == "" {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "mising fileid param",
+		})
+		return
+	}
+	res, err := cli.GetImage(fileID)
+	if err != nil || !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// 写文件
+	ctx.Writer.WriteHeader(http.StatusOK)
+	ctx.Writer.Header().Add("Content-Type", config.ContentType(res.FileExt))
+	ctx.Writer.Write(res.Image)
 }

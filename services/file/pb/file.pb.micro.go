@@ -52,6 +52,8 @@ type FileService interface {
 	DeleteFile(ctx context.Context, in *DeleteFileReq, opts ...client.CallOption) (*DeleteFileRes, error)
 	// /file/upload
 	UploadFile(ctx context.Context, in *UploadFileReq, opts ...client.CallOption) (*UploadFileRes, error)
+	// /:filehash
+	GetImage(ctx context.Context, in *GetImageReq, opts ...client.CallOption) (*GetImageRes, error)
 }
 
 type fileService struct {
@@ -116,6 +118,16 @@ func (c *fileService) UploadFile(ctx context.Context, in *UploadFileReq, opts ..
 	return out, nil
 }
 
+func (c *fileService) GetImage(ctx context.Context, in *GetImageReq, opts ...client.CallOption) (*GetImageRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetImage", in)
+	out := new(GetImageRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -129,6 +141,8 @@ type FileServiceHandler interface {
 	DeleteFile(context.Context, *DeleteFileReq, *DeleteFileRes) error
 	// /file/upload
 	UploadFile(context.Context, *UploadFileReq, *UploadFileRes) error
+	// /:filehash
+	GetImage(context.Context, *GetImageReq, *GetImageRes) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -138,6 +152,7 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
 		UploadFile(ctx context.Context, in *UploadFileReq, out *UploadFileRes) error
+		GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error
 	}
 	type FileService struct {
 		fileService
@@ -168,4 +183,8 @@ func (h *fileServiceHandler) DeleteFile(ctx context.Context, in *DeleteFileReq, 
 
 func (h *fileServiceHandler) UploadFile(ctx context.Context, in *UploadFileReq, out *UploadFileRes) error {
 	return h.FileServiceHandler.UploadFile(ctx, in, out)
+}
+
+func (h *fileServiceHandler) GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error {
+	return h.FileServiceHandler.GetImage(ctx, in, out)
 }

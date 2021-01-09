@@ -8,9 +8,11 @@ import (
 	"errors"
 	"io"
 	"log"
+	"time"
 
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/services/file/model"
+	"github.com/teris-io/shortid"
 
 	"github.com/micro/go-micro/v2"
 	"github.com/minio/minio-go/v7"
@@ -19,12 +21,21 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	idgen *shortid.Shortid
+)
+
+func init() {
+	idgen, _ = shortid.New(8, shortid.DefaultABC, uint64(time.Now().Unix()))
+}
+
 type FileRepository interface {
 	GenerateToken(context.Context, string) (string, error)
 	RefreshToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
 	UploadFile(ctx context.Context, token string, fileName string, fileExt string, fileSize int64, fileBody []byte) (model.FileModel, error)
 	DeleteFile(context.Context, string, string) error
+	GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error)
 }
 
 type FileRepositoryImpl struct {
@@ -70,6 +81,7 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string)
 	log.Println("Create success")
 	err := repo.minioCli.MakeBucket(ctx, userID, minio.MakeBucketOptions{})
 	if err != nil {
+		log.Printf("Create Bucket Error %s\n", err.Error())
 		tx.Rollback()
 		exists, errBucketExists := repo.minioCli.BucketExists(ctx, userID)
 		if errBucketExists == nil && exists {
@@ -120,6 +132,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 func (repo FileRepositoryImpl) UploadFile(ctx context.Context,
 	token, fileName, fileExt string,
 	fileSize int64, fileBody []byte) (model.FileModel, error) {
+	log.Print(len(fileBody))
 	var res model.FileModel
 
 	var tx = repo.db.Begin()
@@ -142,9 +155,18 @@ func (repo FileRepositoryImpl) UploadFile(ctx context.Context,
 	res.FileName = fileName
 	res.FileSize = fileSize
 	res.FileExt = fileExt
+	res.FileID, _ = idgen.Generate()
+
+	reader.Seek(0, 0)
 	// 3. upload into minio
 	_, err := repo.minioCli.PutObject(ctx, userid, fileName, reader, int64(fileSize), minio.PutObjectOptions{})
 	if err != nil {
+		tx.Rollback()
+		return res, err
+	}
+
+	// 4. insert record into database
+	if err := tx.Model(model.FileModel{}).FirstOrCreate(&res).Error; err != nil {
 		tx.Rollback()
 		return res, err
 	}
@@ -178,4 +200,20 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, token string, fil
 	}
 	tx.Commit()
 	return nil
+}
+
+func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error) {
+	var file model.FileModel
+	tx := repo.db.Begin()
+	if err := tx.Raw("select * from tbl_file where file_id = ?", fileID).Scan(&file).Error; err != nil {
+		tx.Rollback()
+		return file, nil, err
+	}
+	// 2. Get Files body
+	obj, err := repo.minioCli.GetObject(ctx, file.UserID, file.FileName, minio.GetObjectOptions{})
+	if err != nil {
+		tx.Rollback()
+		return file, nil, err
+	}
+	return file, obj, nil
 }

@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log"
 
 	"github.com/miRemid/kira/services/file/pb"
@@ -11,6 +13,29 @@ import (
 
 type FileServiceHandler struct {
 	Repo repository.FileRepository
+}
+
+func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageReq, res *pb.GetImageRes) error {
+	file, reader, err := handler.Repo.GetImage(ctx, in.FileID)
+	if err != nil {
+		res.Msg = err.Error()
+		res.Succ = false
+		return errors.WithMessage(err, "get image")
+	}
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, reader)
+	if err != nil {
+		res.Msg = err.Error()
+		res.Succ = false
+		return errors.WithMessage(err, "get image")
+	}
+	res.Msg = "get success"
+	res.Succ = true
+	res.Image = buf.Bytes()
+	res.FileExt = file.FileExt
+	res.FileName = file.FileName
+	return nil
 }
 
 func (handler FileServiceHandler) GenerateToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
@@ -75,8 +100,10 @@ func (handler FileServiceHandler) DeleteFile(ctx context.Context, in *pb.DeleteF
 	return nil
 }
 func (handler FileServiceHandler) UploadFile(ctx context.Context, in *pb.UploadFileReq, res *pb.UploadFileRes) error {
+	log.Println(len(in.FileBody))
 	fileInfo, err := handler.Repo.UploadFile(ctx, in.Token, in.FileName, in.FileExt, in.FileSize, in.FileBody)
 	if err != nil {
+		log.Println(err)
 		res.Succ = false
 		res.Msg = err.Error()
 		return errors.WithMessage(err, "upload file")

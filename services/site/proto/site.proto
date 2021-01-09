@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package kira.micro.service.site;
+
+option go_package="../pb";
+
+message ImageReq {
+    string fileID = 1;
+}
+
+message ImageRes {
+    bool succ = 1;
+    string msg = 2;
+    bytes image = 3;
+}
+
+message StateReq {
+
+}
+
+message StateRes {
+
+}
+
+service SiteService {
+    rpc GetImage(ImageReq) returns(ImageRes);
+    rpc GetSiteState(StateReq) returns(StateRes);
+}
