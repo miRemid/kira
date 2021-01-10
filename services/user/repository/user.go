@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	authClient "github.com/miRemid/kira/services/auth/client"
 	fileClient "github.com/miRemid/kira/services/file/client"
 	"github.com/miRemid/kira/services/user/model"
@@ -45,10 +47,13 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 	if err != nil || !res.Succ {
 		return err
 	}
+
+	log.Println(res.Token)
+
 	user.Token = res.Token
 	user.Role = "normal"
 
-	if err := repo.db.FirstOrCreate(&user).Error; err != nil {
+	if err := repo.db.Create(&user).Error; err != nil {
 		return err
 	}
 

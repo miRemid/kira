@@ -73,7 +73,7 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string)
 	var item model.TokenUser
 	item.UserID = userID
 	item.Token = token
-	if err := tx.FirstOrCreate(&item).Error; err != nil {
+	if err := tx.Create(&item).Error; err != nil {
 		tx.Rollback()
 		return "", err
 	}

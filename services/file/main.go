@@ -50,7 +50,7 @@ func connect() (*gorm.DB, error) {
 func startAPIService() {
 	r := route.Route()
 	service := web.NewService(
-		web.Name("kira.micro.api.file"),
+		web.Name("go.micro.api.file"),
 		web.Address(common.Getenv("API_ADDRESS", "127.0.0.1:5001")),
 		web.Handler(r),
 	)

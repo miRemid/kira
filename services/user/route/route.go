@@ -19,14 +19,12 @@ func Route() *gin.Engine {
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
 
-	v1 := route.Group("/api/v1")
+	v1 := route.Group("/user")
 	{
 
 		v1.POST("/signup", Signup)
 		v1.POST("/signin", Signin)
-
-		user := v1.Group("/user")
-		user.GET("/me", GetInfo)
+		v1.GET("/me", GetInfo)
 	}
 
 	return route
