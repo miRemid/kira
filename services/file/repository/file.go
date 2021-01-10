@@ -121,7 +121,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 		return res, total, err
 	}
 	// 3. get files list
-	if err := tx.Raw("select * from tbl_file where user_id = ? limit ? offset ?", userid, offset, offset+limit).Scan(&res).Error; err != nil {
+	if err := tx.Raw("select * from tbl_file where user_id = ? limit ?, ?", userid, offset, offset+limit).Scan(&res).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}
