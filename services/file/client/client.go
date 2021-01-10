@@ -16,11 +16,11 @@ type FileClient struct {
 	service pb.FileService
 }
 
-func NewFileClient(service microClient.Client) FileClient {
+func NewFileClient(service microClient.Client) *FileClient {
 	var cli FileClient
 	srv := pb.NewFileService("kira.micro.service.file", service)
 	cli.service = srv
-	return cli
+	return &cli
 }
 
 func (cli FileClient) GetImage(fileid string) (*pb.GetImageRes, error) {

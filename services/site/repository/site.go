@@ -8,13 +8,13 @@ import (
 type SiteRepository interface{}
 
 type SiteRepositoryImpl struct {
-	fileCli fcli.FileClient
+	fileClient *fcli.FileClient
 }
 
 func NewSiteRepository(cli client.Client) SiteRepository {
 	var res SiteRepositoryImpl
 	var ff = fcli.NewFileClient(cli)
-	res.fileCli = ff
+	res.fileClient = ff
 	return res
 }
 

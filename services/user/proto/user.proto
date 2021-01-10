@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package kira.micro.service.user;
+
+option go_package = "../pb";
+
+message SigninReq {
+    //@inject_tag: form:"user_name"
+    string username = 1;
+    //@inject_tag: form:"password"
+    string password = 2;
+}
+
+message SigninRes {
+    bool succ = 1;
+    string msg = 2;
+    string token =3;
+}
+
+message SignupReq {
+    //@inject_tag: form:"user_name"
+    string username = 1;
+    //@inject_tag: form:"password"
+    string password = 2;
+}
+
+message SignupRes {
+    bool succ = 1;
+    string msg = 2;
+}
+
+message User {
+    string userID = 1;
+    string userName = 2;
+    string userRole = 3;
+    string userToken = 4;
+}
+
+message UserInfoReq {
+    string userID = 1;
+}
+
+message UserInfoRes {
+    bool succ = 1;
+    string msg = 2;
+    User user = 3;
+}
+
+service UserService {
+    rpc Signin(SigninReq) returns(SigninRes);
+    rpc Signup(SignupReq) returns(SignupRes);
+    rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+}

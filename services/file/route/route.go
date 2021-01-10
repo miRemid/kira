@@ -6,9 +6,12 @@ import (
 	microClient "github.com/micro/go-micro/v2/client"
 )
 
+var (
+	cli *client.FileClient
+)
+
 func Init(clients microClient.Client) {
 	cli = client.NewFileClient(clients)
-
 }
 
 func Route() *gin.Engine {

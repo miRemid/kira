@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"github.com/miRemid/kira/services/auth/pb"
-	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client"
 )
 
 type AuthClient struct {
 	service pb.AuthService
 }
 
-func NewAuthClient(service micro.Service) *AuthClient {
-	var client AuthClient
-	srv := pb.NewAuthService("kira.micro.service.auth", service.Client())
-	client.service = srv
-	return &client
+func NewAuthClient(client client.Client) *AuthClient {
+	var cli AuthClient
+	srv := pb.NewAuthService("kira.micro.service.auth", client)
+	cli.service = srv
+	return &cli
 }
 
 func (client *AuthClient) Auth(userid, userRole string) (*pb.AuthResponse, error) {

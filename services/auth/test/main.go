@@ -14,7 +14,7 @@ func main() {
 	)
 	server.Init()
 
-	cli := client.NewAuthClient(server)
+	cli := client.NewAuthClient(server.Client())
 	resp, err := cli.Auth("asdf", "asdfkdsjaf")
 	if err != nil {
 		log.Fatal(err)

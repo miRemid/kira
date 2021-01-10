@@ -51,7 +51,7 @@ func startAPIService() {
 	r := route.Route()
 	service := web.NewService(
 		web.Name("kira.micro.api.file"),
-		web.Address(common.Getenv("API_ADDRESS", ":5001")),
+		web.Address(common.Getenv("API_ADDRESS", "127.0.0.1:5001")),
 		web.Handler(r),
 	)
 	route.Init(client.DefaultClient)
@@ -73,7 +73,7 @@ func startMicroService() {
 		log.Fatal(errors.WithMessage(err, "connect to database"))
 	}
 
-	repo, err := repository.NewFileRepository(service, db)
+	repo, err := repository.NewFileRepository(db)
 	if err != nil {
 		log.Fatal(errors.WithMessage(err, "new repo"))
 	}

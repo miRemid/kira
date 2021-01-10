@@ -14,7 +14,6 @@ import (
 	"github.com/miRemid/kira/services/file/model"
 	"github.com/teris-io/shortid"
 
-	"github.com/micro/go-micro/v2"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/segmentio/ksuid"
@@ -43,7 +42,7 @@ type FileRepositoryImpl struct {
 	db       *gorm.DB
 }
 
-func NewFileRepository(service micro.Service, db *gorm.DB) (FileRepository, error) {
+func NewFileRepository(db *gorm.DB) (FileRepository, error) {
 	var res FileRepositoryImpl
 	var ssl = false
 	endpoint := common.Getenv("MINIO_ENDPOINT", "127.0.0.1:9900")

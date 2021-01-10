@@ -12,7 +12,7 @@ const (
 	token  = "1moZvJ0kvpsUr3SVGo99O3CNKAN"
 )
 
-var cli client.FileClient
+var cli *client.FileClient
 var srv micro.Service
 
 func TestCreateBucketAndToken() {

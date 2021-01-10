@@ -7,13 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common/response"
-	"github.com/miRemid/kira/services/file/client"
 	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/file/pb"
-)
-
-var (
-	cli client.FileClient
 )
 
 type Search struct {
