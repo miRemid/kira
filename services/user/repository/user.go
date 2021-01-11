@@ -65,10 +65,15 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 
 	// 1. get user model
 	var user model.UserModel
-	if err := tx.Raw("select * from tbl_user where user_name = ?", username).Scan(&user).Error; err != nil {
+	if err := tx.Model(model.UserModel{}).Where("user_name = ?", username).First(&user).Error; err != nil {
 		tx.Rollback()
-		return "", err
+		if err == gorm.ErrRecordNotFound {
+			return "", errors.New("username not found")
+		}
+		return "", errors.WithMessage(err, "get user model")
 	}
+
+	log.Printf("UserID = %s, UserName = %s", user.UserID, username)
 
 	// 2. check password
 	if !user.CheckPassword(password) {

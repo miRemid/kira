@@ -6,11 +6,16 @@ import (
 
 	"github.com/miRemid/kira/services/auth/client"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
 )
 
 func main() {
 	server := micro.NewService(
 		micro.Name("kira.micro.client.auth"),
+		micro.Registry(etcd.NewRegistry(
+			registry.Addrs("127.0.0.1:2379"),
+		)),
 	)
 	server.Init()
 

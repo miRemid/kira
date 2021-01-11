@@ -13,6 +13,8 @@ import (
 
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
@@ -53,6 +55,9 @@ func startAPIService() {
 		web.Name("go.micro.api.user"),
 		web.Address(common.Getenv("API_ADDRESS", "127.0.0.1:5002")),
 		web.Handler(r),
+		web.Registry(etcd.NewRegistry(
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
+		)),
 	)
 	route.Init(client.DefaultClient)
 	service.Init()
@@ -65,6 +70,9 @@ func startMicroService() {
 	service := micro.NewService(
 		micro.Name("kira.micro.service.user"),
 		micro.Version("latest"),
+		micro.Registry(etcd.NewRegistry(
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
+		)),
 	)
 	service.Init()
 

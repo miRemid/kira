@@ -8,6 +8,8 @@ import (
 	"github.com/miRemid/kira/services/auth/pb"
 	"github.com/miRemid/kira/services/auth/repository"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/pkg/errors"
 )
 
@@ -17,6 +19,9 @@ func main() {
 	service := micro.NewService(
 		micro.Name("kira.micro.service.auth"),
 		micro.Version("latest"),
+		micro.Registry(etcd.NewRegistry(
+			registry.Addrs(common.Getenv("ETCD_ADDRESS", "127.0.0.1:2379")),
+		)),
 	)
 	service.Init()
 

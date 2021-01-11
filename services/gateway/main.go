@@ -5,6 +5,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/services/gateway/plugins/auth"
+	"github.com/miRemid/kira/services/gateway/plugins/hystrix"
 
 	"github.com/micro/micro/v2/client/api"
 	"github.com/micro/micro/v2/cmd"
@@ -22,6 +23,11 @@ func main() {
 	err = api.Register(auth.NewPlugin(e))
 	if err != nil {
 		log.Fatal(errors.WithMessage(err, "auth register"))
+	}
+
+	err = api.Register(hystrix.NewPlugin())
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "hystrix register"))
 	}
 
 	cmd.Init()

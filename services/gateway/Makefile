@@ -1,14 +1,17 @@
 GOPATH:=$(shell go env GOPATH)
 MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
 
-.PHONY: proto
-proto:
-	protoc --proto_path=. proto/*.proto --micro_out=pb --go_out=pb
-	protoc-go-inject-tag -input=pb/gateway.pb.go
+.PHONY: gorun
+gorun:
+	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 go run main.go api -handler=web
 
 .PHONY: build
-build: proto
+build: 
 	go build -o gateway_service main.go
+
+.PHONY: run
+run: build
+	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 ./gateway_service api -handler=web
 
 .PHONY: test
 test:

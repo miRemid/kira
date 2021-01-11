@@ -20,7 +20,7 @@ func Route() *gin.Engine {
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
 
-	route.GET("/image/:fileid", GetImage)
+	route.GET("/file/image/:fileid", GetImage)
 
 	file := route.Group("/file", CheckToken)
 	{

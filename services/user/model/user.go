@@ -7,11 +7,11 @@ import (
 
 type UserModel struct {
 	gorm.Model
-	UserID   string
-	UserName string
-	Password string
-	Role     string
-	Token    string
+	UserID   string `gorm:"column:user_id;index:idx_user_id,unique"`
+	UserName string `gorm:"column:user_name;index:idx_user_name,unique"`
+	Password string `gorm:"column:password"`
+	Role     string `gorm:"column:role"`
+	Token    string `gorm:"column:token"`
 }
 
 func (UserModel) TableName() string {
