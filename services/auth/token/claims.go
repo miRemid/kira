@@ -1,6 +1,7 @@
 package token
 
 import (
+	"crypto/rsa"
 	"errors"
 	"time"
 
@@ -26,24 +27,27 @@ type AuthClaims struct {
 
 type AuthControl struct {
 	screct string
+	pub    *rsa.PublicKey
+	pri    *rsa.PrivateKey
 }
 
-func NewAuthControl(screct string) *AuthControl {
+func NewAuthControl(pubKey *rsa.PublicKey, priKey *rsa.PrivateKey) *AuthControl {
 	return &AuthControl{
-		screct: screct,
+		pub: pubKey,
+		pri: priKey,
 	}
 }
 
 func (control *AuthControl) GenerateToken(claims *AuthClaims) *jwt.Token {
 	jwt.TimeFunc = time.Now
 	claims.StandardClaims.ExpiresAt = time.Now().Add(time.Hour * time.Duration(24*7)).Unix()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	return token
 }
 
 func (control *AuthControl) ValidToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(control.screct), nil
+		return control.pub, nil
 	})
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
@@ -74,6 +78,6 @@ func (control *AuthControl) Refresh(tokenString string) (*jwt.Token, error) {
 	return nil, ErrTokenInvalid
 }
 
-func (control AuthControl) GetScrect() string {
-	return control.screct
+func (control AuthControl) GetPri() *rsa.PrivateKey {
+	return control.pri
 }

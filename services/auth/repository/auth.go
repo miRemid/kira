@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"crypto/rsa"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/miRemid/kira/services/auth/token"
@@ -23,7 +24,7 @@ func (auth AuthRepositoryImpl) Auth(ctx context.Context, userid, role string) (s
 		Role:   role,
 	}
 	token := auth.center.GenerateToken(&claims)
-	return token.SignedString([]byte(auth.center.GetScrect()))
+	return token.SignedString(auth.center.GetPri())
 }
 
 func (auth AuthRepositoryImpl) Valid(ctx context.Context, tokenString string) (*jwt.Token, error) {
@@ -35,11 +36,11 @@ func (auth AuthRepositoryImpl) Refresh(ctx context.Context, tokenString string) 
 	if err != nil {
 		return tokenString, err
 	}
-	return token.SignedString([]byte(auth.center.GetScrect()))
+	return token.SignedString(auth.center.GetPri())
 }
 
-func NewAuthRepositoryImpl(screct string) AuthRepository {
+func NewAuthRepositoryImpl(pubKey *rsa.PublicKey, priKey *rsa.PrivateKey) AuthRepository {
 	return AuthRepositoryImpl{
-		center: token.NewAuthControl(screct),
+		center: token.NewAuthControl(pubKey, priKey),
 	}
 }
