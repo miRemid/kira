@@ -45,6 +45,7 @@ type FileService interface {
 	// RPC
 	GenerateToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
 	RefreshToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
+	GetToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
 	// API
 	// /file/getHistory
 	GetHistory(ctx context.Context, in *GetHistoryReq, opts ...client.CallOption) (*GetHistoryRes, error)
@@ -54,6 +55,7 @@ type FileService interface {
 	UploadFile(ctx context.Context, in *UploadFileReq, opts ...client.CallOption) (*UploadFileRes, error)
 	// /:filehash
 	GetImage(ctx context.Context, in *GetImageReq, opts ...client.CallOption) (*GetImageRes, error)
+	GetDetail(ctx context.Context, in *GetDetailReq, opts ...client.CallOption) (*GetDetailRes, error)
 }
 
 type fileService struct {
@@ -80,6 +82,16 @@ func (c *fileService) GenerateToken(ctx context.Context, in *TokenUserReq, opts 
 
 func (c *fileService) RefreshToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error) {
 	req := c.c.NewRequest(c.name, "FileService.RefreshToken", in)
+	out := new(TokenUserRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileService) GetToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetToken", in)
 	out := new(TokenUserRes)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -128,12 +140,23 @@ func (c *fileService) GetImage(ctx context.Context, in *GetImageReq, opts ...cli
 	return out, nil
 }
 
+func (c *fileService) GetDetail(ctx context.Context, in *GetDetailReq, opts ...client.CallOption) (*GetDetailRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetDetail", in)
+	out := new(GetDetailRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
 	// RPC
 	GenerateToken(context.Context, *TokenUserReq, *TokenUserRes) error
 	RefreshToken(context.Context, *TokenUserReq, *TokenUserRes) error
+	GetToken(context.Context, *TokenUserReq, *TokenUserRes) error
 	// API
 	// /file/getHistory
 	GetHistory(context.Context, *GetHistoryReq, *GetHistoryRes) error
@@ -143,16 +166,19 @@ type FileServiceHandler interface {
 	UploadFile(context.Context, *UploadFileReq, *UploadFileRes) error
 	// /:filehash
 	GetImage(context.Context, *GetImageReq, *GetImageRes) error
+	GetDetail(context.Context, *GetDetailReq, *GetDetailRes) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
 	type fileService interface {
 		GenerateToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		RefreshToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
+		GetToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
 		UploadFile(ctx context.Context, in *UploadFileReq, out *UploadFileRes) error
 		GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error
+		GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error
 	}
 	type FileService struct {
 		fileService
@@ -173,6 +199,10 @@ func (h *fileServiceHandler) RefreshToken(ctx context.Context, in *TokenUserReq,
 	return h.FileServiceHandler.RefreshToken(ctx, in, out)
 }
 
+func (h *fileServiceHandler) GetToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error {
+	return h.FileServiceHandler.GetToken(ctx, in, out)
+}
+
 func (h *fileServiceHandler) GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error {
 	return h.FileServiceHandler.GetHistory(ctx, in, out)
 }
@@ -187,4 +217,8 @@ func (h *fileServiceHandler) UploadFile(ctx context.Context, in *UploadFileReq, 
 
 func (h *fileServiceHandler) GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error {
 	return h.FileServiceHandler.GetImage(ctx, in, out)
+}
+
+func (h *fileServiceHandler) GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error {
+	return h.FileServiceHandler.GetDetail(ctx, in, out)
 }

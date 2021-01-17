@@ -76,10 +76,21 @@ message GetImageRes {
     bytes image = 5;
 }
 
+message GetDetailReq {
+    string fileID = 1;
+}
+
+message GetDetailRes {
+    bool succ = 1;
+    string msg = 2;
+    File file = 3;
+}
+
 service FileService {
     // RPC
     rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
     rpc RefreshToken(TokenUserReq) returns (TokenUserRes);
+    rpc GetToken(TokenUserReq) returns (TokenUserRes);
 
     // API
     // /file/getHistory
@@ -90,4 +101,5 @@ service FileService {
     rpc UploadFile(UploadFileReq) returns(UploadFileRes);
     // /:filehash
     rpc GetImage(GetImageReq) returns(GetImageRes);
+    rpc GetDetail(GetDetailReq) returns (GetDetailRes);
 }

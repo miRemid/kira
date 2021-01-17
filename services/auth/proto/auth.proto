@@ -23,6 +23,7 @@ message ValidResponse {
     bool succ = 1;
     string msg = 2;
     bool valid = 3;
+    bool expired = 6;
     string userID = 4;
     string userRole=5;
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/file/pb"
 	"github.com/miRemid/kira/services/file/repository"
 	"github.com/pkg/errors"
@@ -65,6 +66,18 @@ func (handler FileServiceHandler) RefreshToken(ctx context.Context, in *pb.Token
 	res.Token = token
 	return nil
 }
+func (handler FileServiceHandler) GetToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
+	token, err := handler.Repo.GetToken(ctx, in.Userid)
+	if err != nil {
+		res.Msg = err.Error()
+		res.Succ = false
+		return errors.WithMessage(err, "get token")
+	}
+	res.Msg = "get token success"
+	res.Succ = true
+	res.Token = token
+	return nil
+}
 func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHistoryReq, res *pb.GetHistoryRes) error {
 	items, total, err := handler.Repo.GetHistory(ctx, in.Token, in.Limit, in.Offset)
 	if err != nil {
@@ -80,6 +93,7 @@ func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHist
 		file.FileID = items[i].FileID
 		file.FileHash = items[i].FileHash
 		file.FileSize = int64(items[i].FileSize)
+		file.FileURL = config.IMAGE_API + items[i].FileID
 		files = append(files, &file)
 	}
 	res.Total = total
@@ -116,6 +130,26 @@ func (handler FileServiceHandler) UploadFile(ctx context.Context, in *pb.UploadF
 	file.FileID = fileInfo.FileID
 	file.FileName = fileInfo.FileName
 	file.FileSize = fileInfo.FileSize
+	file.FileURL = config.IMAGE_API + fileInfo.FileID
 	res.File = file
+	return nil
+}
+
+func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetailReq, res *pb.GetDetailRes) error {
+	resp, err := handler.Repo.GetDetail(ctx, in.FileID)
+	if err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return errors.WithMessage(err, "get detail")
+	}
+	res.Succ = true
+	res.Msg = "get success"
+	res.File = new(pb.File)
+	res.File.FileID = resp.FileID
+	res.File.FileURL = config.IMAGE_API + in.FileID
+	res.File.FileHash = resp.FileHash
+	res.File.FileName = resp.FileName
+	res.File.FileExt = resp.FileExt
+	res.File.FileSize = resp.FileSize
 	return nil
 }

@@ -7,6 +7,7 @@ require (
 	github.com/casbin/casbin/v2 v2.19.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-playground/validator/v10 v10.2.0
 	github.com/golang/protobuf v1.4.3
 	github.com/gomodule/redigo v1.8.3
 	github.com/micro/cli/v2 v2.1.2

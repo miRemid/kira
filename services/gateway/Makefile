@@ -3,7 +3,7 @@ MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
 
 .PHONY: gorun
 gorun:
-	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 go run main.go api -handler=web
+	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 go run main.go api --handler=web --address=0.0.0.0:3000
 
 .PHONY: build
 build: 
@@ -11,7 +11,7 @@ build:
 
 .PHONY: run
 run: build
-	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 ./gateway_service api -handler=web
+	MICRO_REGISTRY=etcd MICRO_REGISTRY_ADDRESS=127.0.0.1:2379 ./gateway_service api -handler=web --address=0.0.0.0:3000
 
 .PHONY: test
 test:

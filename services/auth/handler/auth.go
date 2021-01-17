@@ -29,12 +29,17 @@ func (handler AuthHandler) Auth(ctx context.Context, in *pb.AuthRequest, res *pb
 
 func (handler AuthHandler) Valid(ctx context.Context, in *pb.TokenRequest, res *pb.ValidResponse) error {
 	tk, err := handler.Repo.Valid(ctx, in.Token)
-	if err != nil {
+	if err != nil && err != token.ErrTokenExpired {
 		res.Succ = false
 		res.Msg = err.Error()
+		res.Valid = false
 		return errors.WithMessage(err, "valid error")
 	}
+	if err == token.ErrTokenExpired {
+		res.Expired = true
+	}
 	res.Succ = true
+	res.Valid = true
 	res.Msg = "valid token"
 	claims := tk.Claims.(*token.AuthClaims)
 	res.UserID = claims.UserID

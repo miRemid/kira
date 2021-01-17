@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -10,7 +11,9 @@ import (
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/micro/v2/plugin"
 
+	"github.com/miRemid/kira/common/response"
 	authClient "github.com/miRemid/kira/services/auth/client"
+	"github.com/miRemid/kira/services/auth/pb"
 
 	"github.com/casbin/casbin/v2"
 )
@@ -34,16 +37,16 @@ func checkFile(path string) bool {
 	return splits[1] == "file"
 }
 
-func parseToken(header string) (userID string, userRole string, err error) {
+func parseToken(header string) (res *pb.ValidResponse, err error) {
 	split := strings.Split(header, " ")
 	if len(split) != 2 {
-		return "", "", errors.New("invalid token struct")
+		return nil, errors.New("invalid token struct")
 	}
 	if split[0] != "Bearer" {
-		return "", "", errors.New("invalid prefix")
+		return nil, errors.New("invalid prefix")
 	}
-	res, err := authCli.Valid(split[1])
-	return res.UserID, res.UserRole, err
+	log.Println(split[1])
+	return authCli.Valid(split[1])
 }
 
 func NewPlugin(enforcer *casbin.Enforcer) plugin.Plugin {
@@ -70,15 +73,28 @@ func NewPlugin(enforcer *casbin.Enforcer) plugin.Plugin {
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}
-				userID, userRole, err := parseToken(header)
+				log.Println(header)
+				res, err := parseToken(header)
 				if err != nil {
 					w.WriteHeader(http.StatusUnauthorized)
 					w.Write([]byte(err.Error()))
 					return
 				}
+
+				if res.Expired {
+					w.WriteHeader(http.StatusOK)
+					r := response.Response{
+						Code:  response.StatusExpired,
+						Error: "signin expired",
+					}
+					body, _ := json.Marshal(r)
+					w.Write(body)
+					return
+				}
+
 				// TODO casbin valid
-				log.Printf("UserRole, Path, Method = (%s, %s, %s)", userRole, path, method)
-				if allow, err := enforcer.Enforce(userRole, path, method); err != nil {
+				log.Printf("UserRole, Path, Method = (%s, %s, %s)", res.UserRole, path, method)
+				if allow, err := enforcer.Enforce(res.UserRole, path, method); err != nil {
 					w.WriteHeader(http.StatusForbidden)
 					w.Write([]byte(err.Error()))
 					return
@@ -88,8 +104,8 @@ func NewPlugin(enforcer *casbin.Enforcer) plugin.Plugin {
 					return
 				}
 
-				r.Header.Set("userid", userID)
-				r.Header.Set("userRole", userRole)
+				r.Header.Set("userid", res.UserID)
+				r.Header.Set("userRole", res.UserRole)
 				h.ServeHTTP(w, r)
 			})
 		}),

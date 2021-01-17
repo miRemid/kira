@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 
 	authClient "github.com/miRemid/kira/services/auth/client"
@@ -17,6 +18,7 @@ type UserRepository interface {
 	Signup(username, password string) error
 	Signin(username, password string) (string, error)
 	UserInfo(userid string) (model.UserModel, error)
+	Refresh(userid string) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -36,9 +38,22 @@ func NewUserRepository(service client.Client, db *gorm.DB) (UserRepository, erro
 	}, err
 }
 
+func (repo UserRepositoryImpl) Refresh(userid string) (string, error) {
+	res, err := repo.fileCli.RefreshToken(userid)
+	if err != nil || !res.Succ {
+		return "", errors.New("User Service: Refresh failed")
+	}
+	return res.Token, nil
+}
+
 func (repo UserRepositoryImpl) Signup(username, password string) error {
 	var user model.UserModel
 	user.UserName = username
+	if err := repo.db.Model(user).Where("user_name = ?", username).First(&user).Error; err == nil {
+		return fmt.Errorf("username '%s' already exists", username)
+	} else if err != gorm.ErrRecordNotFound {
+		return err
+	}
 	pwd, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	user.Password = string(pwd)
 	user.UserID = xid.New().String()
@@ -94,9 +109,17 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) {
 	var user model.UserModel
 	tx := repo.db.Begin()
+	// Get User Info
 	if err := tx.Raw("select * from tbl_user where user_id = ?", userid).Scan(&user).Error; err != nil {
 		tx.Rollback()
 		return user, err
+	}
+	// Get User Token
+	if res, err := repo.fileCli.GetToken(userid); err != nil {
+		tx.Rollback()
+		return user, err
+	} else {
+		user.Token = res.Token
 	}
 	tx.Commit()
 	return user, nil

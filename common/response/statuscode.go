@@ -8,5 +8,6 @@ const (
 	StatusOK
 	StatusInternalError
 	StatusUnauthorized
+	StatusExpired
 	StatusBadParams
 )

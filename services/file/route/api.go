@@ -12,8 +12,8 @@ import (
 )
 
 type Search struct {
-	Offset int64 `form:"offset"`
-	Limit  int64 `form:"limit"`
+	Offset int64 `json:"offset" form:"offset"`
+	Limit  int64 `json:"limit" form:"limit"`
 }
 
 type SearchRes struct {
@@ -140,4 +140,32 @@ func GetImage(ctx *gin.Context) {
 	ctx.Writer.WriteHeader(http.StatusOK)
 	ctx.Writer.Header().Add("Content-Type", config.ContentType(res.FileExt))
 	ctx.Writer.Write(res.Image)
+}
+
+type GetDetailReq struct {
+	FileID string `json:"file_id" form:"file_id" binding:"required"`
+}
+
+func GetDetail(ctx *gin.Context) {
+	var req GetDetailReq
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	res, err := cli.GetDetail(req.FileID)
+	if err != nil || !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	} else {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code: response.StatusOK,
+			Data: res.File,
+		})
+	}
 }

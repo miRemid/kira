@@ -31,10 +31,12 @@ func init() {
 type FileRepository interface {
 	GenerateToken(context.Context, string) (string, error)
 	RefreshToken(context.Context, string) (string, error)
+	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
 	UploadFile(ctx context.Context, token string, fileName string, fileExt string, fileSize int64, fileBody []byte) (model.FileModel, error)
 	DeleteFile(context.Context, string, string) error
 	GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error)
+	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
 }
 
 type FileRepositoryImpl struct {
@@ -104,6 +106,16 @@ func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, userID string) 
 	return token, nil
 }
 
+func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (string, error) {
+	tx := repo.db.Begin()
+	var token string
+	if err := tx.Raw("select token from tbl_token_user where user_id = ?", userID).Scan(&token).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+	return token, nil
+}
+
 func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, limit, offset int64) ([]model.FileModel, int64, error) {
 	var total int64
 	var res = make([]model.FileModel, 0)
@@ -120,7 +132,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 		return res, total, err
 	}
 	// 3. get files list
-	if err := tx.Raw("select * from tbl_file where user_id = ? limit ?, ?", userid, offset, offset+limit).Scan(&res).Error; err != nil {
+	if err := tx.Raw("select * from tbl_file where user_id = ? limit ?, ?", userid, offset, limit).Scan(&res).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}
@@ -165,7 +177,7 @@ func (repo FileRepositoryImpl) UploadFile(ctx context.Context,
 	}
 
 	// 4. insert record into database
-	if err := tx.Model(model.FileModel{}).FirstOrCreate(&res).Error; err != nil {
+	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
 		tx.Rollback()
 		return res, err
 	}
@@ -215,4 +227,10 @@ func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID string) (mod
 		return file, nil, err
 	}
 	return file, obj, nil
+}
+
+func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (model.FileModel, error) {
+	var file model.FileModel
+	err := repo.db.Raw("select * from tbl_file where file_id = ?", fileID).Scan(&file).Error
+	return file, err
 }

@@ -21,6 +21,7 @@ func Route() *gin.Engine {
 	route.Use(gin.Recovery())
 
 	route.GET("/file/image/:fileid", GetImage)
+	route.GET("/file/detail", GetDetail)
 
 	file := route.Group("/file", CheckToken)
 	{

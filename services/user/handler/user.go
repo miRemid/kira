@@ -52,3 +52,16 @@ func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res
 	res.User.UserToken = user.Token
 	return nil
 }
+
+func (handler UserHandler) RefreshToken(ctx context.Context, in *pb.UserTokenReq, res *pb.UserTokenRes) error {
+	token, err := handler.Repo.Refresh(in.UserID)
+	if err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return errors.WithMessage(err, "refresh token")
+	}
+	res.Succ = true
+	res.Msg = "refresh token success"
+	res.Token = token
+	return nil
+}

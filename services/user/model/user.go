@@ -11,7 +11,7 @@ type UserModel struct {
 	UserName string `gorm:"column:user_name;index:idx_user_name,unique"`
 	Password string `gorm:"column:password"`
 	Role     string `gorm:"column:role"`
-	Token    string `gorm:"column:token"`
+	Token    string `gorm:"-"`
 }
 
 func (UserModel) TableName() string {

@@ -46,8 +46,19 @@ message UserInfoRes {
     User user = 3;
 }
 
+message UserTokenReq {
+    string userID = 1;
+}
+
+message UserTokenRes {
+    bool succ = 1;
+    string msg = 2;
+    string token =3;
+}
+
 service UserService {
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+    rpc RefreshToken(UserTokenReq) returns(UserTokenRes);
 }

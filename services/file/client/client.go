@@ -41,6 +41,12 @@ func (cli FileClient) RefreshToken(userid string) (*pb.TokenUserRes, error) {
 	})
 }
 
+func (cli FileClient) GetToken(userid string) (*pb.TokenUserRes, error) {
+	return cli.service.GetToken(context.TODO(), &pb.TokenUserReq{
+		Userid: userid,
+	})
+}
+
 func (cli FileClient) GetHistory(token string, limit, offset int64) (*pb.GetHistoryRes, error) {
 	return cli.service.GetHistory(context.TODO(), &pb.GetHistoryReq{
 		Token:  token,
@@ -67,6 +73,12 @@ func (cli FileClient) UploadFile(token string, fileName, fileExt string, file mu
 func (cli FileClient) DeleteFile(token string, fileID string) (*pb.DeleteFileRes, error) {
 	return cli.service.DeleteFile(context.TODO(), &pb.DeleteFileReq{
 		Token:  token,
+		FileID: fileID,
+	})
+}
+
+func (cli FileClient) GetDetail(fileID string) (*pb.GetDetailRes, error) {
+	return cli.service.GetDetail(context.TODO(), &pb.GetDetailReq{
 		FileID: fileID,
 	})
 }

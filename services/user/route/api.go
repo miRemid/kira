@@ -8,8 +8,8 @@ import (
 )
 
 type UserPassword struct {
-	Username string `form:"user_name" binding:"required"`
-	Password string `form:"password" binding:"required"`
+	Username string `form:"user_name" binding:"required,usernameValidate"`
+	Password string `form:"password" binding:"required,passwordValidate"`
 }
 
 func Signin(ctx *gin.Context) {
@@ -78,5 +78,22 @@ func GetInfo(ctx *gin.Context) {
 		Code:    response.StatusOK,
 		Message: res.Msg,
 		Data:    res.User,
+	})
+}
+
+func RefreshToken(ctx *gin.Context) {
+	userid := ctx.GetHeader("userid")
+	res, err := cli.Refresh(userid)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code:    response.StatusOK,
+		Message: res.Msg,
+		Data:    res.Token,
 	})
 }

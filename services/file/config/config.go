@@ -1,6 +1,10 @@
 package config
 
-import "log"
+import (
+	"log"
+
+	"github.com/miRemid/kira/common"
+)
 
 var (
 	SUPPORT_EXT = []string{".jpg", ".jpeg", ".png", ".gif"}
@@ -11,7 +15,18 @@ var (
 		".png":  "image/png",
 		".gif":  "image/gif",
 	}
+
+	DOMAIN    = "http://127.0.0.1:3000"
+	IMAGE_API = DOMAIN + "/file/image/"
 )
+
+func init() {
+	pro := common.Getenv("GIN_MODE", "")
+	if pro == "release" {
+		DOMAIN = common.Getenv("DOMAIN", "127.0.0.1:3000")
+		IMAGE_API = DOMAIN + "/file/image/"
+	}
+}
 
 func CheckExt(ext string) bool {
 	log.Print(ext)
