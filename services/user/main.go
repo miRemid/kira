@@ -53,7 +53,7 @@ func startAPIService() {
 	r := route.Route()
 	service := web.NewService(
 		web.Name("go.micro.api.user"),
-		web.Address(common.Getenv("API_ADDRESS", "127.0.0.1:5002")),
+		web.Address(common.Getenv("API_ADDRESS", ":5002")),
 		web.Handler(r),
 		web.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),

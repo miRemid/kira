@@ -1,6 +1,8 @@
 package route
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -19,6 +21,9 @@ func Init(clients microClient.Client) {
 func Route() *gin.Engine {
 	route := gin.New()
 	route.Use(gin.Logger())
+	route.Use(func(ctx *gin.Context) {
+		log.Println(ctx.Request.RemoteAddr, ctx.Request.URL.Path)
+	})
 	route.Use(gin.Recovery())
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {

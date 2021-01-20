@@ -53,10 +53,10 @@ func startAPIService() {
 	r := route.Route()
 	service := web.NewService(
 		web.Name("go.micro.api.file"),
-		web.Address(common.Getenv("API_ADDRESS", "127.0.0.1:5001")),
+		web.Address(common.Getenv("API_ADDRESS", ":5001")),
 		web.Handler(r),
 		web.Registry(etcd.NewRegistry(
-			registry.Addrs("127.0.0.1:2379"),
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 	)
 	route.Init(client.DefaultClient)
@@ -71,7 +71,7 @@ func startMicroService() {
 		micro.Name("kira.micro.service.file"),
 		micro.Version("latest"),
 		micro.Registry(etcd.NewRegistry(
-			registry.Addrs("127.0.0.1:2379"),
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 	)
 	service.Init()

@@ -1,0 +1,97 @@
+version: "3"
+
+services: 
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    networks:
+      - kira
+    restart: always
+    ports: 
+      - "3306:3306"
+    environment: 
+      - MYSQL_PASSWORD=123456
+      - MYSQL_USER=shi
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=kira
+  
+  etcd:
+    image: quay.io/coreos/etcd:v3.4.13
+    container_name: etcd
+    volumes: 
+      - kira_etcd:/etcd-data
+    ports: 
+      - 2379:2379
+      - 2380:2380
+    networks:
+      - kira
+    restart: always
+    command: 
+      - /usr/local/bin/etcd
+      - --name=s1 
+      - --data-dir=/etcd-data 
+      - --listen-client-urls=http://0.0.0.0:2379 
+      - --advertise-client-urls=http://0.0.0.0:2379 
+      - --listen-peer-urls=http://0.0.0.0:2380 
+      - --initial-advertise-peer-urls=http://0.0.0.0:2380 
+      - --initial-cluster 
+      - s1=http://0.0.0.0:2380 
+      - --initial-cluster-token 
+      - tkn 
+      - --initial-cluster-state 
+      - new 
+      - --log-level 
+      - info 
+      - --logger 
+      - zap 
+      - --log-outputs 
+      - stderr
+  
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data
+    volumes: 
+      - kira_minio:/data
+    ports: 
+      - "9900:9000"
+    restart: always
+    networks:
+      - kira
+    environment: 
+      - MINIO_ACCESS_KEY=kira
+      - MINIO_SECRET_KEY=1234567890
+
+  redis:
+    image: redis
+    container_name: redis
+    ports: 
+      - "6379:6379"
+    restart: always
+    volumes: 
+      - kira_redis:/data
+    command: redis-server
+
+
+networks: 
+  kira:
+    external: 
+      name: kira_net
+
+volumes: 
+  kira_mysql:
+    external: 
+      name: kira_mysql
+  
+  kira_etcd:
+    external: 
+      name: kira_etcd
+
+  kira_redis:
+    external: 
+      name: kira_redis
+
+  kira_minio:
+    external: 
+      name: kira_minio

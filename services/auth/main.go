@@ -21,7 +21,7 @@ func main() {
 		micro.Name("kira.micro.service.auth"),
 		micro.Version("latest"),
 		micro.Registry(etcd.NewRegistry(
-			registry.Addrs(common.Getenv("ETCD_ADDRESS", "127.0.0.1:2379")),
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 	)
 	service.Init()
