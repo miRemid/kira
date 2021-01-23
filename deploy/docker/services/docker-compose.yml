@@ -9,27 +9,11 @@ services:
     networks: 
       - kira
 
-  gateway: 
-    container_name: gateway
-    image: kira/gateway
-    links: 
-      - file
-      - user
-      - auth
-    networks: 
-      - kira
-    environment: 
-      - MICRO_REGISTRY=etcd
-      - MICRO_REGISTRY_ADDRESS=etcd:2379
-      - MICRO_NAMESPACE=kira.micro.api
-    ports: 
-      - "3000:3000"
-
   file:
     image: kira/file
     container_name: file
-    ports: 
-      - "5001:5001"
+    expose: 
+      - 5001
     networks: 
       - kira
     environment: 
@@ -37,20 +21,30 @@ services:
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5001
       - MINIO_ENDPOINT=minio:9000
+      - DOMAIN=api.test.me
+    labels: 
+      - traefik.enable=true
+      - traefik.http.routers.file.rule=Host(`api.test.me`) && (PathPrefix(`/v1/file`) || PathPrefix(`/file`))
+      - traefik.http.services.file.loadbalancer.server.port=5001
+
   
   user:
     image: kira/user
     container_name: user
     links: 
       - auth
-    ports: 
-      - "5002:5002"
+    expose: 
+      - 5002
     networks:
       - kira
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5002
+    labels: 
+      - traefik.enable=true
+      - traefik.http.routers.user.rule=Host(`api.test.me`) && PathPrefix(`/v1/user`)
+      - traefik.http.services.user.loadbalancer.server.port=5002
 
 
 networks: 

@@ -5,11 +5,13 @@ import (
 	"log"
 	"time"
 
+	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
+	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -73,8 +75,11 @@ func startMicroService() {
 		micro.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
+		micro.WrapClient(hystrix.NewClientWrapper()),
 	)
 	service.Init()
+	hystrixGo.DefaultMaxConcurrent = 5
+	hystrixGo.DefaultTimeout = 300
 
 	db, err := connect()
 	if err != nil {

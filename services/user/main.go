@@ -5,7 +5,10 @@ import (
 	"log"
 	"time"
 
+	hystrixGo "github.com/afex/hystrix-go/hystrix"
+	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
+
 	"github.com/miRemid/kira/services/user/handler"
 	"github.com/miRemid/kira/services/user/pb"
 	"github.com/miRemid/kira/services/user/repository"
@@ -16,6 +19,7 @@ import (
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
+	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -50,7 +54,11 @@ func connect() (*gorm.DB, error) {
 }
 
 func startAPIService() {
-	r := route.Route()
+	e, err := casbin.NewEnforcer("./casbin/model.conf", "./casbin/permission.csv")
+	if err != nil {
+		log.Fatal(err)
+	}
+	r := route.Route(e)
 	service := web.NewService(
 		web.Name("go.micro.api.user"),
 		web.Address(common.Getenv("API_ADDRESS", ":5002")),
@@ -73,8 +81,11 @@ func startMicroService() {
 		micro.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
+		micro.WrapClient(hystrix.NewClientWrapper()),
 	)
 	service.Init()
+	hystrixGo.DefaultMaxConcurrent = 5
+	hystrixGo.DefaultTimeout = 300
 
 	db, err := connect()
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miRemid/kira/common/middleware"
 	"github.com/miRemid/kira/services/file/client"
 	microClient "github.com/micro/go-micro/v2/client"
 )
@@ -25,14 +26,16 @@ func Route() *gin.Engine {
 	})
 	route.Use(gin.Recovery())
 
-	route.GET("/file/image/:fileid", GetImage)
-	route.GET("/file/detail", GetDetail)
+	route.Use(middleware.CORS())
 
-	file := route.Group("/file", CheckToken)
+	route.GET("/file/image/:fileid", GetImage)
+
+	file := route.Group("/v1/file", CheckToken)
 	{
 		file.GET("/history", GetHistory)
 		file.PUT("/upload", UploadFile)
 		file.DELETE("/delete", DeleteFile)
+		file.GET("/detail", GetDetail)
 	}
 
 	return route

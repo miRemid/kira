@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/miRemid/kira/common"
@@ -16,14 +17,14 @@ var (
 		".gif":  "image/gif",
 	}
 
-	DOMAIN    = "http://127.0.0.1:3000"
+	DOMAIN    = "http://api.test.me"
 	IMAGE_API = DOMAIN + "/file/image/"
 )
 
 func init() {
 	pro := common.Getenv("GIN_MODE", "")
 	if pro == "release" {
-		DOMAIN = common.Getenv("DOMAIN", "127.0.0.1:3000")
+		DOMAIN = fmt.Sprintf("http://%s", common.Getenv("DOMAIN", "api.test.me"))
 		IMAGE_API = DOMAIN + "/file/image/"
 	}
 }

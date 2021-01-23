@@ -66,12 +66,35 @@ services:
   redis:
     image: redis
     container_name: redis
+    networks:
+      - kira
     ports: 
       - "6379:6379"
     restart: always
     volumes: 
       - kira_redis:/data
     command: redis-server
+
+  traefik:
+    image: traefik:v2.3
+    container_name: traefik
+    restart: always
+    command: 
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    networks: 
+      - kira
+    ports: 
+      - "80:80"
+      - "8088:8080"
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+    labels: 
+      - "traefik.enable=false"
 
 
 networks: 

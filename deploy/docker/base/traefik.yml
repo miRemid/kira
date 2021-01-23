@@ -1,0 +1,21 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: true
+
+entryPoints:
+  http:
+    address: ":80"
+  
+providers:
+  providersThrottleDuration: 42
+  docker:
+    watch: true
+    exposedByDefault: true
+    useBindPortIP: true
+    network: kira_net
+api:
+  insecure: true
+  dashboard: true
+  debug: true
+log:
+  level: DEBUG
