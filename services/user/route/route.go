@@ -42,7 +42,6 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		auth := v1.Group("/", JwtAuth(e))
 		{
 			auth.GET("/me", GetInfo)
-			auth.GET("/refreshToken", RefreshToken)
 		}
 
 	}

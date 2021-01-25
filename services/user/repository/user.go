@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/miRemid/kira/model"
 	authClient "github.com/miRemid/kira/services/auth/client"
 	fileClient "github.com/miRemid/kira/services/file/client"
-	"github.com/miRemid/kira/services/user/model"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
@@ -62,8 +62,6 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 	if err != nil || !res.Succ {
 		return err
 	}
-
-	log.Println(res.Token)
 
 	user.Token = res.Token
 	user.Role = "normal"

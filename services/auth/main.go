@@ -17,6 +17,11 @@ import (
 func main() {
 	log.SetFlags(log.Llongfile)
 
+	db, err := common.DBConnect()
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "database"))
+	}
+
 	service := micro.NewService(
 		micro.Name("kira.micro.service.auth"),
 		micro.Version("latest"),
@@ -30,7 +35,7 @@ func main() {
 	pubkey := test.LoadRSAPublicKeyFromDisk(common.Getenv("PUBKEY_PATH", "./pem/pubkey.pem"))
 
 	authHandler := &handler.AuthHandler{
-		Repo: repository.NewAuthRepositoryImpl(pubkey, prikey),
+		Repo: repository.NewAuthRepositoryImpl(pubkey, prikey, db),
 	}
 	if err := pb.RegisterAuthServiceHandler(service.Server(), authHandler); err != nil {
 		log.Fatal(errors.WithMessage(err, "register server"))

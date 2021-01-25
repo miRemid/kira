@@ -28,8 +28,20 @@ message ValidResponse {
     string userRole=5;
 }
 
+message FileTokenRequest {
+    string token = 1;
+}
+
+message FileTokenResponse {
+    bool succ = 1;
+    string msg = 2;
+    string userID = 3;
+}
+
 service AuthService {
     rpc Auth(AuthRequest) returns (AuthResponse) {}
     rpc Valid(TokenRequest) returns (ValidResponse) {}
     rpc Refresh(TokenRequest) returns (AuthResponse) {}
+
+    rpc FileToken(FileTokenRequest) returns (FileTokenResponse) {}
 }

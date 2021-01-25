@@ -37,9 +37,3 @@ func (cli UserClient) UserInfo(userid string) (*pb.UserInfoRes, error) {
 		UserID: userid,
 	})
 }
-
-func (cli UserClient) Refresh(userid string) (*pb.UserTokenRes, error) {
-	return cli.service.RefreshToken(context.TODO(), &pb.UserTokenReq{
-		UserID: userid,
-	})
-}

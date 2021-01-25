@@ -10,4 +10,5 @@ const (
 	StatusUnauthorized
 	StatusExpired
 	StatusBadParams
+	StatusForbidden
 )

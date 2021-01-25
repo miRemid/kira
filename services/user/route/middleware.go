@@ -29,7 +29,7 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		path := ctx.Request.URL.Path
 		method := ctx.Request.Method
 
-		if path == "/v1/signup" || path == "/v1/signin" {
+		if path == "/v1/user/signup" || path == "/v1/user/signin" {
 			ctx.Next()
 			return
 		}
@@ -55,10 +55,16 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 
 		if allow, err := enforcer.Enforce(res.UserRole, path, method); err != nil {
-			ctx.AbortWithError(http.StatusForbidden, err)
+			ctx.AbortWithStatusJSON(http.StatusForbidden, response.Response{
+				Code:  response.StatusForbidden,
+				Error: err.Error(),
+			})
 			return
 		} else if !allow {
-			ctx.AbortWithError(http.StatusForbidden, errors.New("no permission"))
+			ctx.AbortWithStatusJSON(http.StatusForbidden, response.Response{
+				Code:  response.StatusForbidden,
+				Error: errors.New("no permission").Error(),
+			})
 			return
 		}
 

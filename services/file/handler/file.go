@@ -54,8 +54,8 @@ func (handler FileServiceHandler) GenerateToken(ctx context.Context, in *pb.Toke
 	res.Token = token
 	return nil
 }
-func (handler FileServiceHandler) RefreshToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
-	token, err := handler.Repo.RefreshToken(ctx, in.Userid)
+func (handler FileServiceHandler) RefreshToken(ctx context.Context, in *pb.TokenReq, res *pb.TokenUserRes) error {
+	token, err := handler.Repo.RefreshToken(ctx, in.Token)
 	if err != nil {
 		res.Msg = err.Error()
 		res.Succ = false
@@ -93,7 +93,7 @@ func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHist
 		file.FileID = items[i].FileID
 		file.FileHash = items[i].FileHash
 		file.FileSize = int64(items[i].FileSize)
-		file.FileURL = config.IMAGE_API + items[i].FileID
+		file.FileURL = config.Path(items[i].FileID)
 		files = append(files, &file)
 	}
 	res.Total = total
@@ -113,27 +113,6 @@ func (handler FileServiceHandler) DeleteFile(ctx context.Context, in *pb.DeleteF
 	res.Msg = "delete success"
 	return nil
 }
-func (handler FileServiceHandler) UploadFile(ctx context.Context, in *pb.UploadFileReq, res *pb.UploadFileRes) error {
-	log.Println(len(in.FileBody))
-	fileInfo, err := handler.Repo.UploadFile(ctx, in.Token, in.FileName, in.FileExt, in.FileSize, in.FileBody)
-	if err != nil {
-		log.Println(err)
-		res.Succ = false
-		res.Msg = err.Error()
-		return errors.WithMessage(err, "upload file")
-	}
-	res.Succ = true
-	res.Msg = "upload success"
-	var file = new(pb.File)
-	file.FileExt = fileInfo.FileExt
-	file.FileHash = fileInfo.FileHash
-	file.FileID = fileInfo.FileID
-	file.FileName = fileInfo.FileName
-	file.FileSize = fileInfo.FileSize
-	file.FileURL = config.IMAGE_API + fileInfo.FileID
-	res.File = file
-	return nil
-}
 
 func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetailReq, res *pb.GetDetailRes) error {
 	resp, err := handler.Repo.GetDetail(ctx, in.FileID)
@@ -146,7 +125,7 @@ func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetai
 	res.Msg = "get success"
 	res.File = new(pb.File)
 	res.File.FileID = resp.FileID
-	res.File.FileURL = config.IMAGE_API + in.FileID
+	res.File.FileURL = config.Path(resp.FileID)
 	res.File.FileHash = resp.FileHash
 	res.File.FileName = resp.FileName
 	res.File.FileExt = resp.FileExt

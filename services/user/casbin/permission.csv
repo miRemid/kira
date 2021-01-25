@@ -1,2 +1,1 @@
-p, normal, /v1/me, GET 
-p, normal, /v1/refreshToken, GET
+p, normal, /v1/user/me, GET 

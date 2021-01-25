@@ -45,7 +45,6 @@ type UserService interface {
 	Signin(ctx context.Context, in *SigninReq, opts ...client.CallOption) (*SigninRes, error)
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
-	RefreshToken(ctx context.Context, in *UserTokenReq, opts ...client.CallOption) (*UserTokenRes, error)
 }
 
 type userService struct {
@@ -90,23 +89,12 @@ func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...cli
 	return out, nil
 }
 
-func (c *userService) RefreshToken(ctx context.Context, in *UserTokenReq, opts ...client.CallOption) (*UserTokenRes, error) {
-	req := c.c.NewRequest(c.name, "UserService.RefreshToken", in)
-	out := new(UserTokenRes)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // Server API for UserService service
 
 type UserServiceHandler interface {
 	Signin(context.Context, *SigninReq, *SigninRes) error
 	Signup(context.Context, *SignupReq, *SignupRes) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
-	RefreshToken(context.Context, *UserTokenReq, *UserTokenRes) error
 }
 
 func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
@@ -114,7 +102,6 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Signin(ctx context.Context, in *SigninReq, out *SigninRes) error
 		Signup(ctx context.Context, in *SignupReq, out *SignupRes) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
-		RefreshToken(ctx context.Context, in *UserTokenReq, out *UserTokenRes) error
 	}
 	type UserService struct {
 		userService
@@ -137,8 +124,4 @@ func (h *userServiceHandler) Signup(ctx context.Context, in *SignupReq, out *Sig
 
 func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error {
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
-}
-
-func (h *userServiceHandler) RefreshToken(ctx context.Context, in *UserTokenReq, out *UserTokenRes) error {
-	return h.UserServiceHandler.RefreshToken(ctx, in, out)
 }

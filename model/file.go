@@ -9,12 +9,13 @@ import (
 
 type FileModel struct {
 	gorm.Model
-	UserID   string `gorm:"column:user_id;index:idx_user_id"`
+	Owner    string `gorm:"column:owner;index:idx_owner"`
 	FileID   string `gorm:"column:file_id;index:idx_file_id"`
 	FileName string `gorm:"column:file_name;"`
 	FileExt  string `gorm:"column:file_ext;"`
 	FileSize int64  `gorm:"column:file_size;"`
 	FileHash string `gorm:"column:file_hash;index:idx_file_hash"`
+	Bucket   string `gorm:"column:bucket"`
 }
 
 func (FileModel) TableName() string {

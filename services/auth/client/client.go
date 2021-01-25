@@ -36,3 +36,9 @@ func (client *AuthClient) Refresh(tokenString string) (*pb.AuthResponse, error) 
 		Token: tokenString,
 	})
 }
+
+func (client *AuthClient) FileToken(tokenString string) (*pb.FileTokenResponse, error) {
+	return client.service.FileToken(context.TODO(), &pb.FileTokenRequest{
+		Token: tokenString,
+	})
+}

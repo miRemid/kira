@@ -1,10 +1,9 @@
-package route
+package router
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/miRemid/kira/common/response"
 )
 
@@ -13,7 +12,7 @@ func CheckToken(ctx *gin.Context) {
 	if token := ctx.Query("token"); token == "" {
 		owner = ctx.ClientIP()
 	} else {
-		res, err := auth.FileToken(token)
+		userid, err := auth.FileToken(token)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, response.Response{
 				Code:  response.StatusInternalError,
@@ -21,7 +20,7 @@ func CheckToken(ctx *gin.Context) {
 			})
 			return
 		}
-		owner = res.UserID
+		owner = userid.UserID
 	}
 	ctx.Set("owner", owner)
 	ctx.Next()

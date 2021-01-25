@@ -80,20 +80,3 @@ func GetInfo(ctx *gin.Context) {
 		Data:    res.User,
 	})
 }
-
-func RefreshToken(ctx *gin.Context) {
-	userid := ctx.GetHeader("userid")
-	res, err := cli.Refresh(userid)
-	if err != nil {
-		ctx.JSON(http.StatusOK, response.Response{
-			Code:  response.StatusInternalError,
-			Error: err.Error(),
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, response.Response{
-		Code:    response.StatusOK,
-		Message: res.Msg,
-		Data:    res.Token,
-	})
-}
