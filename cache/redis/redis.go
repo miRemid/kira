@@ -28,11 +28,14 @@ func newRedisPool(host, pass string) *redis.Pool {
 			}
 
 			// 2. 访问认证
-			if _, err = c.Do("AUTH", pass); err != nil {
-				fmt.Println(err)
-				c.Close()
-				return nil, err
+			if pass != "" {
+				if _, err = c.Do("AUTH", pass); err != nil {
+					fmt.Println(err)
+					c.Close()
+					return nil, err
+				}
 			}
+
 			return c, nil
 		},
 		TestOnBorrow: func(conn redis.Conn, t time.Time) error {

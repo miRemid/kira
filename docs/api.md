@@ -6,11 +6,6 @@ domain: api.test.me
 - /v1/user/history
 - /v1/user/updatePassword
 
-- /v1/admin/signin
-- /v1/admin/listUser
-- /v1/admin/listFile
-
-
 # file
 domain: api.test.me
 - /v1/file/history
@@ -19,8 +14,7 @@ domain: api.test.me
 
 # upload
 domain: api.test.me
-- /v1/upload/normal
-- /v1/upload/aon
+- /v1/upload 1
 
 # site
 domain: api.test.me

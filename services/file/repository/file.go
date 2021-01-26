@@ -85,7 +85,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 	var total int64
 	var res = make([]model.FileModel, 0)
 	var tx = repo.db.Begin()
-	if err := tx.Raw("select COUNT(*) from tbl_file group by owner = ?", owner).Scan(&total).Error; err != nil {
+	if err := tx.Raw("select COUNT(*) from tbl_file where owner = ?", owner).Scan(&total).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}

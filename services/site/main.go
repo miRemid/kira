@@ -13,7 +13,7 @@ func main() {
 	log.SetFlags(log.Llongfile)
 	r := router.New()
 
-	if err := http.ListenAndServe(common.Getenv("ADDRESS", ":5004"), r); err != nil {
+	if err := http.ListenAndServe(common.Getenv("API_ADDRESS", ":5000"), r); err != nil {
 		log.Fatal(errors.WithMessage(err, "http service"))
 	}
 }

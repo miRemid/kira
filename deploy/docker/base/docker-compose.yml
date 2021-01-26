@@ -94,7 +94,19 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik.yml:/etc/traefik/traefik.yml
     labels: 
-      - "traefik.enable=false"
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.test.me`)
+      - traefik.http.services.traefik.loadbalancer.server.port=8088
+    
+  nats:
+    image: nats
+    restart: always
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+      - "6222:6222"
+    networks:
+      - kira
 
 
 networks: 

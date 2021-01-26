@@ -11,6 +11,7 @@ import (
 	"github.com/miRemid/kira/services/upload/router"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
+	"github.com/micro/go-micro/v2/client/grpc"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
@@ -58,6 +59,8 @@ func startMicroService() {
 }
 
 func startAPIService() {
+	cli := client.DefaultClient
+	cli.Init(grpc.MaxSendMsgSize(5 * 1024 * 1024))
 	r := router.NewRouter(client.DefaultClient)
 	service := web.NewService(
 		web.Name("kira.micro.api.upload"),

@@ -4,6 +4,8 @@ services="
 auth
 user
 file
+upload
+site
 "
 
 build_service() {
