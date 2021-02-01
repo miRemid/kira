@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 
-	"github.com/miRemid/kira/services/user/pb"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/repository"
 	"github.com/pkg/errors"
 )
@@ -50,5 +50,16 @@ func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res
 	res.User.UserName = user.UserName
 	res.User.UserRole = user.Role
 	res.User.UserToken = user.Token
+	return nil
+}
+
+func (handler UserHandler) AdminUserList(ctx context.Context, in *pb.UserListRequest, res *pb.UserListResponse) error {
+	return nil
+}
+
+func (handler UserHandler) AdminDeleteUser(ctx context.Context, in *pb.DeleteUserRequest, res *pb.AdminCommonResponse) error {
+	return nil
+}
+func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUserRoleRequest, res *pb.AdminCommonResponse) error {
 	return nil
 }

@@ -6,6 +6,7 @@ services:
     container_name: auth
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
+      - MYSQL_ADDRESS=mysql:3306
     networks: 
       - kira
 
@@ -22,6 +23,7 @@ services:
       - API_ADDRESS=:5001
       - MINIO_ENDPOINT=minio:9000
       - DOMAIN=api.test.me
+      - REDIS_ADDRESS=redis:6379
     labels: 
       - traefik.enable=true
       - traefik.http.routers.file.rule=Host(`api.test.me`) && (PathPrefix(`/v1/file`) || PathPrefix(`/file`))
@@ -41,6 +43,8 @@ services:
       - REGISTRY_ADDRESS=etcd:2379
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5002
+      - REDIS_ADDRESS=redis:6379
+
     labels: 
       - traefik.enable=true
       - traefik.http.routers.user.rule=Host(`api.test.me`) && PathPrefix(`/v1/user`)
@@ -55,9 +59,11 @@ services:
       - kira
     environment: 
       - API_ADDRESS=:5000
+      - REDIS_ADDRESS=redis:6379
+      - REGISTRY_ADDRESS=etcd:2379
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.site.rule=(Host(`api.test.me`) && (PathPrefix(`/v1/site`)) || (Host(`img.test.me`))
+      - traefik.http.routers.site.rule=(Host(`api.test.me`) && PathPrefix(`/v1/site`)) || Host(`img.test.me`)
       - traefik.http.services.site.loadbalancer.server.port=5000
   
   upload:
@@ -70,14 +76,13 @@ services:
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
       - MYSQL_ADDRESS=mysql:3306
-      - API_ADDRESS=:5002
+      - API_ADDRESS=:5003
+      - MINIO_ENDPOINT=minio:9000
+      - REDIS_ADDRESS=redis:6379
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.upload.rule=Host(`api.test.me`) && (PathPrefix(`/v1/upload`)
-      - traefik.http.services.upload.loadbalancer.server.port=5002
-
- 
-
+      - traefik.http.routers.upload.rule=Host(`api.test.me`) && PathPrefix(`/v1/upload`)
+      - traefik.http.services.upload.loadbalancer.server.port=5003
 
 networks: 
   kira:

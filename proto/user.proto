@@ -2,7 +2,37 @@ syntax = "proto3";
 
 package kira.micro.service.user;
 
-option go_package = "../pb";
+option go_package = ".;pb";
+
+import "google/protobuf/timestamp.proto";
+
+message UserListRequest {
+    int64 offset = 1;
+    int64 limit = 2;
+}
+
+message UserListResponse {
+    int64 total = 1;
+    repeated User users = 2;
+    message User {
+        string userID = 1;
+        string userName = 2;
+        string role = 3;
+        google.protobuf.Timestamp createTime = 4;
+    }
+}
+
+message DeleteUserRequest {
+    string userID = 1;
+}
+
+message UpdateUserRoleRequest {
+    string role = 1;
+}
+
+message AdminCommonResponse {
+    string message = 1;
+}
 
 message SigninReq {
     //@inject_tag: form:"user_name"
@@ -61,4 +91,8 @@ service UserService {
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+
+    rpc AdminUserList(UserListRequest) returns(UserListResponse);
+    rpc AdminDeleteUser(DeleteUserRequest) returns(AdminCommonResponse);
+    rpc AdminUpdateUser(UpdateUserRoleRequest) returns(AdminCommonResponse);
 }

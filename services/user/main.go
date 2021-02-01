@@ -7,8 +7,8 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
 
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/handler"
-	"github.com/miRemid/kira/services/user/pb"
 	"github.com/miRemid/kira/services/user/repository"
 	"github.com/miRemid/kira/services/user/route"
 

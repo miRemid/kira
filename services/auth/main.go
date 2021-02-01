@@ -5,8 +5,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go/test"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/auth/handler"
-	"github.com/miRemid/kira/services/auth/pb"
 	"github.com/miRemid/kira/services/auth/repository"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"

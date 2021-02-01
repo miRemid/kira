@@ -3,8 +3,8 @@ package handler
 import (
 	"context"
 
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/upload/config"
-	"github.com/miRemid/kira/services/upload/pb"
 	"github.com/miRemid/kira/services/upload/repository"
 	"github.com/pkg/errors"
 )

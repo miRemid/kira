@@ -4,7 +4,7 @@ package handler
 import (
 	"context"
 
-	"github.com/miRemid/kira/services/auth/pb"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/auth/repository"
 	"github.com/miRemid/kira/services/auth/token"
 	"github.com/pkg/errors"

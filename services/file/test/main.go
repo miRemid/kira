@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/miRemid/kira/services/file/client"
+	"github.com/miRemid/kira/client"
 	"github.com/micro/go-micro/v2"
 )
 

@@ -2,17 +2,9 @@ syntax = "proto3";
 
 package kira.micro.service.upload;
 
-option go_package = "../pb";
+import "proto/file.proto";
 
-message File {
-    string fileID = 1;
-    string fileName = 2;
-    int64 fileSize = 3;
-    string fileExt = 4;
-    string fileHash = 5;
-    string fileURL = 6;
-    string delURL = 7;
-}
+option go_package = ".;pb";
 
 message UploadFileReq {
     string fileName = 1;
@@ -26,7 +18,7 @@ message UploadFileReq {
 message UploadFileRes {
     bool succ = 1;
     string msg = 2;
-    File file = 3;
+    kira.micro.service.file.File file = 3;
 }
 
 service UploadService {

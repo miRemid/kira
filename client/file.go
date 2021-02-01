@@ -3,17 +3,17 @@ package client
 import (
 	"context"
 
-	"github.com/miRemid/kira/services/file/pb"
-	microClient "github.com/micro/go-micro/v2/client"
+	"github.com/miRemid/kira/proto/pb"
+	"github.com/micro/go-micro/v2/client"
 )
 
 type FileClient struct {
 	service pb.FileService
 }
 
-func NewFileClient(service microClient.Client) *FileClient {
+func NewFileClient(client client.Client) *FileClient {
 	var cli FileClient
-	srv := pb.NewFileService("kira.micro.service.file", service)
+	srv := pb.NewFileService("kira.micro.service.file", client)
 	cli.service = srv
 	return &cli
 }

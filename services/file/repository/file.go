@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"io"
-	"log"
 	"time"
 
 	"github.com/miRemid/kira/model"
@@ -22,6 +21,13 @@ func init() {
 	idgen, _ = shortid.New(8, shortid.DefaultABC, uint64(time.Now().Unix()))
 }
 
+type DeleteStruct struct {
+	FileID   string `gorm:"file_id"`
+	Bucket   string `gorm:"bucket"`
+	FileName string `gorm:"file_name"`
+	Count    int    `gorm:"-"`
+}
+
 type FileRepository interface {
 	GenerateToken(context.Context, string) (string, error)
 	RefreshToken(context.Context, string) (string, error)
@@ -30,19 +36,78 @@ type FileRepository interface {
 	DeleteFile(context.Context, string, string) error
 	GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error)
 	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
+	DeleteUser(ctx context.Context, userID string) error
+	Done()
 }
 
 type FileRepositoryImpl struct {
-	minioCli *minio.Client
-	db       *gorm.DB
+	minioCli   *minio.Client
+	db         *gorm.DB
+	deleteChan chan DeleteStruct
+	done       chan struct{}
 }
 
 func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	var res FileRepositoryImpl
 	res.minioCli = mini
 	res.db = db
+	res.deleteChan = make(chan DeleteStruct)
+	res.done = make(chan struct{}, 1)
+	go res.deleteG()
 	db.AutoMigrate(model.TokenUser{})
 	return res
+}
+
+func (repo FileRepositoryImpl) deleteG() {
+	for {
+		select {
+		case item := <-repo.deleteChan:
+			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileName+"-"+item.FileID, minio.RemoveObjectOptions{})
+			repo.db.Raw("delete from tbl_file where file_id = ?", item.FileID)
+			break
+		case <-repo.done:
+			return
+		default:
+			break
+		}
+	}
+}
+
+func (repo FileRepositoryImpl) Done() {
+	repo.done <- struct{}{}
+	close(repo.done)
+	close(repo.deleteChan)
+}
+
+func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) error {
+	defer func() {
+		if r := recover(); r != nil {
+
+		}
+	}()
+	// 1. Get User FileID
+	var total int
+	tx := repo.db.Begin()
+	if err := tx.Raw("select COUNT(*) from tbl_file where owner = ?", userID).Scan(&total).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	// 2. 批量删除
+	var offset, limit = 0, 5
+	for i := 0; i < total; i += limit {
+		offset += i
+		var dels = make([]DeleteStruct, 0)
+		if err := tx.Raw("select file_id, bucket, file_name from tbl_file where user_id = ? limit ?, ?", userID, offset, limit).Scan(&dels).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+		for i := range dels {
+			repo.deleteChan <- dels[i]
+		}
+	}
+	tx.Raw("delete from tbl_token_user where user_id = ?", userID)
+	tx.Commit()
+	return nil
 }
 
 // generate user's token, and create the user bucket
@@ -107,7 +172,6 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fil
 		tx.Rollback()
 		return err
 	}
-	log.Println("Bucket: ", bucket)
 	// 2. delete minio file
 	if err := repo.minioCli.RemoveObject(ctx, bucket, fileName+"-"+fileID, minio.RemoveObjectOptions{}); err != nil {
 		tx.Rollback()

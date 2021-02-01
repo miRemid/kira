@@ -5,20 +5,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common/middleware"
-	authClient "github.com/miRemid/kira/services/auth/client"
-	"github.com/miRemid/kira/services/user/client"
 	microClient "github.com/micro/go-micro/v2/client"
 )
 
 var (
 	cli     *client.UserClient
-	authCli *authClient.AuthClient
+	authCli *client.AuthClient
 )
 
 func Init(clients microClient.Client) {
 	cli = client.NewUserClient(clients)
-	authCli = authClient.NewAuthClient(clients)
+	authCli = client.NewAuthClient(clients)
 }
 
 func Route(e *casbin.Enforcer) *gin.Engine {

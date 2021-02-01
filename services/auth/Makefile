@@ -3,7 +3,7 @@ MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
 
 .PHONY: proto
 proto:
-	protoc --proto_path=. proto/*.proto --micro_out=pb --go_out=pb
+	protoc --proto_path=. proto/auth.proto --micro_out=pb --go_out=pb
 	protoc-go-inject-tag -input=pb/auth.pb.go
 
 .PHONY: build

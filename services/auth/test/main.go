@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/miRemid/kira/services/auth/client"
+	"github.com/miRemid/kira/client"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"

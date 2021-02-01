@@ -16,7 +16,7 @@ build_service() {
 
 build_image() {
     echo -e "\033[32mPacket: \033[0m $1_service"
-    docker build -t kira/$1 -f ./services/$1/Dockerfile .
+    docker build -t kira/$1 -f ./build/$1/Dockerfile .
     echo -e "\033[32mFinish: \033[0m kira/$1\n"
 }
 

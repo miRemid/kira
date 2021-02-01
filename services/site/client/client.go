@@ -1,22 +1,28 @@
 package client
 
 import (
-	fileClient "github.com/miRemid/kira/services/file/client"
+	"github.com/miRemid/kira/client"
+	"github.com/miRemid/kira/common"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
 )
 
 var (
-	fileCli *fileClient.FileClient
+	fileCli *client.FileClient
 )
 
 func init() {
 	service := micro.NewService(
-		micro.Name("kira.service.client.site"),
+		micro.Name("kira.service.service.site"),
+		micro.Registry(etcd.NewRegistry(
+			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
+		)),
 	)
 	service.Init()
-	fileCli = fileClient.NewFileClient(service.Client())
+	fileCli = client.NewFileClient(service.Client())
 }
 
-func File() *fileClient.FileClient {
+func File() *client.FileClient {
 	return fileCli
 }

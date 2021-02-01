@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package kira.micro.service.auth;
 
-option go_package = "../pb";
+option go_package = ".;pb";
 
 message AuthRequest {
     string userID = 1;

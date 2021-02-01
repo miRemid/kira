@@ -13,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/handler"
-	"github.com/miRemid/kira/services/file/pb"
 	"github.com/miRemid/kira/services/file/repository"
 	"github.com/miRemid/kira/services/file/route"
 )
@@ -59,14 +59,21 @@ func startMicroService() {
 		log.Fatal(errors.WithMessage(err, "connect to minio"))
 	}
 
+	repo := repository.NewFileRepository(db, mini)
 	fileHandler := handler.FileServiceHandler{
-		Repo: repository.NewFileRepository(db, mini),
+		Repo: repo,
 	}
 	if err := pb.RegisterFileServiceHandler(service.Server(), fileHandler); err != nil {
 		log.Fatal(errors.WithMessage(err, "register service"))
 	}
 
+	// 订阅消费者
+	if err := micro.RegisterSubscriber("kira.micro.service.user.delete", service.Server(), fileHandler.DeleteUser); err != nil {
+		log.Fatal(errors.WithMessage(err, "register subscriber"))
+	}
+
 	if err := service.Run(); err != nil {
+		repo.Done()
 		log.Fatal(errors.WithMessage(err, "run service"))
 	}
 }

@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/miRemid/kira/services/user/pb"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/micro/go-micro/v2/client"
 )
 

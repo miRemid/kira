@@ -1,13 +1,13 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/model"
-	authClient "github.com/miRemid/kira/services/auth/client"
-	fileClient "github.com/miRemid/kira/services/file/client"
-	"github.com/micro/go-micro/v2/client"
+	mClient "github.com/micro/go-micro/v2/client"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"
@@ -23,13 +23,13 @@ type UserRepository interface {
 
 type UserRepositoryImpl struct {
 	db      *gorm.DB
-	authCli *authClient.AuthClient
-	fileCli *fileClient.FileClient
+	authCli *client.AuthClient
+	fileCli *client.FileClient
 }
 
-func NewUserRepository(service client.Client, db *gorm.DB) (UserRepository, error) {
-	ac := authClient.NewAuthClient(service)
-	fc := fileClient.NewFileClient(service)
+func NewUserRepository(service mClient.Client, db *gorm.DB) (UserRepository, error) {
+	ac := client.NewAuthClient(service)
+	fc := client.NewFileClient(service)
 	err := db.AutoMigrate(model.UserModel{})
 	return UserRepositoryImpl{
 		db:      db,
@@ -121,4 +121,27 @@ func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) 
 	}
 	tx.Commit()
 	return user, nil
+}
+
+func (repo UserRepositoryImpl) GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error) {
+	var total int64
+	var res = make([]model.UserModel, 0)
+	tx := repo.db.Begin()
+	if err := tx.Raw("select COUNT(*) from tbl_user").Scan(&total).Error; err != nil {
+		tx.Rollback()
+		return res, total, err
+	}
+	if err := tx.Raw("select * from tbl_user limit ?, ?", offset, limit).Error; err != nil {
+		tx.Rollback()
+		return res, total, err
+	}
+	tx.Commit()
+	return res, total, nil
+}
+
+func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) error {
+	if err := repo.db.Exec("delete from tbl_user where user_id = ?", userid).Error; err != nil {
+		return err
+	}
+	return nil
 }

@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
-	"github.com/miRemid/kira/services/file/pb"
 	"github.com/miRemid/kira/services/file/repository"
 	"github.com/pkg/errors"
 )
@@ -131,4 +131,8 @@ func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetai
 	res.File.FileExt = resp.FileExt
 	res.File.FileSize = resp.FileSize
 	return nil
+}
+
+func (handler FileServiceHandler) DeleteUser(ctx context.Context, in *pb.DeleteUserRequest) error {
+	return handler.Repo.DeleteUser(ctx, in.UserID)
 }

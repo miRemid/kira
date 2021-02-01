@@ -18,6 +18,7 @@ func newRedisPool(host, pass string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     50,
 		MaxActive:   30,
+		Wait:        true,
 		IdleTimeout: 300 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			// 1. 打开连接

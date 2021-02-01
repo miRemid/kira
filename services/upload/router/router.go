@@ -2,21 +2,21 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/micro/go-micro/v2/client"
+	mClient "github.com/micro/go-micro/v2/client"
 
 	"github.com/miRemid/kira/common/middleware"
-	authClient "github.com/miRemid/kira/services/auth/client"
-	uploadClient "github.com/miRemid/kira/services/upload/client"
+
+	"github.com/miRemid/kira/client"
 )
 
 var (
-	auth   *authClient.AuthClient
-	upload *uploadClient.UploadClient
+	auth   *client.AuthClient
+	upload *client.UploadClient
 )
 
-func NewRouter(cli client.Client) *gin.Engine {
-	auth = authClient.NewAuthClient(cli)
-	upload = uploadClient.NewUploadClient(cli)
+func NewRouter(cli mClient.Client) *gin.Engine {
+	auth = client.NewAuthClient(cli)
+	upload = client.NewUploadClient(cli)
 
 	router := gin.New()
 	router.Use(gin.Logger())

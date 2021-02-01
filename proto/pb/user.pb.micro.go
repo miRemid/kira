@@ -6,6 +6,7 @@ package pb
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	math "math"
 )
 
@@ -45,6 +46,9 @@ type UserService interface {
 	Signin(ctx context.Context, in *SigninReq, opts ...client.CallOption) (*SigninRes, error)
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
+	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
+	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
+	AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
 }
 
 type userService struct {
@@ -89,12 +93,45 @@ func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...cli
 	return out, nil
 }
 
+func (c *userService) AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.AdminUserList", in)
+	out := new(UserListResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.AdminDeleteUser", in)
+	out := new(AdminCommonResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, opts ...client.CallOption) (*AdminCommonResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.AdminUpdateUser", in)
+	out := new(AdminCommonResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for UserService service
 
 type UserServiceHandler interface {
 	Signin(context.Context, *SigninReq, *SigninRes) error
 	Signup(context.Context, *SignupReq, *SignupRes) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
+	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
+	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
+	AdminUpdateUser(context.Context, *UpdateUserRoleRequest, *AdminCommonResponse) error
 }
 
 func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
@@ -102,6 +139,9 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Signin(ctx context.Context, in *SigninReq, out *SigninRes) error
 		Signup(ctx context.Context, in *SignupReq, out *SignupRes) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
+		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
+		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
+		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
 	}
 	type UserService struct {
 		userService
@@ -124,4 +164,16 @@ func (h *userServiceHandler) Signup(ctx context.Context, in *SignupReq, out *Sig
 
 func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error {
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
+}
+
+func (h *userServiceHandler) AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error {
+	return h.UserServiceHandler.AdminUserList(ctx, in, out)
+}
+
+func (h *userServiceHandler) AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error {
+	return h.UserServiceHandler.AdminDeleteUser(ctx, in, out)
+}
+
+func (h *userServiceHandler) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error {
+	return h.UserServiceHandler.AdminUpdateUser(ctx, in, out)
 }

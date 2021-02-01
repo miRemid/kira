@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common/response"
-	"github.com/miRemid/kira/services/file/pb"
+	"github.com/miRemid/kira/proto/pb"
 )
 
 type Search struct {

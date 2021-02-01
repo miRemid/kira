@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package kira.micro.service.file;
 
-option go_package = "../pb";
+option go_package = ".;pb";
 
 message File {
     string fileID = 1;

@@ -2,26 +2,23 @@ package route
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common/response"
-	"github.com/miRemid/kira/services/auth/pb"
 )
 
-func parseToken(header string) (res *pb.ValidResponse, err error) {
+func parseToken(header string) (string, error) {
 	split := strings.Split(header, " ")
 	if len(split) != 2 {
-		return nil, errors.New("invalid token struct")
+		return "", errors.New("invalid token struct")
 	}
 	if split[0] != "Bearer" {
-		return nil, errors.New("invalid prefix")
+		return "", errors.New("invalid prefix")
 	}
-	log.Println(split[1])
-	return authCli.Valid(split[1])
+	return split[1], nil
 }
 
 func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
@@ -40,12 +37,17 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			return
 		}
 
-		res, err := parseToken(header)
+		token, err := parseToken(header)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}
 
+		res, err := authCli.Valid(token)
+		if err != nil {
+			ctx.AbortWithError(http.StatusUnauthorized, err)
+			return
+		}
 		if res.Expired {
 			ctx.JSON(http.StatusOK, response.Response{
 				Code:  response.StatusExpired,

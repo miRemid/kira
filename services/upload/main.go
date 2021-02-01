@@ -5,8 +5,8 @@ import (
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/upload/handler"
-	"github.com/miRemid/kira/services/upload/pb"
 	"github.com/miRemid/kira/services/upload/repository"
 	"github.com/miRemid/kira/services/upload/router"
 	"github.com/micro/go-micro/v2"
