@@ -6,6 +6,7 @@ import (
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/database"
 
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/handler"
@@ -13,6 +14,8 @@ import (
 	"github.com/miRemid/kira/services/user/route"
 
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/broker"
+	"github.com/micro/go-micro/v2/broker/nats"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -50,6 +53,9 @@ func startMicroService() {
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 		micro.WrapClient(hystrix.NewClientWrapper()),
+		micro.Broker(nats.NewBroker(
+			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
+		)),
 	)
 	service.Init()
 	hystrixGo.DefaultMaxConcurrent = 5
@@ -60,7 +66,11 @@ func startMicroService() {
 		log.Fatal(errors.WithMessage(err, "connect to database"))
 	}
 
-	repo, err := repository.NewUserRepository(service.Client(), db)
+	database.InitAdmin(common.Getenv("ADMIN_USERNAME", "miosuki"), common.Getenv("ADMIN_PASSWORD", "QAZplm%123"), db)
+
+	pub := micro.NewPublisher("kira.micro.service.user.delete", service.Client())
+
+	repo, err := repository.NewUserRepository(service.Client(), db, pub)
 	if err != nil {
 		log.Fatal(errors.WithMessage(err, "new repo"))
 	}

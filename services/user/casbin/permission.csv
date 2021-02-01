@@ -1,1 +1,2 @@
 p, normal, /v1/user/me, GET 
+p, admin, /v1/user/delete/user, DELETE

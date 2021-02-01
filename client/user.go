@@ -37,3 +37,9 @@ func (cli UserClient) UserInfo(userid string) (*pb.UserInfoRes, error) {
 		UserID: userid,
 	})
 }
+
+func (cli UserClient) DeleteUser(userid string) (*pb.AdminCommonResponse, error) {
+	return cli.service.AdminDeleteUser(context.TODO(), &pb.DeleteUserRequest{
+		UserID: userid,
+	})
+}

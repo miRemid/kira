@@ -5,6 +5,8 @@ import (
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/broker"
+	"github.com/micro/go-micro/v2/broker/nats"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -44,6 +46,9 @@ func startMicroService() {
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 		micro.WrapClient(hystrix.NewClientWrapper()),
+		micro.Broker(nats.NewBroker(
+			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
+		)),
 	)
 	service.Init()
 	hystrixGo.DefaultMaxConcurrent = 5

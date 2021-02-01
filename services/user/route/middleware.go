@@ -2,6 +2,7 @@ package route
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -55,7 +56,7 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			})
 			return
 		}
-
+		log.Println(res.UserRole, path)
 		if allow, err := enforcer.Enforce(res.UserRole, path, method); err != nil {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, response.Response{
 				Code:  response.StatusForbidden,

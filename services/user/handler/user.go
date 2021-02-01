@@ -58,7 +58,7 @@ func (handler UserHandler) AdminUserList(ctx context.Context, in *pb.UserListReq
 }
 
 func (handler UserHandler) AdminDeleteUser(ctx context.Context, in *pb.DeleteUserRequest, res *pb.AdminCommonResponse) error {
-	return nil
+	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
 func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUserRoleRequest, res *pb.AdminCommonResponse) error {
 	return nil

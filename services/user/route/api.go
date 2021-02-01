@@ -80,3 +80,29 @@ func GetInfo(ctx *gin.Context) {
 		Data:    res.User,
 	})
 }
+
+type DeleteReq struct {
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
+}
+
+func DeleteUser(ctx *gin.Context) {
+	var req DeleteReq
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	_, err := cli.DeleteUser(req.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+	})
+}

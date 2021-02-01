@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"io"
+	"log"
 	"time"
 
 	"github.com/miRemid/kira/model"
@@ -85,6 +86,7 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 
 		}
 	}()
+	log.Printf("Rcv Message From Nats: userid=%v", userID)
 	// 1. Get User FileID
 	var total int
 	tx := repo.db.Begin()
@@ -105,7 +107,7 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 			repo.deleteChan <- dels[i]
 		}
 	}
-	tx.Raw("delete from tbl_token_user where user_id = ?", userID)
+	tx.Exec("delete from tbl_token_user where user_id = ?", userID)
 	tx.Commit()
 	return nil
 }
