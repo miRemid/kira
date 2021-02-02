@@ -14,13 +14,13 @@ var (
 		".gif":  "image/gif",
 	}
 
-	DOMAIN = "api.test.me"
+	DOMAIN = "test.me:5000"
 )
 
 func init() {
 	pro := common.Getenv("GIN_MODE", "")
 	if pro == "release" {
-		DOMAIN = common.Getenv("DOMAIN", "api.test.me")
+		DOMAIN = common.Getenv("DOMAIN", "img.test.me")
 	}
 }
 

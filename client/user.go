@@ -43,3 +43,17 @@ func (cli UserClient) DeleteUser(userid string) (*pb.AdminCommonResponse, error)
 		UserID: userid,
 	})
 }
+
+func (cli UserClient) UpdateUser(userid, role string) (*pb.AdminCommonResponse, error) {
+	return cli.service.AdminUpdateUser(context.TODO(), &pb.UpdateUserRoleRequest{
+		UserID: userid,
+		Role:   role,
+	})
+}
+
+func (cli UserClient) GetUserList(limit, offset int64) (*pb.UserListResponse, error) {
+	return cli.service.AdminUserList(context.TODO(), &pb.UserListRequest{
+		Limit:  limit,
+		Offset: offset,
+	})
+}

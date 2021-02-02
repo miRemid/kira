@@ -1,3 +1,7 @@
+GOPATH:=$(shell go env GOPATH)
+MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
+
+
 .PHONY: build
 build:
 	bash build.sh

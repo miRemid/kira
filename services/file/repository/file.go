@@ -62,14 +62,15 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 func (repo FileRepositoryImpl) deleteG() {
 	for {
 		select {
-		case item := <-repo.deleteChan:
+		case item, ok := <-repo.deleteChan:
+			if !ok {
+				return
+			}
 			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileName+"-"+item.FileID, minio.RemoveObjectOptions{})
-			repo.db.Raw("delete from tbl_file where file_id = ?", item.FileID)
+			repo.db.Exec("delete from tbl_file where file_id = ?", item.FileID)
 			break
 		case <-repo.done:
 			return
-		default:
-			break
 		}
 	}
 }
@@ -99,7 +100,7 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 	for i := 0; i < total; i += limit {
 		offset += i
 		var dels = make([]DeleteStruct, 0)
-		if err := tx.Raw("select file_id, bucket, file_name from tbl_file where user_id = ? limit ?, ?", userID, offset, limit).Scan(&dels).Error; err != nil {
+		if err := tx.Raw("select file_id, bucket, file_name from tbl_file where owner = ? limit ?, ?", userID, offset, limit).Scan(&dels).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -107,7 +108,10 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 			repo.deleteChan <- dels[i]
 		}
 	}
-	tx.Exec("delete from tbl_token_user where user_id = ?", userID)
+	if err := tx.Exec("delete from tbl_token_user where user_id = ?", userID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 	tx.Commit()
 	return nil
 }

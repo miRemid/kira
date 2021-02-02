@@ -7,7 +7,9 @@ option go_package = ".;pb";
 import "google/protobuf/timestamp.proto";
 
 message UserListRequest {
+    //@inject_tag: form:"offset"
     int64 offset = 1;
+    //@inject_tag: form:"limit"
     int64 limit = 2;
 }
 
@@ -27,7 +29,10 @@ message DeleteUserRequest {
 }
 
 message UpdateUserRoleRequest {
-    string role = 1;
+    //@inject_tag: form:"user_id"
+    string userID = 1;
+    //@inject_tag: form:"role"
+    string role = 2;
 }
 
 message AdminCommonResponse {

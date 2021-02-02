@@ -21,6 +21,9 @@ type UserRepository interface {
 	Signin(username, password string) (string, error)
 	UserInfo(userid string) (model.UserModel, error)
 	Refresh(userid string) (string, error)
+
+	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
+	ChangeUserRole(ctx context.Context, userid, role string) error
 	DeleteUser(ctx context.Context, userid string) error
 }
 
@@ -71,6 +74,7 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 
 	user.Token = res.Token
 	user.Role = "normal"
+	user.Status = 1
 
 	if err := repo.db.Create(&user).Error; err != nil {
 		return err
@@ -137,7 +141,7 @@ func (repo UserRepositoryImpl) GetUserList(ctx context.Context, limit, offset in
 		tx.Rollback()
 		return res, total, err
 	}
-	if err := tx.Raw("select * from tbl_user limit ?, ?", offset, limit).Error; err != nil {
+	if err := tx.Raw("select * from tbl_user limit ?, ?", offset, limit).Scan(&res).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}
@@ -153,4 +157,22 @@ func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) er
 	return repo.pub.Publish(ctx, &pb.DeleteUserRequest{
 		UserID: userid,
 	})
+}
+
+var (
+	roleMap = map[string]interface{}{
+		"admin":  struct{}{},
+		"normal": struct{}{},
+	}
+)
+
+func (repo UserRepositoryImpl) ChangeUserRole(ctx context.Context, userid, role string) error {
+	log.Println(role)
+	if _, ok := roleMap[role]; !ok {
+		return errors.New("role incorrect")
+	}
+	if err := repo.db.Exec("update tbl_user set role = ? where user_id = ? and role not in ('admin')", role, userid).Error; err != nil {
+		return err
+	}
+	return nil
 }

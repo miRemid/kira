@@ -1,13 +1,6 @@
-GOPATH:=$(shell go env GOPATH)
-MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
-
-.PHONY: proto
-proto:
-	protoc --proto_path=. proto/auth.proto --micro_out=pb --go_out=pb
-	protoc-go-inject-tag -input=pb/auth.pb.go
 
 .PHONY: build
-build: proto
+build: 
 	go build -o auth_service main.go
 
 .PHONY: run

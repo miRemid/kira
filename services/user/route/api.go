@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common/response"
+	"github.com/miRemid/kira/proto/pb"
 )
 
 type UserPassword struct {
@@ -104,5 +105,54 @@ func DeleteUser(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
+	})
+}
+
+func GetUserList(ctx *gin.Context) {
+	var req pb.UserListRequest
+	if err := ctx.BindQuery(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 10
+	}
+	res, err := cli.GetUserList(req.Limit, req.Offset)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: res,
+	})
+}
+
+func UpdateUser(ctx *gin.Context) {
+	var req pb.UpdateUserRoleRequest
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	res, err := cli.UpdateUser(req.UserID, req.Role)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code:    response.StatusOK,
+		Message: res.Message,
 	})
 }

@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
+	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/miRemid/kira/common"
@@ -19,9 +20,13 @@ var (
 		".gif":  "image/gif",
 	}
 
-	DOMAIN = "img.test.me"
+	DOMAIN = "test.me:5000"
 
 	BUCKET_NAME = []string{"kira-1", "kira-2", "kira-3"}
+
+	TEMP_DIR = "tmp"
+
+	once sync.Once
 )
 
 func init() {
@@ -29,16 +34,12 @@ func init() {
 	if pro == "release" {
 		DOMAIN = fmt.Sprintf("http://%s", common.Getenv("DOMAIN", "img.test.me"))
 	}
+	TEMP_DIR = filepath.Join(common.Getenv("TEMP_DIR", "./"), TEMP_DIR)
 }
 
 func CheckExt(ext string) bool {
-	log.Print(ext)
-	for i := 0; i < len(SUPPORT_EXT); i++ {
-		if SUPPORT_EXT[i] == ext {
-			return true
-		}
-	}
-	return false
+	_, ok := contentType[ext]
+	return ok
 }
 
 func ContentType(ext string) string {

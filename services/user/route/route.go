@@ -42,7 +42,11 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		{
 			auth.GET("/me", GetInfo)
 
-			auth.DELETE("/delete/user", DeleteUser)
+			auth.DELETE("/deleteUser", DeleteUser)
+
+			auth.GET("/getUserList", GetUserList)
+
+			auth.POST("/updateUser", UpdateUser)
 		}
 
 	}

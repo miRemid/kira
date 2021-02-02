@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/repository"
 	"github.com/pkg/errors"
@@ -54,6 +55,20 @@ func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res
 }
 
 func (handler UserHandler) AdminUserList(ctx context.Context, in *pb.UserListRequest, res *pb.UserListResponse) error {
+	users, total, err := handler.Repo.GetUserList(ctx, in.Limit, in.Offset)
+	if err != nil {
+		return errors.WithMessage(err, "get user list")
+	}
+	res.Total = total
+	res.Users = make([]*pb.UserListResponse_User, 0)
+	for _, user := range users {
+		u := new(pb.UserListResponse_User)
+		u.CreateTime, _ = ptypes.TimestampProto(user.CreatedAt)
+		u.Role = user.Role
+		u.UserID = user.UserID
+		u.UserName = user.UserName
+		res.Users = append(res.Users, u)
+	}
 	return nil
 }
 
@@ -61,5 +76,9 @@ func (handler UserHandler) AdminDeleteUser(ctx context.Context, in *pb.DeleteUse
 	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
 func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUserRoleRequest, res *pb.AdminCommonResponse) error {
+	if err := handler.Repo.ChangeUserRole(ctx, in.UserID, in.Role); err != nil {
+		return err
+	}
+	res.Message = "update success"
 	return nil
 }
