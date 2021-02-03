@@ -1,12 +1,6 @@
 ROOT_DIR=$PWD
 
-services="
-auth
-user
-file
-upload
-site
-"
+services=`ls $ROOT_DIR/services`
 
 build_service() {
     echo -e "\033[32mCompile: \033[0m $1_service"
@@ -36,5 +30,8 @@ for service in $services
 do
     build_image $service
 done
+
+cp -r $ROOT_DIR/services/user/casbin deploy/bin/casbin
+cp -r $ROOT_DIR/services/auth/pem deploy/bin/pem
 
 echo -e "\033[32mFinish building docker images\033[0m"

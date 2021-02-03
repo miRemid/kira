@@ -24,7 +24,7 @@ func getConnect() string {
 	password := Getenv("MYSQL_PASSWORD", "123456")
 	database := Getenv("MYSQL_DATABASE", "kira")
 	address := Getenv("MYSQL_ADDRESS", "127.0.0.1:3306")
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&Local", username, password, address, database)
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", username, password, address, database)
 }
 
 func DBConnect() (*gorm.DB, error) {

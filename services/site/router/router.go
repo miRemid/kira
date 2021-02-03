@@ -10,6 +10,7 @@ func New() *gin.Engine {
 	route := gin.New()
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
+	route.Use(middleware.CORS())
 
 	v1 := route.Group("/v1/site", middleware.APICount("site"))
 	{

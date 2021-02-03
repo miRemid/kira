@@ -24,6 +24,7 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - DOMAIN=api.test.me
       - REDIS_ADDRESS=redis:6379
+      - NATS_ADDRESS=nats://nats:4222
     labels: 
       - traefik.enable=true
       - traefik.http.routers.file.rule=Host(`api.test.me`) && (PathPrefix(`/v1/file`) || PathPrefix(`/file`))
@@ -44,6 +45,7 @@ services:
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5002
       - REDIS_ADDRESS=redis:6379
+      - NATS_ADDRESS=nats://nats:4222
 
     labels: 
       - traefik.enable=true
@@ -79,6 +81,7 @@ services:
       - API_ADDRESS=:5003
       - MINIO_ENDPOINT=minio:9000
       - REDIS_ADDRESS=redis:6379
+      - GIN_MODE=release
     labels: 
       - traefik.enable=true
       - traefik.http.routers.upload.rule=Host(`api.test.me`) && PathPrefix(`/v1/upload`)
