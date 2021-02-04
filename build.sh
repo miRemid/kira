@@ -23,6 +23,9 @@ do
     build_service $service
 done
 
+cp -r $ROOT_DIR/services/user/casbin $ROOT_DIR/deploy/bin/casbin
+cp -r $ROOT_DIR/services/auth/pem $ROOT_DIR/deploy/bin/pem
+
 echo -e "\033[32mFinish building services\033[0m"
 
 cd ${ROOT_DIR}/deploy/
@@ -30,8 +33,5 @@ for service in $services
 do
     build_image $service
 done
-
-cp -r $ROOT_DIR/services/user/casbin deploy/bin/casbin
-cp -r $ROOT_DIR/services/auth/pem deploy/bin/pem
 
 echo -e "\033[32mFinish building docker images\033[0m"

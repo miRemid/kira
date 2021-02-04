@@ -25,6 +25,8 @@ services:
       - DOMAIN=api.test.me
       - REDIS_ADDRESS=redis:6379
       - NATS_ADDRESS=nats://nats:4222
+      - GIN_MODE=release
+      - DOMAIN=img.test.me
     labels: 
       - traefik.enable=true
       - traefik.http.routers.file.rule=Host(`api.test.me`) && (PathPrefix(`/v1/file`) || PathPrefix(`/file`))

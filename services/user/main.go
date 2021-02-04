@@ -58,8 +58,8 @@ func startMicroService() {
 		)),
 	)
 	service.Init()
-	hystrixGo.DefaultMaxConcurrent = 5
-	hystrixGo.DefaultTimeout = 300
+	hystrixGo.DefaultMaxConcurrent = 50
+	hystrixGo.DefaultTimeout = 3000
 
 	db, err := common.DBConnect()
 	if err != nil {

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common"
 )
 
@@ -19,7 +20,7 @@ var (
 
 func init() {
 	pro := common.Getenv("GIN_MODE", "")
-	if pro == "release" {
+	if pro == gin.ReleaseMode {
 		DOMAIN = common.Getenv("DOMAIN", "img.test.me")
 	}
 }
