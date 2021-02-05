@@ -53,7 +53,7 @@ func GetAPICounts(ctx *gin.Context) {
 		log.Println(str)
 		res, _ = redis.Get().Do("GET", str)
 		log.Println(res)
-		data[str] = res.([]uint8)[0]
+		data[str] = string(res.([]byte))
 	}
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,

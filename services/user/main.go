@@ -30,6 +30,8 @@ func startAPIService() {
 		log.Fatal(err)
 	}
 	r := route.Route(e)
+	route.Init(client.DefaultClient)
+
 	service := web.NewService(
 		web.Name("kira.micro.api.user"),
 		web.Address(common.Getenv("API_ADDRESS", ":5002")),
@@ -38,7 +40,6 @@ func startAPIService() {
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 	)
-	route.Init(client.DefaultClient)
 	service.Init()
 	if err := service.Run(); err != nil {
 		log.Fatal(err)

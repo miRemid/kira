@@ -115,6 +115,7 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 }
 
 func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) {
+	log.Println("receive", userid)
 	var user model.UserModel
 	tx := repo.db.Begin()
 	// Get User Info
@@ -150,6 +151,13 @@ func (repo UserRepositoryImpl) GetUserList(ctx context.Context, limit, offset in
 }
 
 func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) error {
+	var role string
+	if err := repo.db.Raw("select role from tbl_user where user_id = ?", userid).Scan(&role).Error; err != nil {
+		return err
+	}
+	if role == "admin" {
+		return errors.New("Cannot delete admin user")
+	}
 	if err := repo.db.Exec("delete from tbl_user where user_id = ?", userid).Error; err != nil {
 		return err
 	}

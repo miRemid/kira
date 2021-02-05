@@ -40,6 +40,8 @@ services:
       - auth
     expose: 
       - 5002
+    volumes: 
+      - $HOME/Workspace/goproject/kira-project/kira/deploy/bin/casbin:/casbin
     networks:
       - kira
     environment: 

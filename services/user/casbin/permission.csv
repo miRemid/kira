@@ -1,4 +1,5 @@
 p, normal, /v1/user/me, GET 
+p, admin, /v1/user/me, GET
 p, admin, /v1/user/deleteUser, DELETE
 p, admin, /v1/user/getUserList, GET
 p, admin, /v1/user/updateUser, POST
