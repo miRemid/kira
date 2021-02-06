@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/cache/redis"
@@ -45,15 +45,18 @@ func GetAPICounts(ctx *gin.Context) {
 		})
 		return
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]map[string]string)
 	items, _ := res.([]interface{})
 	for _, item := range items {
 		path, _ := item.([]byte)
-		str := string(path)
-		log.Println(str)
-		res, _ = redis.Get().Do("GET", str)
-		log.Println(res)
-		data[str] = string(res.([]byte))
+		key := string(path)
+		arr := strings.Split(key, "-")
+		service, router := arr[0], arr[1]
+		if _, ok := data[service]; !ok {
+			data[service] = make(map[string]string)
+		}
+		count, _ := redis.Get().Do("GET", key)
+		data[service][router] = string(count.([]byte))
 	}
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
