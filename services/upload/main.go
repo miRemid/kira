@@ -5,6 +5,7 @@ import (
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/tracer"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/upload/handler"
 	"github.com/miRemid/kira/services/upload/repository"
@@ -16,10 +17,16 @@ import (
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
+	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 	"github.com/pkg/errors"
 )
 
 func startMicroService() {
+	jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.service.upload", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "tracer"))
+	}
+	defer closer.Close()
 
 	service := micro.NewService(
 		micro.Name("kira.micro.service.upload"),
@@ -28,6 +35,7 @@ func startMicroService() {
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 		micro.WrapClient(hystrix.NewClientWrapper()),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 	)
 	service.Init()
 

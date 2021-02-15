@@ -12,9 +12,11 @@ import (
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
+	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 	"github.com/pkg/errors"
 
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/tracer"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/handler"
 	"github.com/miRemid/kira/services/file/repository"
@@ -39,6 +41,12 @@ func startAPIService() {
 }
 
 func startMicroService() {
+	jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.service.file", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "tracer"))
+	}
+	defer closer.Close()
+
 	service := micro.NewService(
 		micro.Name("kira.micro.service.file"),
 		micro.Version("latest"),
@@ -46,6 +54,7 @@ func startMicroService() {
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
 		micro.WrapClient(hystrix.NewClientWrapper()),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 		micro.Broker(nats.NewBroker(
 			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
 		)),

@@ -6,6 +6,7 @@ services:
     container_name: auth
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
+      - JAEGER_ADDRESS=jaeger:6831
       - MYSQL_ADDRESS=mysql:3306
     networks: 
       - kira
@@ -26,6 +27,7 @@ services:
       - REDIS_ADDRESS=redis:6379
       - NATS_ADDRESS=nats://nats:4222
       - GIN_MODE=release
+      - JAEGER_ADDRESS=jaeger:6831
       - DOMAIN=img.test.me
     labels: 
       - traefik.enable=true
@@ -49,6 +51,7 @@ services:
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5002
       - REDIS_ADDRESS=redis:6379
+      - JAEGER_ADDRESS=jaeger:6831
       - NATS_ADDRESS=nats://nats:4222
 
     labels: 
@@ -67,6 +70,7 @@ services:
       - API_ADDRESS=:5000
       - REDIS_ADDRESS=redis:6379
       - REGISTRY_ADDRESS=etcd:2379
+      - JAEGER_ADDRESS=jaeger:6831
     labels: 
       - traefik.enable=true
       - traefik.http.routers.site.rule=(Host(`api.test.me`) && PathPrefix(`/v1/site`)) || Host(`img.test.me`)
@@ -85,6 +89,7 @@ services:
       - API_ADDRESS=:5003
       - MINIO_ENDPOINT=minio:9000
       - REDIS_ADDRESS=redis:6379
+      - JAEGER_ADDRESS=jaeger:6831
       - GIN_MODE=release
     labels: 
       - traefik.enable=true

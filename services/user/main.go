@@ -7,6 +7,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/database"
+	"github.com/miRemid/kira/common/tracer"
 
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/handler"
@@ -21,6 +22,7 @@ import (
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
+	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 	"github.com/pkg/errors"
 )
 
@@ -47,6 +49,11 @@ func startAPIService() {
 }
 
 func startMicroService() {
+	jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.service.user", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "tracer"))
+	}
+	defer closer.Close()
 	service := micro.NewService(
 		micro.Name("kira.micro.service.user"),
 		micro.Version("latest"),
@@ -57,6 +64,7 @@ func startMicroService() {
 		micro.Broker(nats.NewBroker(
 			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
 		)),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 	)
 	service.Init()
 	hystrixGo.DefaultMaxConcurrent = 50
