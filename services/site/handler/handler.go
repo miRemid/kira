@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/site/client"
+	"golang.org/x/sync/errgroup"
 )
 
 func GetImage(ctx *gin.Context) {
@@ -61,5 +64,66 @@ func GetAPICounts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
 		Data: data,
+	})
+}
+
+func Ping(ctx *gin.Context) {
+	// errorGroup
+	g, _ := errgroup.WithContext(context.Background())
+	var res = make(map[string]interface{})
+	var lock sync.Mutex
+	g.Go(func() error {
+		f := client.FileCli
+		resp, err := f.Ping()
+		if err != nil {
+			return err
+		}
+		lock.Lock()
+		res[resp.Name] = resp.Message
+		lock.Unlock()
+		return nil
+	})
+	g.Go(func() error {
+		u := client.UserCli
+		resp, err := u.Ping()
+		if err != nil {
+			return err
+		}
+		lock.Lock()
+		res[resp.Name] = resp.Message
+		lock.Unlock()
+		return nil
+	})
+	g.Go(func() error {
+		a := client.AuthCli
+		resp, err := a.Ping()
+		if err != nil {
+			return err
+		}
+		lock.Lock()
+		res[resp.Name] = resp.Message
+		lock.Unlock()
+		return nil
+	})
+	g.Go(func() error {
+		u := client.UploadCli
+		resp, err := u.Ping()
+		if err != nil {
+			return err
+		}
+		lock.Lock()
+		res[resp.Name] = resp.Message
+		lock.Unlock()
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code: response.StatusPingError,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: res,
 	})
 }

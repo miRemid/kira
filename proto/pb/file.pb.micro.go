@@ -51,6 +51,7 @@ type FileService interface {
 	GetDetail(ctx context.Context, in *GetDetailReq, opts ...client.CallOption) (*GetDetailRes, error)
 	RefreshToken(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*TokenUserRes, error)
 	GetImage(ctx context.Context, in *GetImageReq, opts ...client.CallOption) (*GetImageRes, error)
+	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 }
 
 type fileService struct {
@@ -135,6 +136,16 @@ func (c *fileService) GetImage(ctx context.Context, in *GetImageReq, opts ...cli
 	return out, nil
 }
 
+func (c *fileService) Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error) {
+	req := c.c.NewRequest(c.name, "FileService.Ping", in)
+	out := new(Pong)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -147,6 +158,7 @@ type FileServiceHandler interface {
 	GetDetail(context.Context, *GetDetailReq, *GetDetailRes) error
 	RefreshToken(context.Context, *TokenReq, *TokenUserRes) error
 	GetImage(context.Context, *GetImageReq, *GetImageRes) error
+	Ping(context.Context, *Ping, *Pong) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -158,6 +170,7 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error
 		RefreshToken(ctx context.Context, in *TokenReq, out *TokenUserRes) error
 		GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error
+		Ping(ctx context.Context, in *Ping, out *Pong) error
 	}
 	type FileService struct {
 		fileService
@@ -196,4 +209,8 @@ func (h *fileServiceHandler) RefreshToken(ctx context.Context, in *TokenReq, out
 
 func (h *fileServiceHandler) GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error {
 	return h.FileServiceHandler.GetImage(ctx, in, out)
+}
+
+func (h *fileServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {
+	return h.FileServiceHandler.Ping(ctx, in, out)
 }

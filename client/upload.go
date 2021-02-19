@@ -35,3 +35,6 @@ func (cli UploadClient) UploadFile(owner, fileName, fileExt string, file multipa
 		Owner:    owner,
 	})
 }
+func (client *UploadClient) Ping() (*pb.Pong, error) {
+	return client.service.Ping(context.TODO(), &pb.Ping{})
+}

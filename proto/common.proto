@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package kira.micro.common;
+
+option go_package = ".;pb";
+
+message Ping {
+
+}
+
+message Pong {
+    int64 code = 3;
+    string name = 1;
+    string message = 2;
+}

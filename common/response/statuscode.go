@@ -11,4 +11,5 @@ const (
 	StatusExpired
 	StatusBadParams
 	StatusForbidden
+	StatusPingError
 )

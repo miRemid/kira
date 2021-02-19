@@ -43,6 +43,7 @@ func NewUploadServiceEndpoints() []*api.Endpoint {
 
 type UploadService interface {
 	UploadFile(ctx context.Context, in *UploadFileReq, opts ...client.CallOption) (*UploadFileRes, error)
+	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 }
 
 type uploadService struct {
@@ -67,15 +68,27 @@ func (c *uploadService) UploadFile(ctx context.Context, in *UploadFileReq, opts 
 	return out, nil
 }
 
+func (c *uploadService) Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error) {
+	req := c.c.NewRequest(c.name, "UploadService.Ping", in)
+	out := new(Pong)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for UploadService service
 
 type UploadServiceHandler interface {
 	UploadFile(context.Context, *UploadFileReq, *UploadFileRes) error
+	Ping(context.Context, *Ping, *Pong) error
 }
 
 func RegisterUploadServiceHandler(s server.Server, hdlr UploadServiceHandler, opts ...server.HandlerOption) error {
 	type uploadService interface {
 		UploadFile(ctx context.Context, in *UploadFileReq, out *UploadFileRes) error
+		Ping(ctx context.Context, in *Ping, out *Pong) error
 	}
 	type UploadService struct {
 		uploadService
@@ -90,4 +103,8 @@ type uploadServiceHandler struct {
 
 func (h *uploadServiceHandler) UploadFile(ctx context.Context, in *UploadFileReq, out *UploadFileRes) error {
 	return h.UploadServiceHandler.UploadFile(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {
+	return h.UploadServiceHandler.Ping(ctx, in, out)
 }
