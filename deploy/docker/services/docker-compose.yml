@@ -14,8 +14,8 @@ services:
   file:
     image: kira/file
     container_name: file
-    expose: 
-      - 5001
+    ports: 
+      - "5001:5001"
     networks: 
       - kira
     environment: 
@@ -31,7 +31,7 @@ services:
       - DOMAIN=img.test.me
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.file.rule=Host(`api.test.me`) && (PathPrefix(`/v1/file`) || PathPrefix(`/file`))
+      - traefik.http.routers.file.rule=(PathPrefix(`/v1/file`) || PathPrefix(`/file`))
       - traefik.http.services.file.loadbalancer.server.port=5001
 
   
@@ -40,8 +40,8 @@ services:
     container_name: user
     links: 
       - auth
-    expose: 
-      - 5002
+    ports: 
+      - "5002:5002"
     volumes: 
       - $HOME/Workspace/goproject/kira-project/kira/deploy/bin/casbin:/casbin
     networks:
@@ -56,14 +56,14 @@ services:
 
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.user.rule=Host(`api.test.me`) && PathPrefix(`/v1/user`)
+      - traefik.http.routers.user.rule=PathPrefix(`/v1/user`)
       - traefik.http.services.user.loadbalancer.server.port=5002
   
   site:
     image: kira/site
     container_name: site
-    expose: 
-      - 5000
+    ports: 
+      - "5000:5000"
     networks:
       - kira
     environment: 
@@ -73,14 +73,14 @@ services:
       - JAEGER_ADDRESS=jaeger:6831
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.site.rule=(Host(`api.test.me`) && PathPrefix(`/v1/site`)) || Host(`img.test.me`)
+      - traefik.http.routers.site.rule=PathPrefix(`/v1/site`) || PathPrefix(`/image`)
       - traefik.http.services.site.loadbalancer.server.port=5000
   
   upload:
     image: kira/upload
     container_name: upload
-    expose: 
-      - 5003
+    ports: 
+      - "5003:5003"
     networks: 
       - kira
     environment: 
@@ -93,7 +93,7 @@ services:
       - GIN_MODE=release
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.upload.rule=Host(`api.test.me`) && PathPrefix(`/v1/upload`)
+      - traefik.http.routers.upload.rule=PathPrefix(`/v1/upload`)
       - traefik.http.services.upload.loadbalancer.server.port=5003
 
 networks: 
