@@ -57,3 +57,7 @@ func (cli UserClient) GetUserList(limit, offset int64) (*pb.UserListResponse, er
 		Offset: offset,
 	})
 }
+
+func (client *UserClient) Ping() (*pb.Pong, error) {
+	return client.service.Ping(context.TODO(), &pb.Ping{})
+}

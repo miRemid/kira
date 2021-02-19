@@ -42,3 +42,7 @@ func (client *AuthClient) FileToken(tokenString string) (*pb.FileTokenResponse, 
 		Token: tokenString,
 	})
 }
+
+func (client *AuthClient) Ping() (*pb.Pong, error) {
+	return client.service.Ping(context.TODO(), &pb.Ping{})
+}

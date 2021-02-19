@@ -46,6 +46,7 @@ type AuthService interface {
 	Valid(ctx context.Context, in *TokenRequest, opts ...client.CallOption) (*ValidResponse, error)
 	Refresh(ctx context.Context, in *TokenRequest, opts ...client.CallOption) (*AuthResponse, error)
 	FileToken(ctx context.Context, in *FileTokenRequest, opts ...client.CallOption) (*FileTokenResponse, error)
+	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 }
 
 type authService struct {
@@ -100,6 +101,16 @@ func (c *authService) FileToken(ctx context.Context, in *FileTokenRequest, opts 
 	return out, nil
 }
 
+func (c *authService) Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error) {
+	req := c.c.NewRequest(c.name, "AuthService.Ping", in)
+	out := new(Pong)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for AuthService service
 
 type AuthServiceHandler interface {
@@ -107,6 +118,7 @@ type AuthServiceHandler interface {
 	Valid(context.Context, *TokenRequest, *ValidResponse) error
 	Refresh(context.Context, *TokenRequest, *AuthResponse) error
 	FileToken(context.Context, *FileTokenRequest, *FileTokenResponse) error
+	Ping(context.Context, *Ping, *Pong) error
 }
 
 func RegisterAuthServiceHandler(s server.Server, hdlr AuthServiceHandler, opts ...server.HandlerOption) error {
@@ -115,6 +127,7 @@ func RegisterAuthServiceHandler(s server.Server, hdlr AuthServiceHandler, opts .
 		Valid(ctx context.Context, in *TokenRequest, out *ValidResponse) error
 		Refresh(ctx context.Context, in *TokenRequest, out *AuthResponse) error
 		FileToken(ctx context.Context, in *FileTokenRequest, out *FileTokenResponse) error
+		Ping(ctx context.Context, in *Ping, out *Pong) error
 	}
 	type AuthService struct {
 		authService
@@ -141,4 +154,8 @@ func (h *authServiceHandler) Refresh(ctx context.Context, in *TokenRequest, out 
 
 func (h *authServiceHandler) FileToken(ctx context.Context, in *FileTokenRequest, out *FileTokenResponse) error {
 	return h.AuthServiceHandler.FileToken(ctx, in, out)
+}
+
+func (h *authServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {
+	return h.AuthServiceHandler.Ping(ctx, in, out)
 }

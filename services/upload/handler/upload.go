@@ -31,3 +31,10 @@ func (handler Handler) UploadFile(ctx context.Context, in *pb.UploadFileReq, res
 	res.File.FileName = resp.FileName
 	return nil
 }
+
+func (handler Handler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
+	res.Code = 0
+	res.Name = "upload"
+	res.Message = "ok"
+	return nil
+}

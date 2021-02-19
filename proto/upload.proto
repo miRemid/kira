@@ -4,6 +4,8 @@ package kira.micro.service.upload;
 
 import "proto/file.proto";
 
+import "proto/common.proto";
+
 option go_package = ".;pb";
 
 message UploadFileReq {
@@ -23,4 +25,5 @@ message UploadFileRes {
 
 service UploadService {
     rpc UploadFile(UploadFileReq) returns(UploadFileRes);
+    rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
 }

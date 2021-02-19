@@ -136,3 +136,10 @@ func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetai
 func (handler FileServiceHandler) DeleteUser(ctx context.Context, in *pb.DeleteUserRequest) error {
 	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
+
+func (handler FileServiceHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
+	res.Code = 0
+	res.Name = "file"
+	res.Message = "ok"
+	return nil
+}

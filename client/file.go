@@ -62,3 +62,7 @@ func (cli FileClient) GetDetail(fileID string) (*pb.GetDetailRes, error) {
 		FileID: fileID,
 	})
 }
+
+func (client *FileClient) Ping() (*pb.Pong, error) {
+	return client.service.Ping(context.TODO(), &pb.Ping{})
+}

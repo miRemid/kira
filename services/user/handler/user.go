@@ -82,3 +82,10 @@ func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUse
 	res.Message = "update success"
 	return nil
 }
+
+func (handler UserHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
+	res.Code = 0
+	res.Name = "user"
+	res.Message = "ok"
+	return nil
+}

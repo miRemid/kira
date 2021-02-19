@@ -15,6 +15,7 @@ func New() *gin.Engine {
 	v1 := route.Group("/v1/site", middleware.APICount("site"))
 	{
 		v1.GET("/info", handler.GetAPICounts)
+		v1.GET("/ping", handler.Ping)
 	}
 
 	route.GET("/image", handler.GetImage)

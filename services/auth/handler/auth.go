@@ -72,3 +72,10 @@ func (handler AuthHandler) FileToken(ctx context.Context, in *pb.FileTokenReques
 	res.UserID = userid
 	return nil
 }
+
+func (handler AuthHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
+	res.Code = 0
+	res.Name = "auth"
+	res.Message = "ok"
+	return nil
+}

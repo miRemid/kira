@@ -1,8 +1,12 @@
 FROM alpine:3.7
 
-ADD bin/user_service /
-ADD bin/casbin /casbin
+RUN mkdir /user
 
-RUN chmod 777 /user_service
+ADD bin/user_service /user
+ADD bin/casbin /user/casbin
 
-ENTRYPOINT [ "sh", "-c", "/user_service" ]
+RUN chmod 777 /user/user_service
+
+WORKDIR /user
+
+ENTRYPOINT [ "sh", "-c", "./user_service" ]

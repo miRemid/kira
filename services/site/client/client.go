@@ -9,7 +9,10 @@ import (
 )
 
 var (
-	fileCli *client.FileClient
+	FileCli   *client.FileClient
+	UserCli   *client.UserClient
+	AuthCli   *client.AuthClient
+	UploadCli *client.UploadClient
 )
 
 func init() {
@@ -20,9 +23,12 @@ func init() {
 		)),
 	)
 	service.Init()
-	fileCli = client.NewFileClient(service.Client())
+	FileCli = client.NewFileClient(service.Client())
+	UserCli = client.NewUserClient(service.Client())
+	AuthCli = client.NewAuthClient(service.Client())
+	UploadCli = client.NewUploadClient(service.Client())
 }
 
 func File() *client.FileClient {
-	return fileCli
+	return FileCli
 }
