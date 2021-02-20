@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"time"
 
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/micro/go-micro/v2/client"
@@ -33,7 +34,9 @@ func (cli UserClient) Signin(username, password string) (*pb.SigninRes, error) {
 }
 
 func (cli UserClient) UserInfo(userid string) (*pb.UserInfoRes, error) {
-	return cli.service.UserInfo(context.TODO(), &pb.UserInfoReq{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	return cli.service.UserInfo(ctx, &pb.UserInfoReq{
 		UserID: userid,
 	})
 }

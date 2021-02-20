@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-micro/v2/broker/nats"
@@ -11,7 +10,6 @@ import (
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
-	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
 	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 	"github.com/pkg/errors"
 
@@ -53,15 +51,15 @@ func startMicroService() {
 		micro.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
-		micro.WrapClient(hystrix.NewClientWrapper()),
+		// micro.WrapClient(hystrix.NewClientWrapper()),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 		micro.Broker(nats.NewBroker(
 			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
 		)),
 	)
 	service.Init()
-	hystrixGo.DefaultMaxConcurrent = 50
-	hystrixGo.DefaultTimeout = 3000
+	// hystrixGo.DefaultMaxConcurrent = 50
+	// hystrixGo.DefaultTimeout = 3000
 
 	db, err := common.DBConnect()
 	if err != nil {

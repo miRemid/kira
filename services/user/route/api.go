@@ -35,7 +35,9 @@ func Signin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
-		Data:    res.Token,
+		Data: gin.H{
+			"token": res.Token,
+		},
 	})
 
 }

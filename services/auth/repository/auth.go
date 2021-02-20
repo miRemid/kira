@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"crypto/rsa"
+	"log"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/miRemid/kira/services/auth/token"
@@ -23,12 +24,19 @@ type AuthRepositoryImpl struct {
 }
 
 func (auth AuthRepositoryImpl) Auth(ctx context.Context, userid, role string) (string, error) {
+	log.Println("Auth for: ", userid)
 	claims := token.AuthClaims{
 		UserID: userid,
 		Role:   role,
 	}
 	token := auth.center.GenerateToken(&claims)
-	return token.SignedString(auth.center.GetPri())
+	tk, err := token.SignedString(auth.center.GetPri())
+	if err != nil {
+		log.Println("Auth Error: ", err)
+	} else {
+		log.Println("Auth Token: ", token)
+	}
+	return tk, err
 }
 
 func (auth AuthRepositoryImpl) Valid(ctx context.Context, tokenString string) (*jwt.Token, error) {
