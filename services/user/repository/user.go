@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"github.com/miRemid/kira/client"
+	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/database"
 	"github.com/miRemid/kira/model"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/micro/go-micro/v2"
@@ -39,6 +41,7 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 	ac := client.NewAuthClient(service)
 	fc := client.NewFileClient(service)
 	err := db.AutoMigrate(model.UserModel{})
+	database.InitAdmin(common.Getenv("ADMIN_USERNAME", "miosuki"), common.Getenv("ADMIN_PASSWORD", "QAZplm%123"), db)
 	return UserRepositoryImpl{
 		db:      db,
 		authCli: ac,
@@ -123,6 +126,7 @@ func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) 
 		tx.Rollback()
 		return user, err
 	}
+	log.Println(user.UserName)
 	// Get User Token
 	if res, err := repo.fileCli.GetToken(userid); err != nil {
 		tx.Rollback()
@@ -131,6 +135,7 @@ func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) 
 		user.Token = res.Token
 	}
 	tx.Commit()
+	log.Println(user.UserName)
 	return user, nil
 }
 

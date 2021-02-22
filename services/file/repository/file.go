@@ -149,6 +149,7 @@ func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (str
 		tx.Rollback()
 		return "", err
 	}
+	log.Println(userID, token)
 	return token, nil
 }
 

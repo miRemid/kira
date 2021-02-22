@@ -3,10 +3,8 @@ package main
 import (
 	"log"
 
-	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/database"
 	"github.com/miRemid/kira/common/tracer"
 
 	"github.com/miRemid/kira/proto/pb"
@@ -14,6 +12,7 @@ import (
 	"github.com/miRemid/kira/services/user/repository"
 	"github.com/miRemid/kira/services/user/route"
 
+	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-micro/v2/broker/nats"
@@ -68,14 +67,12 @@ func startMicroService() {
 	)
 	service.Init()
 	hystrixGo.DefaultMaxConcurrent = 50
-	hystrixGo.DefaultTimeout = 3000
+	hystrixGo.DefaultTimeout = 5000
 
 	db, err := common.DBConnect()
 	if err != nil {
 		log.Fatal(errors.WithMessage(err, "connect to database"))
 	}
-
-	database.InitAdmin(common.Getenv("ADMIN_USERNAME", "miosuki"), common.Getenv("ADMIN_PASSWORD", "QAZplm%123"), db)
 
 	pub := micro.NewPublisher("kira.micro.service.user.delete", service.Client())
 
