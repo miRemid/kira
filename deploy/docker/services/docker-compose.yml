@@ -43,7 +43,7 @@ services:
     ports: 
       - "5002:5002"
     volumes: 
-      - $HOME/Workspace/goproject/kira-project/kira/deploy/bin/casbin:/casbin
+      - $HOME/workspace/kira-project/kira/deploy/bin/casbin:/casbin
     networks:
       - kira
     environment: 

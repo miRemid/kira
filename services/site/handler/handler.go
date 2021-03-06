@@ -118,7 +118,8 @@ func Ping(ctx *gin.Context) {
 	})
 	if err := g.Wait(); err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
-			Code: response.StatusPingError,
+			Code:  response.StatusPingError,
+			Error: err.Error(),
 		})
 		return
 	}
