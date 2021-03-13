@@ -5,7 +5,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go/test"
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/tracer"
+	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/auth/handler"
 	"github.com/miRemid/kira/services/auth/repository"

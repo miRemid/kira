@@ -13,7 +13,6 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/gomodule/redigo v1.8.3
 	github.com/micro/go-micro/v2 v2.9.1
-	github.com/micro/go-plugins/wrapper/breaker/hystrix/v2 v2.9.1
 	github.com/micro/go-plugins/wrapper/trace/opentracing/v2 v2.9.1
 	github.com/minio/minio-go/v7 v7.0.7
 	github.com/opentracing/opentracing-go v1.1.0

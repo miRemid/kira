@@ -5,8 +5,8 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/tracer"
-
+	"github.com/miRemid/kira/common/wrapper/hystrix"
+	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/handler"
 	"github.com/miRemid/kira/services/user/repository"
@@ -16,11 +16,9 @@ import (
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-micro/v2/broker/nats"
-	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
-	"github.com/micro/go-plugins/wrapper/breaker/hystrix/v2"
 	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 	"github.com/pkg/errors"
 )
@@ -31,7 +29,31 @@ func startAPIService() {
 		log.Fatal(err)
 	}
 	r := route.Route(e)
-	route.Init(client.DefaultClient)
+
+	etcdAddr := common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")
+	etcdRegistry := etcd.NewRegistry(
+		registry.Addrs(etcdAddr),
+	)
+
+	jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.client.user", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closer.Close()
+
+	cli := micro.NewService(
+		micro.Name("kira.micro.client.user"),
+		micro.Registry(etcdRegistry),
+		micro.WrapClient(
+			hystrix.NewClientWrapper(),
+			opentracing.NewClientWrapper(jaegerTracer),
+		),
+	)
+
+	route.Init(cli.Client())
+
+	hystrixGo.DefaultMaxConcurrent = 50
+	hystrixGo.DefaultTimeout = 5000
 
 	service := web.NewService(
 		web.Name("kira.micro.api.user"),
@@ -59,15 +81,12 @@ func startMicroService() {
 		micro.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
-		micro.WrapClient(hystrix.NewClientWrapper()),
 		micro.Broker(nats.NewBroker(
 			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
 		)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 	)
 	service.Init()
-	hystrixGo.DefaultMaxConcurrent = 50
-	hystrixGo.DefaultTimeout = 5000
 
 	db, err := common.DBConnect()
 	if err != nil {
