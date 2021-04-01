@@ -9,9 +9,9 @@ import "google/protobuf/timestamp.proto";
 import "proto/common.proto";
 
 message UserListRequest {
-    //@inject_tag: form:"offset"
+    //@inject_tag: json:"offset" form:"offset"
     int64 offset = 1;
-    //@inject_tag: form:"limit"
+    //@inject_tag: json:"offset" form:"limit"
     int64 limit = 2;
 }
 
@@ -27,6 +27,7 @@ message UserListResponse {
 }
 
 message DeleteUserRequest {
+    //@inject_tag: form:"user_id"
     string userID = 1;
 }
 
@@ -71,6 +72,7 @@ message User {
     string userName = 2;
     string userRole = 3;
     string userToken = 4;
+    int64 userStatus = 5;
 }
 
 message UserInfoReq {
@@ -85,7 +87,9 @@ message UserInfoRes {
 
 message UpdatePasswordReq {
     string userID = 1;
+    //@inject_tag: form:"old_password"
     string oldPsw = 2;
+    //@inject_tag: form:"new_password"
     string newPsw = 3;
 }
 

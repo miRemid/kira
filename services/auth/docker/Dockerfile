@@ -1,7 +1,7 @@
 FROM alpine:3.7 
 
-ADD bin/auth_service /
-ADD bin/pem /pem
+ADD auth_service /
+ADD pem /pem
 
 RUN chmod 777 /auth_service
 

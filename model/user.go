@@ -11,7 +11,7 @@ type UserModel struct {
 	UserName string `gorm:"column:user_name;index:idx_user_name,unique"`
 	Password string `gorm:"column:password"`
 	Role     string `gorm:"column:role"`
-	Status   int    `gorm:"column:status"` // 0 inactive, 1 active
+	Status   int64  `gorm:"column:status"` // 0 inactive, 1 active
 	Token    string `gorm:"-"`
 }
 

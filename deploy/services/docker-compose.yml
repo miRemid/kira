@@ -14,8 +14,8 @@ services:
   file:
     image: kira/file
     container_name: file
-    ports: 
-      - "5001:5001"
+    # ports: 
+    #   - "5001:5001"
     networks: 
       - kira
     environment: 
@@ -26,9 +26,26 @@ services:
       - DOMAIN=api.test.me
       - REDIS_ADDRESS=redis:6379
       - NATS_ADDRESS=nats://nats:4222
+      # - GIN_MODE=release
+      - JAEGER_ADDRESS=jaeger:6831
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.file.rule=(PathPrefix(`/v1/file`) || PathPrefix(`/file`))
+    #   - traefik.http.services.file.loadbalancer.server.port=5001
+
+  file-api:
+    image: kira/file-api
+    container_name: file-api
+    ports: 
+      - "5001:5001"
+    networks: 
+      - kira
+    environment: 
+      - REGISTRY_ADDRESS=etcd:2379
       - GIN_MODE=release
       - JAEGER_ADDRESS=jaeger:6831
-      - DOMAIN=img.test.me
+      - REDIS_ADDRESS=redis:6379
+
     labels: 
       - traefik.enable=true
       - traefik.http.routers.file.rule=(PathPrefix(`/v1/file`) || PathPrefix(`/file`))
@@ -40,6 +57,27 @@ services:
     container_name: user
     links: 
       - auth
+    # ports: 
+    #   - "5002:5002"
+    networks:
+      - kira
+    environment: 
+      - REGISTRY_ADDRESS=etcd:2379
+      - MYSQL_ADDRESS=mysql:3306
+      # - API_ADDRESS=:5002
+      - REDIS_ADDRESS=redis:6379
+      - JAEGER_ADDRESS=jaeger:6831
+      - NATS_ADDRESS=nats://nats:4222
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.user.rule=PathPrefix(`/v1/user`)
+    #   - traefik.http.services.user.loadbalancer.server.port=5002
+
+  user-api:
+    image: kira/user-api
+    container_name: user-api
+    links: 
+      - auth
     ports: 
       - "5002:5002"
     volumes: 
@@ -48,12 +86,9 @@ services:
       - kira
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
-      - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5002
-      - REDIS_ADDRESS=redis:6379
       - JAEGER_ADDRESS=jaeger:6831
-      - NATS_ADDRESS=nats://nats:4222
-
+      - REDIS_ADDRESS=redis:6379
     labels: 
       - traefik.enable=true
       - traefik.http.routers.user.rule=PathPrefix(`/v1/user`)
@@ -79,18 +114,32 @@ services:
   upload:
     image: kira/upload
     container_name: upload
+    networks: 
+      - kira
+    environment: 
+      - REGISTRY_ADDRESS=etcd:2379
+      - MYSQL_ADDRESS=mysql:3306
+      - MINIO_ENDPOINT=minio:9000
+      - REDIS_ADDRESS=redis:6379
+      - JAEGER_ADDRESS=jaeger:6831
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.upload.rule=PathPrefix(`/v1/upload`)
+    #   - traefik.http.services.upload.loadbalancer.server.port=5003
+  
+  upload-api:
+    image: kira/upload-api
+    container_name: upload-api
     ports: 
       - "5003:5003"
     networks: 
       - kira
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
-      - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5003
-      - MINIO_ENDPOINT=minio:9000
-      - REDIS_ADDRESS=redis:6379
       - JAEGER_ADDRESS=jaeger:6831
       - GIN_MODE=release
+      - REDIS_ADDRESS=redis:6379
     labels: 
       - traefik.enable=true
       - traefik.http.routers.upload.rule=PathPrefix(`/v1/upload`)

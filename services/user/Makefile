@@ -16,4 +16,9 @@ wrk:
 
 .PHONY: docker
 docker:
-	docker build . -t user_service:latest
+	docker build -t kira/user -f ./docker/Dockerfile .
+
+.PHONY: static
+static:
+	CGO_ENABLED=0 go build -a -ldflags '-s' -o user_service
+

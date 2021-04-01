@@ -51,6 +51,7 @@ func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res
 	res.User.UserName = user.UserName
 	res.User.UserRole = user.Role
 	res.User.UserToken = user.Token
+	res.User.UserStatus = user.Status
 	return nil
 }
 

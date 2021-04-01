@@ -13,4 +13,8 @@ test:
 
 .PHONY: docker
 docker:
-	docker build . -t auth_service:latest
+	docker build -t kira/auth -f ./docker/Dockerfile .
+
+.PHONY: static	
+static:
+	CGO_ENABLED=0 go build -a -ldflags '-s' -o auth_service
