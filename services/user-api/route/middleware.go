@@ -76,3 +76,8 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func PrintlnPath(ctx *gin.Context) {
+	log.Println("Request Path = ", ctx.Request.URL.Path)
+	ctx.Next()
+}

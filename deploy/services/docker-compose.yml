@@ -14,8 +14,6 @@ services:
   file:
     image: kira/file
     container_name: file
-    # ports: 
-    #   - "5001:5001"
     networks: 
       - kira
     environment: 
@@ -26,12 +24,7 @@ services:
       - DOMAIN=api.test.me
       - REDIS_ADDRESS=redis:6379
       - NATS_ADDRESS=nats://nats:4222
-      # - GIN_MODE=release
       - JAEGER_ADDRESS=jaeger:6831
-    # labels: 
-    #   - traefik.enable=true
-    #   - traefik.http.routers.file.rule=(PathPrefix(`/v1/file`) || PathPrefix(`/file`))
-    #   - traefik.http.services.file.loadbalancer.server.port=5001
 
   file-api:
     image: kira/file-api
@@ -46,10 +39,10 @@ services:
       - JAEGER_ADDRESS=jaeger:6831
       - REDIS_ADDRESS=redis:6379
 
-    labels: 
-      - traefik.enable=true
-      - traefik.http.routers.file.rule=(PathPrefix(`/v1/file`) || PathPrefix(`/file`))
-      - traefik.http.services.file.loadbalancer.server.port=5001
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.file.rule=PathPrefix(`/file`)
+    #   - traefik.http.services.file.loadbalancer.server.port=5001
 
   
   user:
@@ -57,21 +50,14 @@ services:
     container_name: user
     links: 
       - auth
-    # ports: 
-    #   - "5002:5002"
     networks:
       - kira
     environment: 
       - REGISTRY_ADDRESS=etcd:2379
       - MYSQL_ADDRESS=mysql:3306
-      # - API_ADDRESS=:5002
       - REDIS_ADDRESS=redis:6379
       - JAEGER_ADDRESS=jaeger:6831
       - NATS_ADDRESS=nats://nats:4222
-    # labels: 
-    #   - traefik.enable=true
-    #   - traefik.http.routers.user.rule=PathPrefix(`/v1/user`)
-    #   - traefik.http.services.user.loadbalancer.server.port=5002
 
   user-api:
     image: kira/user-api
@@ -80,8 +66,6 @@ services:
       - auth
     ports: 
       - "5002:5002"
-    volumes: 
-      - $HOME/workspace/kira-project/kira/deploy/bin/casbin:/casbin
     networks:
       - kira
     environment: 
@@ -89,10 +73,10 @@ services:
       - API_ADDRESS=:5002
       - JAEGER_ADDRESS=jaeger:6831
       - REDIS_ADDRESS=redis:6379
-    labels: 
-      - traefik.enable=true
-      - traefik.http.routers.user.rule=PathPrefix(`/v1/user`)
-      - traefik.http.services.user.loadbalancer.server.port=5002
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.user.rule=PathPrefix(`/user`)
+    #   - traefik.http.services.user.loadbalancer.server.port=5002
   
   site:
     image: kira/site
@@ -106,10 +90,10 @@ services:
       - REDIS_ADDRESS=redis:6379
       - REGISTRY_ADDRESS=etcd:2379
       - JAEGER_ADDRESS=jaeger:6831
-    labels: 
-      - traefik.enable=true
-      - traefik.http.routers.site.rule=PathPrefix(`/v1/site`) || PathPrefix(`/image`)
-      - traefik.http.services.site.loadbalancer.server.port=5000
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.site.rule=PathPrefix(`/site`) || PathPrefix(`/image`)
+    #   - traefik.http.services.site.loadbalancer.server.port=5000
   
   upload:
     image: kira/upload
@@ -122,11 +106,7 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - REDIS_ADDRESS=redis:6379
       - JAEGER_ADDRESS=jaeger:6831
-    # labels: 
-    #   - traefik.enable=true
-    #   - traefik.http.routers.upload.rule=PathPrefix(`/v1/upload`)
-    #   - traefik.http.services.upload.loadbalancer.server.port=5003
-  
+ 
   upload-api:
     image: kira/upload-api
     container_name: upload-api
@@ -140,10 +120,26 @@ services:
       - JAEGER_ADDRESS=jaeger:6831
       - GIN_MODE=release
       - REDIS_ADDRESS=redis:6379
+    # labels: 
+    #   - traefik.enable=true
+    #   - traefik.http.routers.upload.rule=PathPrefix(`/upload`)
+    #   - traefik.http.services.upload.loadbalancer.server.port=5003
+  
+  gateway:
+    image: kira/gateway
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - kira
+    environment:
+      - MICRO_REGISTRY=etcd
+      - MICRO_REGISTRY_ADDRESS=etcd:2379
+      - MICRO_API_HANDLER=http
     labels: 
       - traefik.enable=true
-      - traefik.http.routers.upload.rule=PathPrefix(`/v1/upload`)
-      - traefik.http.services.upload.loadbalancer.server.port=5003
+      - traefik.http.routers.gateway.rule=Host(`test.me`) || Host(`192.168.186.128`) || Host(`kira.zxykm.ltd`)
+      - traefik.http.services.gateway.loadbalancer.server.port=8080
 
 networks: 
   kira:

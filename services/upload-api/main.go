@@ -45,7 +45,7 @@ func main() {
 	cli.Client().Init(grpc.MaxSendMsgSize(5 * 1024 * 1024))
 	r := router.NewRouter(cli.Client())
 	service := web.NewService(
-		web.Name("kira.micro.api.upload"),
+		web.Name("go.micro.api.upload"),
 		web.Address(common.Getenv("API_ADDRESS", ":5003")),
 		web.Handler(r),
 		web.Registry(etcdRegistry),

@@ -52,7 +52,7 @@ func main() {
 	hystrixGo.DefaultTimeout = 5000
 
 	service := web.NewService(
-		web.Name("kira.micro.api.user"),
+		web.Name("go.micro.api.user"),
 		web.Address(common.Getenv("API_ADDRESS", ":5002")),
 		web.Handler(r),
 		web.Registry(etcd.NewRegistry(

@@ -31,7 +31,7 @@ func main() {
 
 	r := route.Route()
 	service := web.NewService(
-		web.Name("kira.micro.api.file"),
+		web.Name("go.micro.api.file"),
 		web.Address(common.Getenv("API_ADDRESS", ":5001")),
 		web.Handler(r),
 		web.Registry(etcdRegistry),

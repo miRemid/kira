@@ -23,13 +23,9 @@ func NewRouter(cli mClient.Client) *gin.Engine {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())
 
-	v1 := router.Group("/v1", middleware.APICount("upload"))
+	upload := router.Group("/upload", middleware.APICount("upload"))
 	{
-		// v1/user/upload
-		user := v1.Group("/", CheckToken)
-		{
-			user.PUT("/upload", UploadFile)
-		}
+		upload.PUT("/image", UploadFile)
 	}
 
 	return router
