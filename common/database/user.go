@@ -11,13 +11,24 @@ import (
 
 func InitAdmin(username, password string, db *gorm.DB) {
 	var user model.UserModel
-	log.Println("Init Admin Account: ", username)
-	user.UserName = username
 	pwd, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user.Password = string(pwd)
-	user.UserID = xid.New().String()
-	user.Role = "admin"
-	if err := db.Create(&user).Error; err != nil {
-		log.Println(err)
+	// 1. get user
+	err := db.Model(user).Where("user_name = ?", username).First(&user).Error
+	// if not found, create
+	if err == gorm.ErrRecordNotFound {
+		log.Println("Init Admin Account: ", username)
+		user.UserName = username
+		user.Password = string(pwd)
+		user.UserID = xid.New().String()
+		user.Role = "admin"
+		if err := db.Create(&user).Error; err != nil {
+			log.Println(err)
+		}
+		// if found, update password
+	} else {
+		user.Password = string(pwd)
+		if err = db.Model(user).Save(&user).Error; err != nil {
+			log.Println(err)
+		}
 	}
 }

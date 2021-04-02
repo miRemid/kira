@@ -38,7 +38,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		v1.POST("/signup", Signup)
 		v1.POST("/signin", Signin)
 
-		auth := v1.Group("/")
+		auth := v1.Group("/", JwtAuth(e))
 		{
 			auth.GET("/me", GetInfo)
 

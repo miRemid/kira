@@ -6,10 +6,14 @@ import (
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/services/gateway/plugins/auth"
+	"github.com/miRemid/kira/services/gateway/plugins/cors"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
+
+	// "github.com/micro/go-plugins/micro/cors"
 	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
+	// "github.com/micro/micro/plugin"
 	"github.com/micro/micro/v2/client/api"
 	"github.com/micro/micro/v2/cmd"
 )
@@ -35,11 +39,8 @@ func main() {
 			opentracing.NewClientWrapper(jaegerTracer),
 		),
 	)
-
-	err = api.Register(auth.NewPlugin(cli.Client()))
-	if err != nil {
-		log.Fatal("auth register")
-	}
+	api.Register(cors.NewPlugin())
+	api.Register(auth.NewPlugin(cli.Client()))
 
 	cmd.Init()
 }
