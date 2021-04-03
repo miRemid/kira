@@ -7,7 +7,7 @@ test:
 	go test -v ./... -cover
 
 .PHONY: docker
-docker:
+docker: static
 	docker build -t kira/file -f ./docker/Dockerfile .
 
 .PHONY: static

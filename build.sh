@@ -4,6 +4,6 @@ for service in $services
 do
     echo "\033[32mCompile: \033[0m $service"
     cd ${ROOT_DIR}/services/$service
-    make static docker
+    make docker
     echo "\033[32mFinish: \033[0m $service"
 done

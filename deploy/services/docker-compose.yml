@@ -21,7 +21,8 @@ services:
       - MYSQL_ADDRESS=mysql:3306
       - API_ADDRESS=:5001
       - MINIO_ENDPOINT=minio:9000
-      - DOMAIN=api.test.me
+      - GIN_MODE=release
+      - DOMAIN=test.me
       - REDIS_ADDRESS=redis:6379
       - NATS_ADDRESS=nats://nats:4222
       - JAEGER_ADDRESS=jaeger:6831
@@ -99,6 +100,8 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - REDIS_ADDRESS=redis:6379
       - JAEGER_ADDRESS=jaeger:6831
+      - GIN_MODE=release
+      - DOMAIN=test.me
  
   upload-api:
     image: kira/upload-api

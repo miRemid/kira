@@ -12,7 +12,7 @@ test:
 	go test -v ./... -cover
 
 .PHONY: docker
-docker:
+docker: static
 	docker build -t kira/auth -f ./docker/Dockerfile .
 
 .PHONY: static	

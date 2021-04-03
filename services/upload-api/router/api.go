@@ -12,8 +12,10 @@ import (
 
 func UploadFile(ctx *gin.Context) {
 	owner, _ := ctx.Get("owner")
+	log.Println("Upload File, Owner: ", owner)
 	file, meta, err := ctx.Request.FormFile("file")
 	if err != nil {
+		log.Println("UploadFile, get file from form err: ", err)
 		ctx.JSON(http.StatusBadRequest, response.Response{
 			Code:  response.StatusBadParams,
 			Error: "missing file",
@@ -24,6 +26,7 @@ func UploadFile(ctx *gin.Context) {
 	fileName := meta.Filename
 	fileExt := filepath.Ext(fileName)
 	if !config.CheckExt(fileExt) {
+		log.Println("UploadFile, ext error: ", fileExt)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusBadParams,
 			Error: "not support ext",
@@ -39,6 +42,7 @@ func UploadFile(ctx *gin.Context) {
 		})
 		return
 	} else if !res.Succ {
+		log.Println("UploadFile: ", res.Msg)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: res.Msg,

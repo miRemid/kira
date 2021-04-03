@@ -12,7 +12,7 @@ build:
 	go build -o gateway_service
 
 .PHONY: docker
-docker:
+docker: static
 	docker build -t kira/gateway -f ./docker/Dockerfile .
 
 .PHONY: static

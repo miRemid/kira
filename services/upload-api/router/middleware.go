@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ func CheckToken(ctx *gin.Context) {
 		}
 		owner = userid.UserID
 	}
+	log.Println("Owner: ", owner)
 	ctx.Set("owner", owner)
 	ctx.Next()
 }

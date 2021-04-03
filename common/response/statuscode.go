@@ -12,4 +12,5 @@ const (
 	StatusBadParams
 	StatusForbidden
 	StatusPingError
+	StatusRedisCheck
 )

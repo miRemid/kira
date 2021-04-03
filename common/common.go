@@ -41,9 +41,9 @@ func DBConnect() (*gorm.DB, error) {
 		return nil, err
 	}
 	db, _ := _conn.DB()
-	db.SetMaxOpenConns(100)
-	db.SetMaxIdleConns(10)
-	db.SetConnMaxLifetime(time.Hour)
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(time.Minute * 5)
 	return _conn, nil
 }
 
