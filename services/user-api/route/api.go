@@ -1,10 +1,12 @@
 package route
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/proto/pb"
 )
@@ -98,6 +100,10 @@ func GetInfo(ctx *gin.Context) {
 		})
 		return
 	}
+	// Set user info to the redis, key is the userid
+	buffer, _ := json.Marshal(res.User)
+	conn := redis.Get()
+	conn.Do("SET", userid, buffer)
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,

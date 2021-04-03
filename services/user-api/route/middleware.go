@@ -1,14 +1,18 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
+	redigo "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common/response"
+	"github.com/miRemid/kira/proto/pb"
 )
 
 func parseToken(header string) (string, error) {
@@ -80,4 +84,42 @@ func JwtAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 func PrintlnPath(ctx *gin.Context) {
 	log.Println("Request Path = ", ctx.Request.URL.Path)
 	ctx.Next()
+}
+
+func GetUserInfoFromRedis(ctx *gin.Context) {
+	conn := redis.Get()
+	userid := ctx.GetHeader("userid")
+	log.Println("UserID: ", userid)
+	log.Println("Check Exists")
+	exit, err := redigo.Bool(conn.Do("EXISTS", userid))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+			Code:  response.StatusRedisCheck,
+			Error: err.Error(),
+		})
+		return
+	}
+	if exit {
+		log.Println("Exists, read from redis")
+		data, err := redigo.Bytes(conn.Do("GET", userid))
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+				Code:  response.StatusRedisCheck,
+				Error: err.Error(),
+			})
+			return
+		} else {
+			log.Println("Get Userinfo from redis")
+			var user = new(pb.User)
+			json.Unmarshal(data, user)
+			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+				Code: response.StatusOK,
+				Data: user,
+			})
+			return
+		}
+	} else {
+		log.Println("No Exists, read from database")
+		ctx.Next()
+	}
 }
