@@ -3,10 +3,7 @@ package main
 import (
 	"log"
 
-	hystrixGo "github.com/afex/hystrix-go/hystrix"
-
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/wrapper/hystrix"
 	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/services/upload-api/router"
 	"github.com/micro/go-micro/v2"
@@ -34,13 +31,13 @@ func main() {
 		micro.Name("kira.micro.client.upload"),
 		micro.Registry(etcdRegistry),
 		micro.WrapClient(
-			hystrix.NewClientWrapper(),
+			// hystrix.NewClientWrapper(),
 			opentracing.NewClientWrapper(jaegerTracer),
 		),
 	)
 
-	hystrixGo.DefaultSleepWindow = 3000
-	hystrixGo.DefaultMaxConcurrent = 50
+	// hystrixGo.DefaultMaxConcurrent = 50
+	// hystrixGo.DefaultTimeout = 10000
 
 	cli.Client().Init(grpc.MaxSendMsgSize(5 * 1024 * 1024))
 	r := router.NewRouter(cli.Client())

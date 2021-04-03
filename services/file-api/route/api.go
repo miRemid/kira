@@ -1,6 +1,7 @@
 package route
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,16 @@ func GetHistory(ctx *gin.Context) {
 		s.Limit = 10
 	}
 	res, err := cli.GetHistory(token.(string), s.Limit, s.Offset)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Get Histroy: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	if !res.Succ {
+		log.Println("Get Histroy: ", res.Msg)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: res.Msg,
@@ -64,10 +74,18 @@ func DeleteFile(ctx *gin.Context) {
 		return
 	}
 	res, err := cli.DeleteFile(token.(string), req.FileID)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Delete File: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	}
+	if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	}
@@ -91,10 +109,17 @@ func GetDetail(ctx *gin.Context) {
 		return
 	}
 	res, err := cli.GetDetail(req.FileID)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Get Detail: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	} else {

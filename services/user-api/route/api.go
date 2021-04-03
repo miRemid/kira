@@ -1,6 +1,7 @@
 package route
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,13 +26,19 @@ func Signin(ctx *gin.Context) {
 
 	res, err := cli.Signin(st.Username, st.Password)
 	if err != nil {
+		log.Println("Sign in: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
 		})
 		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
+		})
+		return
 	}
-
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
@@ -52,10 +59,17 @@ func Signup(ctx *gin.Context) {
 		return
 	}
 	res, err := cli.Signup(st.Username, st.Password)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Sign up: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	}
@@ -71,9 +85,16 @@ func GetInfo(ctx *gin.Context) {
 
 	res, err := cli.UserInfo(userid)
 	if err != nil {
+		log.Println("Get Info: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	}
@@ -99,6 +120,7 @@ func DeleteUser(ctx *gin.Context) {
 	}
 	_, err := cli.DeleteUser(req.UserID)
 	if err != nil {
+		log.Println("Delete User: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
@@ -124,6 +146,7 @@ func GetUserList(ctx *gin.Context) {
 	}
 	res, err := cli.GetUserList(req.Limit, req.Offset)
 	if err != nil {
+		log.Println("Get User List: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
@@ -147,6 +170,7 @@ func UpdateUser(ctx *gin.Context) {
 	}
 	res, err := cli.UpdateUser(req.UserID, req.Role)
 	if err != nil {
+		log.Println("Update User: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),

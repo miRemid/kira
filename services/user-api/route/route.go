@@ -32,7 +32,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		v.RegisterValidation("passwordValidate", passwordValidator)
 	}
 
-	v1 := route.Group("/user", PrintlnPath, middleware.APICount("user"))
+	v1 := route.Group("/user", PrintlnPath)
 	{
 
 		v1.POST("/signup", Signup)

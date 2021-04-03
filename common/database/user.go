@@ -21,6 +21,7 @@ func InitAdmin(username, password string, db *gorm.DB) {
 		user.Password = string(pwd)
 		user.UserID = xid.New().String()
 		user.Role = "admin"
+		user.Status = 1
 		if err := db.Create(&user).Error; err != nil {
 			log.Println(err)
 		}

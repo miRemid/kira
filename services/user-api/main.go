@@ -3,18 +3,13 @@ package main
 import (
 	"log"
 
-	hystrixGo "github.com/afex/hystrix-go/hystrix"
-
 	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/wrapper/hystrix"
-	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/services/user-api/route"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/web"
-	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
 )
 
 func main() {
@@ -31,25 +26,25 @@ func main() {
 		registry.Addrs(etcdAddr),
 	)
 
-	jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.client.user", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer closer.Close()
+	// jaegerTracer, closer, err := tracer.NewJaegerTracer("kira.micro.client.user", common.Getenv("JAEGER_ADDRESS", "127.0.0.1:6831"))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer closer.Close()
 
 	cli := micro.NewService(
 		micro.Name("kira.micro.client.user"),
 		micro.Registry(etcdRegistry),
 		micro.WrapClient(
-			hystrix.NewClientWrapper(),
-			opentracing.NewClientWrapper(jaegerTracer),
+		// hystrix.NewClientWrapper(),
+		// opentracing.NewClientWrapper(jaegerTracer),
 		),
 	)
 
 	route.Init(cli.Client())
 
-	hystrixGo.DefaultMaxConcurrent = 50
-	hystrixGo.DefaultTimeout = 5000
+	// hystrixGo.DefaultMaxConcurrent = 50
+	// hystrixGo.DefaultTimeout = 10000
 
 	service := web.NewService(
 		web.Name("go.micro.api.user"),

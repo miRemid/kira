@@ -84,7 +84,7 @@ func (repo FileRepositoryImpl) Done() {
 func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) error {
 	defer func() {
 		if r := recover(); r != nil {
-
+			log.Println(r)
 		}
 	}()
 	log.Printf("Rcv Message From Nats: userid=%v", userID)
@@ -113,11 +113,13 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 		return err
 	}
 	tx.Commit()
+	log.Println("Delete userid: ", userID)
 	return nil
 }
 
 // generate user's token, and create the user bucket
 func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string) (string, error) {
+	log.Println("Generate Token For UserID: ", userID)
 	tx := repo.db.Begin()
 	token := ksuid.New().String()
 	var item model.TokenUser
@@ -128,10 +130,12 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string)
 		return "", err
 	}
 	tx.Commit()
+	log.Printf("UserID: %v, Token: %v\n", userID, token)
 	return token, nil
 }
 
 func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (string, error) {
+	log.Println("Refresh Token")
 	tx := repo.db.Begin()
 	ntoken := ksuid.New().String()
 	if err := tx.Exec("update tbl_token_user set token = ? where token = ?", ntoken, token).Error; err != nil {
@@ -139,21 +143,25 @@ func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (
 		return "", err
 	}
 	tx.Commit()
+	log.Println("Refresh Token: ", token)
 	return token, nil
 }
 
 func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (string, error) {
+	log.Println("Get Token For UserID: ", userID)
 	tx := repo.db.Begin()
 	var token string
 	if err := tx.Raw("select token from tbl_token_user where user_id = ?", userID).Scan(&token).Error; err != nil {
+		log.Println(err)
 		tx.Rollback()
 		return "", err
 	}
-	log.Println(userID, token)
+	log.Println("UserID: ", userID, "; Token: ", token)
 	return token, nil
 }
 
 func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, limit, offset int64) ([]model.FileModel, int64, error) {
+	log.Printf("Get %v's history", owner)
 	var total int64
 	var res = make([]model.FileModel, 0)
 	var tx = repo.db.Begin()
@@ -162,7 +170,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 		return res, total, err
 	}
 	// 3. get files list
-	if err := tx.Raw("select * from tbl_file where owner = ? limit ?, ?", owner, offset, limit).Scan(&res).Error; err != nil {
+	if err := tx.Raw("select * from tbl_file where owner = ? order by created_at, id desc limit ?, ? ", owner, offset, limit).Scan(&res).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}

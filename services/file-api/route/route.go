@@ -30,7 +30,7 @@ func Route() *gin.Engine {
 
 	route.Use(middleware.CORS())
 
-	file := route.Group("/file", CheckToken, middleware.APICount("file"))
+	file := route.Group("/file", CheckToken)
 	{
 		file.GET("/history", GetHistory)
 		file.DELETE("/delete", DeleteFile)

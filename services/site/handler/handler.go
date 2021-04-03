@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -25,10 +26,17 @@ func GetImage(ctx *gin.Context) {
 	}
 
 	res, err := client.File().GetImage(fileID)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Get Image: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	}
@@ -42,6 +50,7 @@ func GetAPICounts(ctx *gin.Context) {
 	// 1. Get services list
 	res, err := redis.Get().Do("SMEMBERS", "kira")
 	if err != nil {
+		log.Println("Get API Counts: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),

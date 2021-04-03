@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -30,10 +31,17 @@ func UploadFile(ctx *gin.Context) {
 		return
 	}
 	res, err := upload.UploadFile(owner.(string), fileName, fileExt, file)
-	if err != nil || !res.Succ {
+	if err != nil {
+		log.Println("Upload File: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
 		})
 		return
 	}
