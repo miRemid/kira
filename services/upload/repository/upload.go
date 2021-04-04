@@ -69,7 +69,7 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	bucket := config.Bucket()
 	reader.Seek(0, 0)
 	// 3. upload into minio
-	_, err := repo.mini.PutObject(ctx, bucket, fileName+"-"+id, reader, int64(fileSize), minio.PutObjectOptions{})
+	_, err := repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
 	if err != nil {
 		tx.Rollback()
 		return res, err
@@ -80,7 +80,6 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	res.FileName = fileName
 	res.FileSize = fileSize
 	res.FileExt = fileExt
-	res.Bucket = bucket
 	res.FileID = id
 	// 4. insert record into database
 	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {

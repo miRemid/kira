@@ -4,23 +4,13 @@ import (
 	"context"
 	"io"
 	"log"
-	"time"
 
 	"github.com/miRemid/kira/model"
-	"github.com/teris-io/shortid"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/segmentio/ksuid"
 	"gorm.io/gorm"
 )
-
-var (
-	idgen *shortid.Shortid
-)
-
-func init() {
-	idgen, _ = shortid.New(8, shortid.DefaultABC, uint64(time.Now().Unix()))
-}
 
 type DeleteStruct struct {
 	FileID   string `gorm:"file_id"`
@@ -35,7 +25,7 @@ type FileRepository interface {
 	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
 	DeleteFile(context.Context, string, string) error
-	GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error)
+	GetImage(ctx context.Context, fileID string) (io.Reader, error)
 	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
 	DeleteUser(ctx context.Context, userID string) error
 	Done()
@@ -68,7 +58,6 @@ func (repo FileRepositoryImpl) deleteG() {
 			}
 			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileName+"-"+item.FileID, minio.RemoveObjectOptions{})
 			repo.db.Exec("delete from tbl_file where file_id = ?", item.FileID)
-			break
 		case <-repo.done:
 			return
 		}
@@ -174,6 +163,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 		tx.Rollback()
 		return res, total, err
 	}
+
 	tx.Commit()
 	return res, total, nil
 }
@@ -201,20 +191,13 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fil
 	return nil
 }
 
-func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID string) (model.FileModel, io.Reader, error) {
-	var file model.FileModel
-	tx := repo.db.Begin()
-	if err := tx.Raw("select * from tbl_file where file_id = ?", fileID).Scan(&file).Error; err != nil {
-		tx.Rollback()
-		return file, nil, err
-	}
+func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID string) (io.Reader, error) {
 	// 2. Get Files body
-	obj, err := repo.minioCli.GetObject(ctx, file.Bucket, file.FileName+"-"+file.FileID, minio.GetObjectOptions{})
+	obj, err := repo.minioCli.GetObject(ctx, "kira-1", fileID, minio.GetObjectOptions{})
 	if err != nil {
-		tx.Rollback()
-		return file, nil, err
+		return nil, err
 	}
-	return file, obj, nil
+	return obj, nil
 }
 
 func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (model.FileModel, error) {

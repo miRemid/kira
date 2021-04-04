@@ -2,10 +2,7 @@ package config
 
 import (
 	"fmt"
-	"math/rand"
 	"path/filepath"
-	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common"
@@ -26,8 +23,6 @@ var (
 	BUCKET_NAME = []string{"kira-1", "kira-2", "kira-3"}
 
 	TEMP_DIR = "tmp"
-
-	once sync.Once
 )
 
 func init() {
@@ -48,8 +43,7 @@ func ContentType(ext string) string {
 }
 
 func Bucket() string {
-	rand.Seed(time.Now().Unix())
-	return BUCKET_NAME[rand.Intn(len(BUCKET_NAME))]
+	return "kira-1"
 }
 
 func Path(id string) string {

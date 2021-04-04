@@ -24,7 +24,6 @@ func GetImage(ctx *gin.Context) {
 		})
 		return
 	}
-
 	res, err := client.File().GetImage(fileID)
 	if err != nil {
 		log.Println("Get Image: ", err)

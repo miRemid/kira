@@ -15,6 +15,7 @@ type FileModel struct {
 	FileExt  string `gorm:"column:file_ext;"`
 	FileSize int64  `gorm:"column:file_size;"`
 	FileHash string `gorm:"column:file_hash;index:idx_file_hash"`
+	FileURL  string `gorm:"-"`
 	Bucket   string `gorm:"column:bucket"`
 }
 

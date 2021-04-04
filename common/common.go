@@ -3,10 +3,12 @@ package common
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -41,8 +43,16 @@ func DBConnect() (*gorm.DB, error) {
 		return nil, err
 	}
 	db, _ := _conn.DB()
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(25)
+	openConns, err := strconv.Atoi(Getenv("MAX_OPEN_CONNS", "0"))
+	if err != nil {
+		return nil, errors.WithMessage(err, "MAX_OPEN_CONNS must be a integer")
+	}
+	idelConns, err := strconv.Atoi(Getenv("MAX_IDLE_CONNS", "0"))
+	if err != nil {
+		return nil, errors.WithMessage(err, "MAX_IDLE_CONNS must be a integer")
+	}
+	db.SetMaxOpenConns(openConns)
+	db.SetMaxIdleConns(idelConns)
 	db.SetConnMaxLifetime(time.Minute * 5)
 	return _conn, nil
 }
