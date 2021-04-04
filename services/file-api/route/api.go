@@ -129,3 +129,35 @@ func GetDetail(ctx *gin.Context) {
 		})
 	}
 }
+
+func RefreshToken(ctx *gin.Context) {
+	token := ctx.Query("token")
+	if token == "" {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusNeedToken,
+			Error: "need token",
+		})
+		return
+	}
+	res, err := cli.RefreshToken(token)
+	if err != nil {
+		log.Println("Refresh Token Err: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: map[string]string{
+			"token": res.Token,
+		},
+	})
+}

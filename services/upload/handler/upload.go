@@ -14,7 +14,7 @@ type Handler struct {
 }
 
 func (handler Handler) UploadFile(ctx context.Context, in *pb.UploadFileReq, res *pb.UploadFileRes) error {
-	resp, err := handler.Repo.UploadFile(ctx, in.Owner, in.FileName, in.FileExt, in.FileSize, in.FileBody)
+	resp, err := handler.Repo.UploadFile(ctx, in.Owner, in.FileName, in.FileExt, in.FileSize, in.Width, in.Height, in.FileBody)
 	if err != nil {
 		res.Succ = false
 		res.Msg = err.Error()

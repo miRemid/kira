@@ -35,6 +35,7 @@ func Route() *gin.Engine {
 		file.GET("/history", GetHistory)
 		file.DELETE("/delete", DeleteFile)
 		file.GET("/detail", GetDetail)
+		file.GET("/refreshToken", RefreshToken)
 	}
 
 	return route

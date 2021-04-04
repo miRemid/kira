@@ -15,6 +15,9 @@ message UploadFileReq {
     
     bytes fileBody = 4;
     string owner = 5;
+
+    string width = 6;
+    string height = 7;
 }
 
 message UploadFileRes {

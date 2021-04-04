@@ -13,4 +13,5 @@ const (
 	StatusForbidden
 	StatusPingError
 	StatusRedisCheck
+	StatusNeedToken
 )

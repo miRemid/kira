@@ -124,7 +124,7 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string)
 }
 
 func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (string, error) {
-	log.Println("Refresh Token")
+	log.Println("Refresh Token for: ", token)
 	tx := repo.db.Begin()
 	ntoken := ksuid.New().String()
 	if err := tx.Exec("update tbl_token_user set token = ? where token = ?", ntoken, token).Error; err != nil {
@@ -132,8 +132,8 @@ func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (
 		return "", err
 	}
 	tx.Commit()
-	log.Println("Refresh Token: ", token)
-	return token, nil
+	log.Println("Refresh Token: ", ntoken)
+	return ntoken, nil
 }
 
 func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (string, error) {

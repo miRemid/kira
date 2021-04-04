@@ -12,6 +12,8 @@ import (
 
 func UploadFile(ctx *gin.Context) {
 	owner, _ := ctx.Get("owner")
+	width := ctx.Query("width")
+	height := ctx.Query("height")
 	log.Println("Upload File, Owner: ", owner)
 	file, meta, err := ctx.Request.FormFile("file")
 	if err != nil {
@@ -33,7 +35,7 @@ func UploadFile(ctx *gin.Context) {
 		})
 		return
 	}
-	res, err := upload.UploadFile(owner.(string), fileName, fileExt, file)
+	res, err := upload.UploadFile(owner.(string), fileName, fileExt, width, height, file)
 	if err != nil {
 		log.Println("Upload File: ", err)
 		ctx.JSON(http.StatusOK, response.Response{

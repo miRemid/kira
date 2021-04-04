@@ -35,7 +35,7 @@ func bucket(mini *minio.Client) {
 }
 
 type Repository interface {
-	UploadFile(ctx context.Context, owner string, fileName string, fileExt string, fileSize int64, fileBody []byte) (model.FileModel, error)
+	UploadFile(ctx context.Context, owner string, fileName string, fileExt string, fileSize int64, fileWidth, fileHeight string, fileBody []byte) (model.FileModel, error)
 }
 
 type RepositoryImpl struct {
@@ -54,7 +54,7 @@ func NewRepository(db *gorm.DB, mini *minio.Client) Repository {
 
 func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	owner, fileName, fileExt string,
-	fileSize int64, fileBody []byte) (model.FileModel, error) {
+	fileSize int64, fileWidth, fileHeight string, fileBody []byte) (model.FileModel, error) {
 	var res model.FileModel
 	var tx = repo.db.Begin()
 	id, _ := idgen.Generate()
@@ -81,6 +81,8 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	res.FileSize = fileSize
 	res.FileExt = fileExt
 	res.FileID = id
+	res.FileWidth = fileWidth
+	res.FileHeight = fileHeight
 	// 4. insert record into database
 	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
 		tx.Rollback()

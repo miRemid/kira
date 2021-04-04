@@ -90,6 +90,8 @@ func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHist
 		file.FileName = items[i].FileName
 		file.FileID = items[i].FileID
 		file.FileHash = items[i].FileHash
+		file.FileWidth = items[i].FileWidth
+		file.FileHeight = items[i].FileHeight
 		file.FileSize = int64(items[i].FileSize)
 		file.FileURL = config.Path(items[i].FileID)
 		files = append(files, &file)
@@ -128,6 +130,8 @@ func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetai
 	res.File.FileName = resp.FileName
 	res.File.FileExt = resp.FileExt
 	res.File.FileSize = resp.FileSize
+	res.File.FileWidth = resp.FileWidth
+	res.File.FileHeight = resp.FileHeight
 	return nil
 }
 

@@ -31,10 +31,10 @@ type UserListRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	//@inject_tag: form:"offset"
-	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty" form:"offset"`
-	//@inject_tag: form:"limit"
-	Limit int64 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty" form:"limit"`
+	//@inject_tag: json:"offset" form:"offset"
+	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset" form:"offset"`
+	//@inject_tag: json:"offset" form:"limit"
+	Limit int64 `protobuf:"varint,2,opt,name=limit,proto3" json:"offset" form:"limit"`
 }
 
 func (x *UserListRequest) Reset() {
@@ -143,7 +143,8 @@ type DeleteUserRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserID string `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	//@inject_tag: form:"user_id"
+	UserID string `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty" form:"user_id"`
 }
 
 func (x *DeleteUserRequest) Reset() {
@@ -716,8 +717,10 @@ type UpdatePasswordReq struct {
 	unknownFields protoimpl.UnknownFields
 
 	UserID string `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
-	OldPsw string `protobuf:"bytes,2,opt,name=oldPsw,proto3" json:"oldPsw,omitempty"`
-	NewPsw string `protobuf:"bytes,3,opt,name=newPsw,proto3" json:"newPsw,omitempty"`
+	//@inject_tag: form:"old_password"
+	OldPsw string `protobuf:"bytes,2,opt,name=oldPsw,proto3" json:"oldPsw,omitempty" form:"old_password"`
+	//@inject_tag: form:"new_password"
+	NewPsw string `protobuf:"bytes,3,opt,name=newPsw,proto3" json:"newPsw,omitempty" form:"new_password"`
 }
 
 func (x *UpdatePasswordReq) Reset() {
