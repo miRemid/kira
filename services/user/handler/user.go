@@ -77,7 +77,7 @@ func (handler UserHandler) AdminDeleteUser(ctx context.Context, in *pb.DeleteUse
 	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
 func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUserRoleRequest, res *pb.AdminCommonResponse) error {
-	if err := handler.Repo.ChangeUserRole(ctx, in.UserID, in.Role); err != nil {
+	if err := handler.Repo.ChangeUserStatus(ctx, in.UserID, in.Status); err != nil {
 		return err
 	}
 	res.Message = "update success"
@@ -88,5 +88,14 @@ func (handler UserHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) 
 	res.Code = 0
 	res.Name = "user"
 	res.Message = "ok"
+	return nil
+}
+
+func (handler UserHandler) ChangePassword(ctx context.Context, in *pb.UpdatePasswordReq, res *pb.UpdatePasswordRes) error {
+	if err := handler.Repo.ChangePassword(ctx, in.UserID, in.OldPsw, in.NewPsw); err != nil {
+		return err
+	}
+	res.Succ = true
+	res.Msg = "change successful"
 	return nil
 }

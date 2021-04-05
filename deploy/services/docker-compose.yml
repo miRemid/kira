@@ -30,8 +30,8 @@ services:
   file-api:
     image: kira/file-api
     container_name: file-api
-    ports: 
-      - "5001:5001"
+    # ports: 
+    #   - "5001:5001"
     networks: 
       - kira
     environment: 
@@ -58,8 +58,8 @@ services:
   user-api:
     image: kira/user-api
     container_name: user-api
-    ports: 
-      - "5002:5002"
+    # ports: 
+    #   - "5002:5002"
     networks:
       - kira
     environment: 
@@ -75,8 +75,8 @@ services:
   site:
     image: kira/site
     container_name: site
-    ports: 
-      - "5000:5000"
+    # ports: 
+    #   - "5000:5000"
     networks:
       - kira
     environment: 
@@ -106,8 +106,8 @@ services:
   upload-api:
     image: kira/upload-api
     container_name: upload-api
-    ports: 
-      - "5003:5003"
+    # ports: 
+    #   - "5003:5003"
     networks: 
       - kira
     environment: 

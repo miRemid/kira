@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/model"
 
 	"github.com/minio/minio-go/v7"
@@ -127,6 +128,18 @@ func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (
 	log.Println("Refresh Token for: ", token)
 	tx := repo.db.Begin()
 	ntoken := ksuid.New().String()
+	var userid string
+	if err := tx.Raw("select user_id from tbl_token_user where token = ?", token).Scan(&userid).Error; err != nil {
+		log.Println("Refresh Token, Get infomation err: ", err)
+		tx.Rollback()
+		return "", err
+	}
+	conn := redis.Get()
+	if _, err := conn.Do("DEL", userid); err != nil {
+		log.Println("Delete key ", userid, " failed: ", err)
+		tx.Rollback()
+		return "", err
+	}
 	if err := tx.Exec("update tbl_token_user set token = ? where token = ?", ntoken, token).Error; err != nil {
 		tx.Rollback()
 		return "", err
@@ -171,14 +184,14 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fileID string) error {
 	var tx = repo.db.Begin()
 	// 1. get bucket
-	var bucket, fileName string
-	row := tx.Raw("select bucket, file_name from tbl_file where file_id = ? and owner = ?", fileID, owner).Row()
-	if err := row.Scan(&bucket, &fileName); err != nil {
+	var fileName string
+	row := tx.Raw("select file_name from tbl_file where file_id = ? and owner = ?", fileID, owner).Row()
+	if err := row.Scan(&fileName); err != nil {
 		tx.Rollback()
 		return err
 	}
 	// 2. delete minio file
-	if err := repo.minioCli.RemoveObject(ctx, bucket, fileName+"-"+fileID, minio.RemoveObjectOptions{}); err != nil {
+	if err := repo.minioCli.RemoveObject(ctx, "kira-1", fileID, minio.RemoveObjectOptions{}); err != nil {
 		tx.Rollback()
 		return err
 	}

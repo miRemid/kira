@@ -47,10 +47,10 @@ func (cli UserClient) DeleteUser(userid string) (*pb.AdminCommonResponse, error)
 	})
 }
 
-func (cli UserClient) UpdateUser(userid, role string) (*pb.AdminCommonResponse, error) {
+func (cli UserClient) UpdateUser(userid string, status int64) (*pb.AdminCommonResponse, error) {
 	return cli.service.AdminUpdateUser(context.TODO(), &pb.UpdateUserRoleRequest{
 		UserID: userid,
-		Role:   role,
+		Status: status,
 	})
 }
 
@@ -63,4 +63,8 @@ func (cli UserClient) GetUserList(limit, offset int64) (*pb.UserListResponse, er
 
 func (client *UserClient) Ping() (*pb.Pong, error) {
 	return client.service.Ping(context.TODO(), &pb.Ping{})
+}
+
+func (client *UserClient) ChangePassword(req *pb.UpdatePasswordReq) (*pb.UpdatePasswordRes, error) {
+	return client.service.ChangePassword(context.TODO(), req)
 }

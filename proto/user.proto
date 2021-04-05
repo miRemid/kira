@@ -35,7 +35,7 @@ message UpdateUserRoleRequest {
     //@inject_tag: form:"user_id"
     string userID = 1;
     //@inject_tag: form:"role"
-    string role = 2;
+    int64 status = 2;
 }
 
 message AdminCommonResponse {
@@ -86,10 +86,11 @@ message UserInfoRes {
 }
 
 message UpdatePasswordReq {
+    //@inject_tag: form:"user_id"
     string userID = 1;
-    //@inject_tag: form:"old_password"
+    //@inject_tag: form:"old_password" binding:"required,passwordValidate"
     string oldPsw = 2;
-    //@inject_tag: form:"new_password"
+    //@inject_tag: form:"new_password" binding:"required,passwordValidate"
     string newPsw = 3;
 }
 
@@ -102,6 +103,7 @@ service UserService {
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+    rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
 
     rpc AdminUserList(UserListRequest) returns(UserListResponse);
     rpc AdminDeleteUser(DeleteUserRequest) returns(AdminCommonResponse);

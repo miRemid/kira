@@ -103,7 +103,7 @@ func GetInfo(ctx *gin.Context) {
 	// Set user info to the redis, key is the userid
 	buffer, _ := json.Marshal(res.User)
 	conn := redis.Get()
-	conn.Do("SET", userid, buffer)
+	conn.Do("SET", userid, buffer, "EX", "60")
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
@@ -174,7 +174,7 @@ func UpdateUser(ctx *gin.Context) {
 		})
 		return
 	}
-	res, err := cli.UpdateUser(req.UserID, req.Role)
+	res, err := cli.UpdateUser(req.UserID, req.Status)
 	if err != nil {
 		log.Println("Update User: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
@@ -186,5 +186,41 @@ func UpdateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Message,
+	})
+}
+
+func GetUserFileList(ctx *gin.Context) {
+}
+
+func ChangePassword(ctx *gin.Context) {
+	userid := ctx.GetHeader("userid")
+	var req pb.UpdatePasswordReq
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	req.UserID = userid
+	res, err := cli.ChangePassword(&req)
+	if err != nil {
+		log.Println("Change Password: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code:    response.StatusOK,
+		Message: res.Msg,
 	})
 }

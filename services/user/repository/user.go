@@ -14,7 +14,6 @@ import (
 	mClient "github.com/micro/go-micro/v2/client"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -22,11 +21,12 @@ type UserRepository interface {
 	Signup(username, password string) error
 	Signin(username, password string) (string, error)
 	UserInfo(userid string) (model.UserModel, error)
-	Refresh(userid string) (string, error)
 
 	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
-	ChangeUserRole(ctx context.Context, userid, role string) error
+	ChangeUserStatus(ctx context.Context, userid string, status int64) error
 	DeleteUser(ctx context.Context, userid string) error
+
+	ChangePassword(ctx context.Context, userid, old, raw string) error
 }
 
 type UserRepositoryImpl struct {
@@ -50,6 +50,32 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 	}, err
 }
 
+func (repo UserRepositoryImpl) ChangePassword(ctx context.Context, userid, old, npwd string) error {
+	log.Println("Change Password for userid = ", userid)
+	tx := repo.db.Begin()
+	var user model.UserModel
+	if err := tx.Model(user).Where("user_id = ?", userid).First(&user).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("username not found")
+		}
+		return errors.WithMessage(err, "get user model")
+	}
+	log.Printf("UserID = %s, UserName = %s", user.UserID, user.UserName)
+	if !user.CheckPassword(old) {
+		tx.Rollback()
+		return errors.New("old password incorrect")
+	}
+	user.Password = user.GeneratePassword(npwd)
+	if err := tx.Model(user).Save(user).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	log.Println("Change Password for userid = ", userid, " successful")
+	return nil
+}
+
 func (repo UserRepositoryImpl) Refresh(userid string) (string, error) {
 	res, err := repo.fileCli.RefreshToken(userid)
 	if err != nil || !res.Succ {
@@ -66,8 +92,7 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 	} else if err != gorm.ErrRecordNotFound {
 		return err
 	}
-	pwd, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user.Password = string(pwd)
+	user.Password = string(user.GeneratePassword(password))
 	user.UserID = xid.New().String()
 
 	res, err := repo.fileCli.GenerateToken(user.UserID)
@@ -89,7 +114,7 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 func (repo UserRepositoryImpl) Signin(username, password string) (string, error) {
 	tx := repo.db.Begin()
 
-	// 1. get user model
+	// get user model
 	var user model.UserModel
 	if err := tx.Model(model.UserModel{}).Where("user_name = ?", username).First(&user).Error; err != nil {
 		tx.Rollback()
@@ -100,6 +125,10 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 	}
 
 	log.Printf("UserID = %s, UserName = %s", user.UserID, username)
+	// 1. check user's status
+	if user.Status == 0 {
+		return "", errors.New("user had been suspend")
+	}
 
 	// 2. check password
 	if !user.CheckPassword(password) {
@@ -179,12 +208,8 @@ var (
 	}
 )
 
-func (repo UserRepositoryImpl) ChangeUserRole(ctx context.Context, userid, role string) error {
-	log.Println(role)
-	if _, ok := roleMap[role]; !ok {
-		return errors.New("role incorrect")
-	}
-	if err := repo.db.Exec("update tbl_user set role = ? where user_id = ? and role not in ('admin')", role, userid).Error; err != nil {
+func (repo UserRepositoryImpl) ChangeUserStatus(ctx context.Context, userid string, status int64) error {
+	if err := repo.db.Exec("update tbl_user set status = ? where user_id = ?", status, userid).Error; err != nil {
 		return err
 	}
 	return nil

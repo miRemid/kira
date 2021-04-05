@@ -22,3 +22,8 @@ func (UserModel) TableName() string {
 func (user UserModel) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
 }
+
+func (user UserModel) GeneratePassword(password string) string {
+	pwd, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(pwd)
+}
