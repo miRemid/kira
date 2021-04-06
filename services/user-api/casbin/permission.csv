@@ -4,4 +4,5 @@ p, admin, /user/changePassword, POST
 p, admin, /user/me, GET
 p, admin, /user/admin/deleteUser, DELETE
 p, admin, /user/admin/getUserList, GET
-p, admin, /user/admin/updateUser, POST
+p, admin, /user/admin/getUserFileList, GET
+p, admin, /user/admin/updateUserStatus, POST
