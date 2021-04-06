@@ -37,6 +37,7 @@ func (handler UserHandler) Signup(ctx context.Context, in *pb.SignupReq, res *pb
 	res.Msg = "sign up success"
 	return nil
 }
+
 func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res *pb.UserInfoRes) error {
 	user, err := handler.Repo.UserInfo(in.UserID)
 	if err != nil {
@@ -68,6 +69,7 @@ func (handler UserHandler) AdminUserList(ctx context.Context, in *pb.UserListReq
 		u.Role = user.Role
 		u.UserID = user.UserID
 		u.UserName = user.UserName
+		u.Status = user.Status
 		res.Users = append(res.Users, u)
 	}
 	return nil
@@ -76,6 +78,7 @@ func (handler UserHandler) AdminUserList(ctx context.Context, in *pb.UserListReq
 func (handler UserHandler) AdminDeleteUser(ctx context.Context, in *pb.DeleteUserRequest, res *pb.AdminCommonResponse) error {
 	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
+
 func (handler UserHandler) AdminUpdateUser(ctx context.Context, in *pb.UpdateUserRoleRequest, res *pb.AdminCommonResponse) error {
 	if err := handler.Repo.ChangeUserStatus(ctx, in.UserID, in.Status); err != nil {
 		return err

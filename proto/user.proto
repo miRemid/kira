@@ -23,6 +23,8 @@ message UserListResponse {
         string userName = 2;
         string role = 3;
         google.protobuf.Timestamp createTime = 4;
+        //@inject_tag: json:"status"
+        int64 status = 5;
     }
 }
 

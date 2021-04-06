@@ -172,11 +172,11 @@ func (repo UserRepositoryImpl) GetUserList(ctx context.Context, limit, offset in
 	var total int64
 	var res = make([]model.UserModel, 0)
 	tx := repo.db.Begin()
-	if err := tx.Raw("select COUNT(*) from tbl_user").Scan(&total).Error; err != nil {
+	if err := tx.Raw(`select COUNT(*) from tbl_user where role = "normal" `).Scan(&total).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}
-	if err := tx.Raw("select * from tbl_user limit ?, ?", offset, limit).Scan(&res).Error; err != nil {
+	if err := tx.Raw(`select * from tbl_user where role = "normal" limit ?, ?`, offset, limit).Scan(&res).Error; err != nil {
 		tx.Rollback()
 		return res, total, err
 	}
@@ -200,13 +200,6 @@ func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) er
 		UserID: userid,
 	})
 }
-
-var (
-	roleMap = map[string]interface{}{
-		"admin":  struct{}{},
-		"normal": struct{}{},
-	}
-)
 
 func (repo UserRepositoryImpl) ChangeUserStatus(ctx context.Context, userid string, status int64) error {
 	if err := repo.db.Exec("update tbl_user set status = ? where user_id = ?", status, userid).Error; err != nil {
