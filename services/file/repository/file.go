@@ -1,14 +1,18 @@
 package repository
 
 import (
+	"bytes"
 	"context"
-	"io"
+	"image"
+	"image/jpeg"
 	"log"
+	"strconv"
 
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/model"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/nfnt/resize"
 	"github.com/segmentio/ksuid"
 	"gorm.io/gorm"
 )
@@ -26,7 +30,7 @@ type FileRepository interface {
 	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
 	DeleteFile(context.Context, string, string) error
-	GetImage(ctx context.Context, fileID string) (io.Reader, error)
+	GetImage(ctx context.Context, fileID, width, height string) ([]byte, error)
 	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
 	DeleteUser(ctx context.Context, userID string) error
 	Done()
@@ -204,13 +208,29 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fil
 	return nil
 }
 
-func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID string) (io.Reader, error) {
+func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID, width, height string) ([]byte, error) {
 	// 2. Get Files body
 	obj, err := repo.minioCli.GetObject(ctx, "kira-1", fileID, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return obj, nil
+	img, _, _ := image.Decode(obj)
+	w, err := strconv.Atoi(width)
+	if err != nil {
+		return nil, err
+	}
+	h, err := strconv.Atoi(height)
+	if err != nil {
+		return nil, err
+	}
+	var out image.Image = img
+	if w != 0 && h != 0 {
+		out = resize.Resize(uint(w), uint(h), img, resize.Lanczos3)
+	}
+
+	var buffer bytes.Buffer
+	err = jpeg.Encode(&buffer, out, nil)
+	return buffer.Bytes(), err
 }
 
 func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (model.FileModel, error) {

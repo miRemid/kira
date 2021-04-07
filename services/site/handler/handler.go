@@ -24,7 +24,9 @@ func GetImage(ctx *gin.Context) {
 		})
 		return
 	}
-	res, err := client.File().GetImage(fileID)
+	width := ctx.DefaultQuery("width", "0")
+	height := ctx.DefaultQuery("height", "0")
+	res, err := client.File().GetImage(fileID, width, height)
 	if err != nil {
 		log.Println("Get Image: ", err)
 		ctx.JSON(http.StatusOK, response.Response{

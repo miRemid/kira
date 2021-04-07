@@ -71,6 +71,8 @@ message GetDetailRes {
 
 message GetImageReq {
     string fileID = 1;
+    string width = 2;
+    string height = 3;
 }
 
 message GetImageRes {

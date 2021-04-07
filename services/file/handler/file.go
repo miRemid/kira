@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"log"
 
 	"github.com/miRemid/kira/proto/pb"
@@ -17,23 +15,16 @@ type FileServiceHandler struct {
 }
 
 func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageReq, res *pb.GetImageRes) error {
-	reader, err := handler.Repo.GetImage(ctx, in.FileID)
+	data, err := handler.Repo.GetImage(ctx, in.FileID, in.Width, in.Height)
 	if err != nil {
 		res.Msg = err.Error()
 		res.Succ = false
 		return errors.WithMessage(err, "get image")
 	}
 
-	var buf bytes.Buffer
-	_, err = io.Copy(&buf, reader)
-	if err != nil {
-		res.Msg = err.Error()
-		res.Succ = false
-		return errors.WithMessage(err, "get image")
-	}
 	res.Msg = "get success"
 	res.Succ = true
-	res.Image = buf.Bytes()
+	res.Image = data
 	return nil
 }
 

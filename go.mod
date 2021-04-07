@@ -18,6 +18,7 @@ require (
 	github.com/micro/go-plugins/wrapper/trace/opentracing/v2 v2.9.1
 	github.com/micro/micro/v2 v2.9.3
 	github.com/minio/minio-go/v7 v7.0.7
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.7.0
