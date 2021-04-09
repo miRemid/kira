@@ -4,8 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	mClient "github.com/micro/go-micro/v2/client"
 
-	"github.com/miRemid/kira/common/middleware"
-
 	"github.com/miRemid/kira/client"
 )
 
@@ -21,7 +19,7 @@ func NewRouter(cli mClient.Client) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	router.Use(middleware.CORS())
+	// router.Use(middleware.CORS())
 
 	upload := router.Group("/upload", CheckToken)
 	{

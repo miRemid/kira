@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/client"
-	"github.com/miRemid/kira/common/middleware"
 	microClient "github.com/micro/go-micro/v2/client"
 )
 
@@ -28,7 +27,7 @@ func Route() *gin.Engine {
 	})
 	route.Use(gin.Recovery())
 
-	route.Use(middleware.CORS())
+	// route.Use(middleware.CORS())
 
 	file := route.Group("/file", CheckToken)
 	{

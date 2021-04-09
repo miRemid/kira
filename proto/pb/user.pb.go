@@ -193,8 +193,8 @@ type UpdateUserRoleRequest struct {
 
 	//@inject_tag: form:"user_id"
 	UserID string `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty" form:"user_id"`
-	//@inject_tag: form:"role"
-	Status int64 `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty" form:"role"`
+	//@inject_tag: form:"status"
+	Status int64 `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty" form:"status"`
 }
 
 func (x *UpdateUserRoleRequest) Reset() {

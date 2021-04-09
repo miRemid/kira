@@ -14,4 +14,5 @@ const (
 	StatusPingError
 	StatusRedisCheck
 	StatusNeedToken
+	StatusUserSuspend
 )

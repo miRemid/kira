@@ -36,7 +36,7 @@ message DeleteUserRequest {
 message UpdateUserRoleRequest {
     //@inject_tag: form:"user_id"
     string userID = 1;
-    //@inject_tag: form:"role"
+    //@inject_tag: form:"status"
     int64 status = 2;
 }
 

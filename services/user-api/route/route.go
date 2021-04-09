@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/miRemid/kira/client"
-	"github.com/miRemid/kira/common/middleware"
 	microClient "github.com/micro/go-micro/v2/client"
 )
 
@@ -25,7 +24,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
 
-	route.Use(middleware.CORS())
+	// route.Use(middleware.CORS())
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("usernameValidate", usernameValidator)
