@@ -210,8 +210,13 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fil
 }
 
 func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID, width, height string) ([]byte, error) {
+	// 1. Get bucket
+	var bucket string
+	if err := repo.db.Model(model.FileModel{}).Select("bucket").Where("file_id = ?", fileID).Scan(&bucket).Error; err != nil {
+		return nil, err
+	}
 	// 2. Get Files body
-	obj, err := repo.minioCli.GetObject(ctx, "kira-1", fileID, minio.GetObjectOptions{})
+	obj, err := repo.minioCli.GetObject(ctx, bucket, fileID, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}

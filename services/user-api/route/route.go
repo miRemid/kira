@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/miRemid/kira/client"
+	"github.com/miRemid/kira/common/middleware"
 	microClient "github.com/micro/go-micro/v2/client"
 )
 
@@ -31,7 +32,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		v.RegisterValidation("passwordValidate", passwordValidator)
 	}
 
-	v1 := route.Group("/user", PrintlnPath)
+	v1 := route.Group("/user", middleware.APICount("user"))
 	{
 
 		v1.POST("/signup", Signup)

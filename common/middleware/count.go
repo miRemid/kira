@@ -1,19 +1,16 @@
 package middleware
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/cache/redis"
 )
 
 func APICount(service string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		service := fmt.Sprintf("%s-%s", service, ctx.Request.URL.Path)
 		conn := redis.Get()
 		defer conn.Close()
-		conn.Do("SADD", "kira", service)
-		conn.Do("incr", service)
+		conn.Do("SADD", "kira-services", service)
+		conn.Do("HINCRBY", service, ctx.Request.URL.Path, 1)
 		ctx.Next()
 	}
 }

@@ -5,6 +5,7 @@ import (
 	mClient "github.com/micro/go-micro/v2/client"
 
 	"github.com/miRemid/kira/client"
+	"github.com/miRemid/kira/common/middleware"
 )
 
 var (
@@ -19,9 +20,8 @@ func NewRouter(cli mClient.Client) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	// router.Use(middleware.CORS())
 
-	upload := router.Group("/upload", CheckToken)
+	upload := router.Group("/upload", middleware.APICount("upload"), CheckToken)
 	{
 		upload.PUT("/image", UploadFile)
 	}

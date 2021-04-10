@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	redigo "github.com/gomodule/redigo/redis"
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/services/file/config"
@@ -49,7 +49,9 @@ func GetImage(ctx *gin.Context) {
 
 func GetAPICounts(ctx *gin.Context) {
 	// 1. Get services list
-	res, err := redis.Get().Do("SMEMBERS", "kira")
+	conn := redis.Get()
+	defer conn.Close()
+	services, err := redigo.Strings(conn.Do("SMEMBERS", "kira-services"))
 	if err != nil {
 		log.Println("Get API Counts: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
@@ -58,19 +60,26 @@ func GetAPICounts(ctx *gin.Context) {
 		})
 		return
 	}
-	data := make(map[string]map[string]string)
-	items, _ := res.([]interface{})
-	for _, item := range items {
-		path, _ := item.([]byte)
-		key := string(path)
-		arr := strings.Split(key, "-")
-		service, router := arr[0], arr[1]
-		if _, ok := data[service]; !ok {
-			data[service] = make(map[string]string)
+	// 2. Get each service's api calls count
+	data := make(map[string]interface{})
+	sum := make(map[string]int64)
+	for _, key := range services {
+		// key is the service's name, eg: file
+		// 3. get file service's all count
+		// all the counts store in a hashmap named file(key)
+		strMap, err := redigo.Int64Map(conn.Do("HGETALL", key))
+		if err != nil {
+			log.Printf("Get %s counts err: ", err)
+		} else {
+			s := int64(0)
+			for _, v := range strMap {
+				s += v
+			}
+			sum[key] = s
+			data[key] = strMap
 		}
-		count, _ := redis.Get().Do("GET", key)
-		data[service][router] = string(count.([]byte))
 	}
+	data["sum"] = sum
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
 		Data: data,
