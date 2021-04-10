@@ -35,6 +35,7 @@ type TokenUser struct {
 	gorm.Model
 	UserID string `gorm:"column:user_id;index:idx_user_id,unique"`
 	Token  string `gorm:"column:token;index:idx_token"`
+	Status int    `gorm:"column:status"`
 }
 
 func (TokenUser) TableName() string {

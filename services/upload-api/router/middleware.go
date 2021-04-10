@@ -30,3 +30,24 @@ func CheckToken(ctx *gin.Context) {
 	ctx.Set("owner", owner)
 	ctx.Next()
 }
+
+func CheckSuspend(ctx *gin.Context) {
+	if token := ctx.Query("token"); token != "" {
+		res, err := fileCli.CheckStatus(token)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+				Code:  response.StatusInternalError,
+				Error: err.Error(),
+			})
+			return
+		}
+		if res.Status != 1 {
+			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+				Code:  response.StatusUserSuspend,
+				Error: "user upload function suspend",
+			})
+			return
+		}
+	}
+	ctx.Next()
+}

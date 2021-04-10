@@ -15,7 +15,7 @@ func CheckToken(ctx *gin.Context) {
 	} else {
 		res, err := auth.FileToken(token)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, response.Response{
+			ctx.JSON(http.StatusOK, response.Response{
 				Code:  response.StatusInternalError,
 				Error: err.Error(),
 			})

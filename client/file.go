@@ -68,3 +68,16 @@ func (cli FileClient) GetDetail(fileID string) (*pb.GetDetailRes, error) {
 func (client *FileClient) Ping() (*pb.Pong, error) {
 	return client.service.Ping(context.TODO(), &pb.Ping{})
 }
+
+func (client *FileClient) ChangeStatus(userid string, status int64) (*pb.ChangeTokenStatusRes, error) {
+	return client.service.ChangeTokenStatus(context.TODO(), &pb.ChangeTokenStatusReq{
+		Userid: userid,
+		Status: status,
+	})
+}
+
+func (cli *FileClient) CheckStatus(token string) (*pb.CheckTokenStatusRes, error) {
+	return cli.service.CheckTokenStatus(context.TODO(), &pb.CheckTokenStatusReq{
+		Token: token,
+	})
+}

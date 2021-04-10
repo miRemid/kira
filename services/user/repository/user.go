@@ -125,10 +125,6 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 	}
 
 	log.Printf("UserID = %s, UserName = %s", user.UserID, username)
-	// 1. check user's status
-	if user.Status == 0 {
-		return "", errors.New("user had been suspend")
-	}
 
 	// 2. check password
 	if !user.CheckPassword(password) {
@@ -201,9 +197,12 @@ func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) er
 	})
 }
 
+// Change user status, allow user to signin, get history item, delete item, but cannot upload
 func (repo UserRepositoryImpl) ChangeUserStatus(ctx context.Context, userid string, status int64) error {
-	if err := repo.db.Exec("update tbl_user set status = ? where user_id = ?", status, userid).Error; err != nil {
+	log.Println("Change status for userid = ", userid)
+	_, err := repo.fileCli.ChangeStatus(userid, status)
+	if err != nil {
 		return err
 	}
-	return nil
+	return repo.db.Model(&model.UserModel{}).Where("user_id = ?", userid).Update("status", status).Error
 }

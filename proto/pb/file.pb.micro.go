@@ -52,6 +52,8 @@ type FileService interface {
 	RefreshToken(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*TokenUserRes, error)
 	GetImage(ctx context.Context, in *GetImageReq, opts ...client.CallOption) (*GetImageRes, error)
 	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
+	ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, opts ...client.CallOption) (*ChangeTokenStatusRes, error)
+	CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, opts ...client.CallOption) (*CheckTokenStatusRes, error)
 }
 
 type fileService struct {
@@ -146,6 +148,26 @@ func (c *fileService) Ping(ctx context.Context, in *Ping, opts ...client.CallOpt
 	return out, nil
 }
 
+func (c *fileService) ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, opts ...client.CallOption) (*ChangeTokenStatusRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.ChangeTokenStatus", in)
+	out := new(ChangeTokenStatusRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileService) CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, opts ...client.CallOption) (*CheckTokenStatusRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.CheckTokenStatus", in)
+	out := new(CheckTokenStatusRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -159,6 +181,8 @@ type FileServiceHandler interface {
 	RefreshToken(context.Context, *TokenReq, *TokenUserRes) error
 	GetImage(context.Context, *GetImageReq, *GetImageRes) error
 	Ping(context.Context, *Ping, *Pong) error
+	ChangeTokenStatus(context.Context, *ChangeTokenStatusReq, *ChangeTokenStatusRes) error
+	CheckTokenStatus(context.Context, *CheckTokenStatusReq, *CheckTokenStatusRes) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -171,6 +195,8 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		RefreshToken(ctx context.Context, in *TokenReq, out *TokenUserRes) error
 		GetImage(ctx context.Context, in *GetImageReq, out *GetImageRes) error
 		Ping(ctx context.Context, in *Ping, out *Pong) error
+		ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, out *ChangeTokenStatusRes) error
+		CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, out *CheckTokenStatusRes) error
 	}
 	type FileService struct {
 		fileService
@@ -213,4 +239,12 @@ func (h *fileServiceHandler) GetImage(ctx context.Context, in *GetImageReq, out 
 
 func (h *fileServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {
 	return h.FileServiceHandler.Ping(ctx, in, out)
+}
+
+func (h *fileServiceHandler) ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, out *ChangeTokenStatusRes) error {
+	return h.FileServiceHandler.ChangeTokenStatus(ctx, in, out)
+}
+
+func (h *fileServiceHandler) CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, out *CheckTokenStatusRes) error {
+	return h.FileServiceHandler.CheckTokenStatus(ctx, in, out)
 }

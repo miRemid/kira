@@ -141,3 +141,26 @@ func (handler FileServiceHandler) Ping(ctx context.Context, in *pb.Ping, res *pb
 	res.Message = "ok"
 	return nil
 }
+
+func (handler FileServiceHandler) ChangeTokenStatus(ctx context.Context, in *pb.ChangeTokenStatusReq, res *pb.ChangeTokenStatusRes) error {
+	if err := handler.Repo.ChangeStatus(ctx, in.Userid, in.Status); err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return err
+	}
+	res.Succ = true
+	res.Msg = "change successful"
+	return nil
+}
+func (handler FileServiceHandler) CheckTokenStatus(ctx context.Context, in *pb.CheckTokenStatusReq, res *pb.CheckTokenStatusRes) error {
+	status, err := handler.Repo.CheckStatus(ctx, in.Token)
+	if err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return err
+	}
+	res.Succ = true
+	res.Msg = "check successful"
+	res.Status = status
+	return nil
+}

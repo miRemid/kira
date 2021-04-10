@@ -33,6 +33,8 @@ type FileRepository interface {
 	GetImage(ctx context.Context, fileID, width, height string) ([]byte, error)
 	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
 	DeleteUser(ctx context.Context, userID string) error
+	ChangeStatus(ctx context.Context, userID string, status int64) error
+	CheckStatus(ctx context.Context, token string) (int64, error)
 	Done()
 }
 
@@ -54,6 +56,19 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	return res
 }
 
+func (repo FileRepositoryImpl) ChangeStatus(ctx context.Context, userID string, status int64) error {
+	// modify userID's token status
+	// 0: suspend, 1: active
+	log.Println("Change status for userid = ", userID)
+	return repo.db.Model(&model.TokenUser{}).Where("user_id = ?", userID).Update("status", status).Error
+}
+
+func (repo FileRepositoryImpl) CheckStatus(ctx context.Context, token string) (int64, error) {
+	var status int64
+	err := repo.db.Model(&model.TokenUser{}).Select("status").Where("token = ?", token).Scan(&status).Error
+	return status, err
+}
+
 func (repo FileRepositoryImpl) deleteG() {
 	for {
 		select {
@@ -61,7 +76,7 @@ func (repo FileRepositoryImpl) deleteG() {
 			if !ok {
 				return
 			}
-			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileName+"-"+item.FileID, minio.RemoveObjectOptions{})
+			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileID, minio.RemoveObjectOptions{})
 			repo.db.Exec("delete from tbl_file where file_id = ?", item.FileID)
 		case <-repo.done:
 			return
@@ -119,6 +134,7 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string)
 	var item model.TokenUser
 	item.UserID = userID
 	item.Token = token
+	item.Status = 1
 	if err := tx.Create(&item).Error; err != nil {
 		tx.Rollback()
 		return "", err
@@ -185,8 +201,6 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 	return res, total, nil
 }
 
-// TODO: Remove the filename content
-// Support delay delete
 func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fileID string) error {
 	var tx = repo.db.Begin()
 	// 1. get bucket

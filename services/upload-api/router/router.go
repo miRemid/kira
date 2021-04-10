@@ -9,19 +9,21 @@ import (
 )
 
 var (
-	auth   *client.AuthClient
-	upload *client.UploadClient
+	auth    *client.AuthClient
+	upload  *client.UploadClient
+	fileCli *client.FileClient
 )
 
 func NewRouter(cli mClient.Client) *gin.Engine {
 	auth = client.NewAuthClient(cli)
 	upload = client.NewUploadClient(cli)
+	fileCli = client.NewFileClient(cli)
 
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	upload := router.Group("/upload", middleware.APICount("upload"), CheckToken)
+	upload := router.Group("/upload", middleware.APICount("upload"), CheckToken, CheckSuspend)
 	{
 		upload.PUT("/image", UploadFile)
 	}

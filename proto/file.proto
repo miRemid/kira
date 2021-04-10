@@ -83,6 +83,26 @@ message GetImageRes {
     bytes image = 5;
 }
 
+message ChangeTokenStatusReq {
+    string userid = 1;
+    int64 status = 2;
+}
+
+message ChangeTokenStatusRes {
+    bool succ = 1;
+    string msg = 2;
+}
+
+message CheckTokenStatusReq {
+    string token = 1;
+}
+
+message CheckTokenStatusRes {
+    int64 status = 1;
+    bool succ = 2;
+    string msg = 3;
+}
+
 service FileService {
     // RPC
     rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
@@ -97,4 +117,6 @@ service FileService {
     rpc GetImage(GetImageReq) returns(GetImageRes);
 
     rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
+    rpc ChangeTokenStatus(ChangeTokenStatusReq) returns (ChangeTokenStatusRes) {};
+    rpc CheckTokenStatus(CheckTokenStatusReq) returns (CheckTokenStatusRes) {};
 }
