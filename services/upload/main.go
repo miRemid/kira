@@ -9,6 +9,8 @@ import (
 	"github.com/miRemid/kira/services/upload/handler"
 	"github.com/miRemid/kira/services/upload/repository"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/broker"
+	"github.com/micro/go-micro/v2/broker/nats"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-plugins/wrapper/trace/opentracing/v2"
@@ -30,6 +32,9 @@ func main() {
 		micro.Registry(etcd.NewRegistry(
 			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
 		)),
+		micro.Broker(nats.NewBroker(
+			broker.Addrs(common.Getenv("NATS_ADDRESS", "nats://127.0.0.1:4222")),
+		)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(jaegerTracer)),
 	)
 	service.Init()
@@ -44,7 +49,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repo := repository.NewRepository(db, mini)
+	publisher := micro.NewPublisher(common.AnonyEvent, service.Client())
+
+	repo := repository.NewRepository(db, mini, publisher)
 
 	if err := pb.RegisterUploadServiceHandler(service.Server(), handler.Handler{
 		Repo: repo,

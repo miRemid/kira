@@ -88,6 +88,7 @@ func PrintlnPath(ctx *gin.Context) {
 
 func GetUserInfoFromRedis(ctx *gin.Context) {
 	conn := redis.Get()
+	defer conn.Close()
 	userid := ctx.GetHeader("userid")
 	log.Println("UserID: ", userid)
 	log.Println("Check Exists")

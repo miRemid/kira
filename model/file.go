@@ -17,6 +17,7 @@ type FileModel struct {
 	FileHash   string `gorm:"column:file_hash;index:idx_file_hash"`
 	FileURL    string `gorm:"-"`
 	Bucket     string `gorm:"column:bucket"`
+	Anony      bool   `gorm:"column:anony"`
 	FileWidth  string `gorm:"column:file_width"`
 	FileHeight string `gorm:"column:file_height"`
 }

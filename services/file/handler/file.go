@@ -130,6 +130,11 @@ func (handler FileServiceHandler) DeleteUser(ctx context.Context, in *pb.DeleteU
 	return handler.Repo.DeleteUser(ctx, in.UserID)
 }
 
+func (handler FileServiceHandler) DeleteAnony(ctx context.Context, in *pb.DeleteFileReq) error {
+	log.Println("Delete Anony File, FileID = ", in.FileID)
+	return handler.Repo.DeleteFile(ctx, "", in.FileID)
+}
+
 func (handler FileServiceHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
 	res.Code = 0
 	res.Name = "file"

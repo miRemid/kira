@@ -64,6 +64,9 @@ func main() {
 	if err := micro.RegisterSubscriber("kira.micro.service.user.delete", service.Server(), fileHandler.DeleteUser); err != nil {
 		log.Fatal(errors.WithMessage(err, "register subscriber"))
 	}
+	if err := micro.RegisterSubscriber(common.AnonyEvent, service.Server(), fileHandler.DeleteAnony); err != nil {
+		log.Fatal(errors.WithMessage(err, "register delete anony file subscriber"))
+	}
 
 	if err := service.Run(); err != nil {
 		repo.Done()

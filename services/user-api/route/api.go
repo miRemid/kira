@@ -103,6 +103,7 @@ func GetInfo(ctx *gin.Context) {
 	// Set user info to the redis, key is the userid
 	buffer, _ := json.Marshal(res.User)
 	conn := redis.Get()
+	defer conn.Close()
 	conn.Do("SET", userid, buffer, "EX", "60")
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,

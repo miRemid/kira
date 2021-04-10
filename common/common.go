@@ -13,6 +13,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	AnonymousKey = "ANONYMOUS_FILES_ID"
+	AnonyEvent   = "kira.micro.service.upload.anony"
+	AnonyBucket  = "anony"
+)
+
 func Getenv(key, replace string) string {
 	res := os.Getenv(key)
 	if res == "" {

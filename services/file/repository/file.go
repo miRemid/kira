@@ -7,7 +7,6 @@ import (
 	"image/jpeg"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/model"
@@ -52,18 +51,7 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	res.done = make(chan struct{}, 1)
 	go res.deleteG()
 	db.AutoMigrate(model.TokenUser{})
-	go res.delayDeleteUnknowFile()
 	return res
-}
-
-func (repo FileRepositoryImpl) delayDeleteUnknowFile() {
-	log.Println("Set Timer")
-	timer := time.NewTicker(time.Second * 5)
-	defer timer.Stop()
-	for t := range timer.C {
-		// zrange key is
-		log.Println("Timer tricker", t.Unix())
-	}
 }
 
 func (repo FileRepositoryImpl) deleteG() {
@@ -202,14 +190,13 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, owner string, lim
 func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, owner string, fileID string) error {
 	var tx = repo.db.Begin()
 	// 1. get bucket
-	// var fileName string
-	// row := tx.Raw("select file_name from tbl_file where file_id = ? and owner = ?", fileID, owner).Row()
-	// if err := row.Scan(&fileName); err != nil {
-	// 	tx.Rollback()
-	// 	return err
-	// }
+	var bucket string
+	if err := tx.Model(model.FileModel{}).Select("bucket").Where("file_id = ?", fileID).Scan(&bucket).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 	// 2. delete minio file
-	if err := repo.minioCli.RemoveObject(ctx, "kira-1", fileID, minio.RemoveObjectOptions{}); err != nil {
+	if err := repo.minioCli.RemoveObject(ctx, bucket, fileID, minio.RemoveObjectOptions{}); err != nil {
 		tx.Rollback()
 		return err
 	}

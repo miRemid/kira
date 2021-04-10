@@ -6,11 +6,13 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/services/upload/config"
 )
 
 func UploadFile(ctx *gin.Context) {
+	anony, _ := ctx.Get(common.AnonymousKey)
 	owner, _ := ctx.Get("owner")
 	width := ctx.Query("width")
 	height := ctx.Query("height")
@@ -35,7 +37,7 @@ func UploadFile(ctx *gin.Context) {
 		})
 		return
 	}
-	res, err := upload.UploadFile(owner.(string), fileName, fileExt, width, height, file)
+	res, err := upload.UploadFile(owner.(string), fileName, fileExt, width, height, anony.(bool), file)
 	if err != nil {
 		log.Println("Upload File: ", err)
 		ctx.JSON(http.StatusOK, response.Response{

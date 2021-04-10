@@ -6,10 +6,16 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
+	"log"
 	"time"
 
+	redigo "github.com/gomodule/redigo/redis"
+	"github.com/miRemid/kira/cache/redis"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/model"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/upload/config"
+	"github.com/micro/go-micro/v2"
 	"github.com/minio/minio-go/v7"
 	"github.com/teris-io/shortid"
 	"gorm.io/gorm"
@@ -30,31 +36,67 @@ func bucket(mini *minio.Client) {
 		if errExists == nil && exists {
 			continue
 		}
-		mini.MakeBucket(context.TODO(), name, minio.MakeBucketOptions{})
+		mini.MakeBucket(ctx, name, minio.MakeBucketOptions{})
 	}
+	mini.MakeBucket(ctx, common.AnonyBucket, minio.MakeBucketOptions{})
 }
 
 type Repository interface {
-	UploadFile(ctx context.Context, owner string, fileName string, fileExt string, fileSize int64, fileWidth, fileHeight string, fileBody []byte) (model.FileModel, error)
+	UploadFile(ctx context.Context, owner string, fileName string, fileExt string, fileSize int64, fileWidth, fileHeight string, anony bool, fileBody []byte) (model.FileModel, error)
 }
 
 type RepositoryImpl struct {
 	mini *minio.Client
 	db   *gorm.DB
+	pub  micro.Event
 }
 
-func NewRepository(db *gorm.DB, mini *minio.Client) Repository {
+func NewRepository(db *gorm.DB, mini *minio.Client, pub micro.Event) Repository {
 	bucket(mini)
 	db.AutoMigrate(model.FileModel{})
-	return RepositoryImpl{
+	repo := RepositoryImpl{
 		mini: mini,
 		db:   db,
+		pub:  pub,
+	}
+	go repo.deleteAnony()
+	return repo
+}
+
+func (repo RepositoryImpl) deleteAnony() {
+	// for every 1 hour, check the redis
+	log.Println("Start Delete Anony Files Time Tricker: 1 hour")
+	tricker := time.NewTicker(time.Hour)
+	defer tricker.Stop()
+	for t := range tricker.C {
+		log.Println("Tricker Delete Anony Files...")
+		log.Println("Start get fileid from redis")
+		// get the redis
+		conn := redis.Get()
+		timestamp := t.Unix()
+		res, err := redigo.StringMap(conn.Do("ZRANGEBYSCORE", common.AnonymousKey, "-inf", timestamp, "withscores"))
+		if err != nil {
+			log.Println("Get fileids from redis err: ", err)
+		} else {
+			log.Println("Get fileid from redis successful, length = ", len(res))
+			for fileid := range res {
+				log.Printf("Send %s to the nats message queue", fileid)
+				// insert into the nats
+				repo.pub.Publish(context.TODO(), &pb.DeleteFileReq{
+					Token:  "",
+					FileID: fileid,
+				})
+				// remove from the redis
+				conn.Do("ZREM", common.AnonymousKey, fileid)
+			}
+		}
+		conn.Close()
 	}
 }
 
 func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	owner, fileName, fileExt string,
-	fileSize int64, fileWidth, fileHeight string, fileBody []byte) (model.FileModel, error) {
+	fileSize int64, fileWidth, fileHeight string, anony bool, fileBody []byte) (model.FileModel, error) {
 	var res model.FileModel
 	var tx = repo.db.Begin()
 	id, _ := idgen.Generate()
@@ -66,7 +108,7 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 		tx.Rollback()
 		return res, err
 	}
-	bucket := config.Bucket()
+	bucket := config.Bucket(anony)
 	reader.Seek(0, 0)
 	// 3. upload into minio
 	_, err := repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
@@ -83,10 +125,22 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	res.FileID = id
 	res.FileWidth = fileWidth
 	res.FileHeight = fileHeight
+	res.Bucket = bucket
+	if anony {
+		res.Anony = true
+	}
 	// 4. insert record into database
 	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
 		tx.Rollback()
 		return res, err
+	}
+	// 5. if anony upload, insert into redis delay queue
+	if anony {
+		conn := redis.Get()
+		defer conn.Close()
+		// save 5 day for the anony upload
+		delay := time.Now().Add(time.Hour * 24 * 5).Unix()
+		conn.Do("ZADD", common.AnonymousKey, delay, id)
 	}
 	tx.Commit()
 	return res, nil

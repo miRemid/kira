@@ -22,7 +22,7 @@ func NewUploadClient(client client.Client) *UploadClient {
 	return &cli
 }
 
-func (cli UploadClient) UploadFile(owner, fileName, fileExt string, width, height string, file multipart.File) (*pb.UploadFileRes, error) {
+func (cli UploadClient) UploadFile(owner, fileName, fileExt string, width, height string, anony bool, file multipart.File) (*pb.UploadFileRes, error) {
 	var buf bytes.Buffer
 	size, _ := io.Copy(&buf, file)
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*10)
@@ -35,6 +35,7 @@ func (cli UploadClient) UploadFile(owner, fileName, fileExt string, width, heigh
 		Owner:    owner,
 		Width:    width,
 		Height:   height,
+		Anony:    anony,
 	})
 }
 func (client *UploadClient) Ping() (*pb.Pong, error) {

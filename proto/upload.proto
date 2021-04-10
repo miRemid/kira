@@ -15,6 +15,7 @@ message UploadFileReq {
     
     bytes fileBody = 4;
     string owner = 5;
+    bool Anony = 8;
 
     string width = 6;
     string height = 7;

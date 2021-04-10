@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"math/rand"
 	"path/filepath"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/common"
@@ -31,6 +33,7 @@ func init() {
 		DOMAIN = common.Getenv("DOMAIN", "img.test.me")
 	}
 	TEMP_DIR = filepath.Join(common.Getenv("TEMP_DIR", "./"), TEMP_DIR)
+	rand.Seed(time.Now().UnixNano())
 }
 
 func CheckExt(ext string) bool {
@@ -42,8 +45,12 @@ func ContentType(ext string) string {
 	return contentType[ext]
 }
 
-func Bucket() string {
-	return "kira-1"
+func Bucket(anony bool) string {
+	if anony {
+		return common.AnonyBucket
+	}
+	index := rand.Intn(len(BUCKET_NAME))
+	return BUCKET_NAME[index]
 }
 
 func Path(id string) string {
