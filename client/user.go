@@ -68,3 +68,7 @@ func (client *UserClient) Ping() (*pb.Pong, error) {
 func (client *UserClient) ChangePassword(req *pb.UpdatePasswordReq) (*pb.UpdatePasswordRes, error) {
 	return client.service.ChangePassword(context.TODO(), req)
 }
+
+func (client *UserClient) GetUserImages(req *pb.GetUserImagesReqByNameReq) (*pb.GetUserImagesRes, error) {
+	return client.service.GetUserImages(context.TODO(), req)
+}

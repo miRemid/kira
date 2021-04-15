@@ -25,6 +25,7 @@ type UserRepository interface {
 	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
 	ChangeUserStatus(ctx context.Context, userid string, status int64) error
 	DeleteUser(ctx context.Context, userid string) error
+	GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error)
 
 	ChangePassword(ctx context.Context, userid, old, raw string) error
 }
@@ -48,6 +49,22 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 		fileCli: fc,
 		pub:     pub,
 	}, err
+}
+
+func (repo UserRepositoryImpl) GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error) {
+	// 1. get user id
+	var userid string
+	if err := repo.db.Model(model.UserModel{}).Select("user_id").Where("user_name = ?", userName).First(&userid).Error; err != nil {
+		log.Println("Get User ", userName, " failed: ", err)
+		return nil, err
+	}
+	// 2. rpc call
+	return repo.fileCli.GetUserImages(&pb.GetUserImagesReq{
+		Userid: userid,
+		Offset: offset,
+		Limit:  limit,
+		Desc:   desc,
+	})
 }
 
 func (repo UserRepositoryImpl) ChangePassword(ctx context.Context, userid, old, npwd string) error {

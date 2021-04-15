@@ -14,6 +14,29 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
+func (handler FileServiceHandler) GetUserImages(ctx context.Context, in *pb.GetUserImagesReq, res *pb.GetUserImagesRes) error {
+	items, total, err := handler.Repo.GetUserImages(ctx, in.Userid, in.Offset, in.Limit, in.Desc)
+	if err != nil {
+		return errors.WithMessage(err, "get user images")
+	}
+	var files = make([]*pb.File, 0)
+	for i := 0; i < len(items); i = i + 1 {
+		var file pb.File
+		file.FileExt = items[i].FileExt
+		file.FileName = items[i].FileName
+		file.FileID = items[i].FileID
+		file.FileHash = items[i].FileHash
+		file.FileWidth = items[i].FileWidth
+		file.FileHeight = items[i].FileHeight
+		file.FileSize = int64(items[i].FileSize)
+		file.FileURL = config.Path(items[i].FileID)
+		files = append(files, &file)
+	}
+	res.Files = files
+	res.Total = total
+	return nil
+}
+
 func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageReq, res *pb.GetImageRes) error {
 	data, err := handler.Repo.GetImage(ctx, in.FileID, in.Width, in.Height)
 	if err != nil {

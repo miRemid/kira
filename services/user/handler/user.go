@@ -102,3 +102,13 @@ func (handler UserHandler) ChangePassword(ctx context.Context, in *pb.UpdatePass
 	res.Msg = "change successful"
 	return nil
 }
+
+func (handler UserHandler) GetUserImages(ctx context.Context, in *pb.GetUserImagesReqByNameReq, res *pb.GetUserImagesRes) error {
+	resp, err := handler.Repo.GetUserImages(ctx, in.UserName, in.Offset, in.Limit, in.Desc)
+	if err != nil {
+		return errors.WithMessage(err, "Get User Images")
+	}
+	res.Files = resp.Files
+	res.Total = resp.Total
+	return nil
+}

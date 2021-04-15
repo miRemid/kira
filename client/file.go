@@ -18,6 +18,10 @@ func NewFileClient(client client.Client) *FileClient {
 	return &cli
 }
 
+func (cli FileClient) GetUserImages(in *pb.GetUserImagesReq) (*pb.GetUserImagesRes, error) {
+	return cli.service.GetUserImages(context.TODO(), in)
+}
+
 func (cli FileClient) GetImage(fileid, width, height string) (*pb.GetImageRes, error) {
 	return cli.service.GetImage(context.TODO(), &pb.GetImageReq{
 		FileID: fileid,

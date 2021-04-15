@@ -35,6 +35,7 @@ type FileRepository interface {
 	DeleteUser(ctx context.Context, userID string) error
 	ChangeStatus(ctx context.Context, userID string, status int64) error
 	CheckStatus(ctx context.Context, token string) (int64, error)
+	GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error)
 	Done()
 }
 
@@ -54,6 +55,27 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	go res.deleteG()
 	db.AutoMigrate(model.TokenUser{})
 	return res
+}
+
+func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error) {
+	log.Println(userID, offset, limit, desc)
+	tx := repo.db.Begin()
+	var total int64
+	if err := tx.Model(model.FileModel{}).Where("owner = ?", userID).Count(&total).Error; err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+	var files = make([]model.FileModel, 0)
+	var err error
+	if desc {
+		err = tx.Model(model.FileModel{}).Where("owner = ?", userID).Order("created_at desc").Limit(int(limit)).Offset(int(offset)).Find(&files).Error
+	} else {
+		err = tx.Model(model.FileModel{}).Where("owner= ?", userID).Order("created_at asc").Limit(int(limit)).Offset(int(offset)).Find(&files).Error
+	}
+	if err != nil {
+		tx.Rollback()
+	}
+	return files, total, err
 }
 
 func (repo FileRepositoryImpl) ChangeStatus(ctx context.Context, userID string, status int64) error {

@@ -225,3 +225,33 @@ func ChangePassword(ctx *gin.Context) {
 		Message: res.Msg,
 	})
 }
+
+func GetUserImages(ctx *gin.Context) {
+	var req pb.GetUserImagesReqByNameReq
+	if err := ctx.BindQuery(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "check params",
+		})
+		return
+	}
+	log.Println(req.UserName, req.Offset, req.Limit, req.Desc)
+	if req.Limit == 0 {
+		req.Limit = 20
+	}
+	res, err := cli.GetUserImages(&req)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: gin.H{
+			"toatl": res.Total,
+			"files": res.Files,
+		},
+	})
+}

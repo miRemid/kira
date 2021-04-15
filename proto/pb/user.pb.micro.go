@@ -43,6 +43,7 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 // Client API for UserService service
 
 type UserService interface {
+	// API
 	Signin(ctx context.Context, in *SigninReq, opts ...client.CallOption) (*SigninRes, error)
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
@@ -50,6 +51,8 @@ type UserService interface {
 	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
 	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
 	AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
+	// RPC
+	GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error)
 	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 }
 
@@ -135,6 +138,16 @@ func (c *userService) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleReq
 	return out, nil
 }
 
+func (c *userService) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetUserImages", in)
+	out := new(GetUserImagesRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userService) Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error) {
 	req := c.c.NewRequest(c.name, "UserService.Ping", in)
 	out := new(Pong)
@@ -148,6 +161,7 @@ func (c *userService) Ping(ctx context.Context, in *Ping, opts ...client.CallOpt
 // Server API for UserService service
 
 type UserServiceHandler interface {
+	// API
 	Signin(context.Context, *SigninReq, *SigninRes) error
 	Signup(context.Context, *SignupReq, *SignupRes) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
@@ -155,6 +169,8 @@ type UserServiceHandler interface {
 	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
 	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
 	AdminUpdateUser(context.Context, *UpdateUserRoleRequest, *AdminCommonResponse) error
+	// RPC
+	GetUserImages(context.Context, *GetUserImagesReqByNameReq, *GetUserImagesRes) error
 	Ping(context.Context, *Ping, *Pong) error
 }
 
@@ -167,6 +183,7 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
 		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
 		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
+		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
 		Ping(ctx context.Context, in *Ping, out *Pong) error
 	}
 	type UserService struct {
@@ -206,6 +223,10 @@ func (h *userServiceHandler) AdminDeleteUser(ctx context.Context, in *DeleteUser
 
 func (h *userServiceHandler) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error {
 	return h.UserServiceHandler.AdminUpdateUser(ctx, in, out)
+}
+
+func (h *userServiceHandler) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error {
+	return h.UserServiceHandler.GetUserImages(ctx, in, out)
 }
 
 func (h *userServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {

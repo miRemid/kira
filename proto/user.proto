@@ -7,6 +7,7 @@ option go_package = ".;pb";
 import "google/protobuf/timestamp.proto";
 
 import "proto/common.proto";
+import "proto/file.proto";
 
 message UserListRequest {
     //@inject_tag: json:"offset" form:"offset"
@@ -101,15 +102,28 @@ message UpdatePasswordRes {
     string msg = 2;
 }
 
+message GetUserImagesReqByNameReq {
+    //@inject_tag: form:"userName" binding:"required"
+    string userName = 1;
+    //@inject_tag: form:"offset"
+    int64 offset = 2;
+    //@inject_tag: form:"limit"
+    int64 limit = 3;
+    //@inject_tag: form:"desc"
+    bool desc = 4;
+}
+
 service UserService {
+    // API
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
     rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
-
     rpc AdminUserList(UserListRequest) returns(UserListResponse);
     rpc AdminDeleteUser(DeleteUserRequest) returns(AdminCommonResponse);
     rpc AdminUpdateUser(UpdateUserRoleRequest) returns(AdminCommonResponse);
 
+    // RPC
+    rpc GetUserImages(GetUserImagesReqByNameReq) returns(kira.micro.service.file.GetUserImagesRes);
     rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
 }

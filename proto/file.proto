@@ -103,20 +103,31 @@ message CheckTokenStatusRes {
     string msg = 3;
 }
 
+message GetUserImagesReq {
+    string userid = 1;
+    int64 offset = 2;
+    int64 limit = 3;
+    bool desc = 4;
+}
+
+message GetUserImagesRes {
+    int64 total = 1;
+    repeated File files = 2;
+}
+
 service FileService {
     // RPC
     rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
     rpc GetToken(TokenUserReq) returns (TokenUserRes);
+    rpc GetImage(GetImageReq) returns(GetImageRes);
+    rpc GetUserImages(GetUserImagesReq) returns(GetUserImagesRes);
+    rpc ChangeTokenStatus(ChangeTokenStatusReq) returns (ChangeTokenStatusRes) {};
+    rpc CheckTokenStatus(CheckTokenStatusReq) returns (CheckTokenStatusRes) {};
+    rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
 
     // API
     rpc GetHistory(GetHistoryReq) returns(GetHistoryRes);
     rpc DeleteFile(DeleteFileReq) returns(DeleteFileRes);
     rpc GetDetail(GetDetailReq) returns (GetDetailRes);
     rpc RefreshToken(TokenReq) returns (TokenUserRes);
-
-    rpc GetImage(GetImageReq) returns(GetImageRes);
-
-    rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
-    rpc ChangeTokenStatus(ChangeTokenStatusReq) returns (ChangeTokenStatusRes) {};
-    rpc CheckTokenStatus(CheckTokenStatusReq) returns (CheckTokenStatusRes) {};
 }
