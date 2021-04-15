@@ -13,3 +13,7 @@ message Pong {
     string name = 1;
     string message = 2;
 }
+
+message Empty {
+    
+}

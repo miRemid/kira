@@ -161,3 +161,18 @@ func RefreshToken(ctx *gin.Context) {
 		},
 	})
 }
+
+func GetRandomFile(ctx *gin.Context) {
+	res, err := cli.GetRandomFile()
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: res.Files,
+	})
+}

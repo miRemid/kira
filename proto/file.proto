@@ -20,6 +20,7 @@ message File {
 
 message TokenUserReq {
     string userid = 1;
+    string userName = 2;
 }
 
 message TokenReq {
@@ -115,6 +116,24 @@ message GetUserImagesRes {
     repeated File files = 2;
 }
 
+message RandomUserFile {
+    //@inject_tag: gorm:"column:user_name"
+    string userName = 1;
+    //@inject_tag: gorm:"column:file_name"
+    string fileName = 2;
+    string fileURL = 3;
+    //@inject_tag: gorm:"column:file_width"
+    string width = 4;
+    //@inject_tag: gorm:"column:file_height"
+    string height = 5;
+    //@inject_tag: gorm:"column:file_id"
+    string fileID = 6;
+}
+
+message RandomFiles {
+    repeated RandomUserFile files = 1;
+}
+
 service FileService {
     // RPC
     rpc GenerateToken(TokenUserReq) returns (TokenUserRes);
@@ -130,4 +149,5 @@ service FileService {
     rpc DeleteFile(DeleteFileReq) returns(DeleteFileRes);
     rpc GetDetail(GetDetailReq) returns (GetDetailRes);
     rpc RefreshToken(TokenReq) returns (TokenUserRes);
+    rpc GetRandomFile(kira.micro.common.Empty) returns (RandomFiles);
 }

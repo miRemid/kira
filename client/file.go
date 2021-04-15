@@ -30,9 +30,10 @@ func (cli FileClient) GetImage(fileid, width, height string) (*pb.GetImageRes, e
 	})
 }
 
-func (cli FileClient) GenerateToken(userid string) (*pb.TokenUserRes, error) {
+func (cli FileClient) GenerateToken(userid, userName string) (*pb.TokenUserRes, error) {
 	return cli.service.GenerateToken(context.TODO(), &pb.TokenUserReq{
-		Userid: userid,
+		Userid:   userid,
+		UserName: userName,
 	})
 }
 
@@ -84,4 +85,8 @@ func (cli *FileClient) CheckStatus(token string) (*pb.CheckTokenStatusRes, error
 	return cli.service.CheckTokenStatus(context.TODO(), &pb.CheckTokenStatusReq{
 		Token: token,
 	})
+}
+
+func (cli *FileClient) GetRandomFile() (*pb.RandomFiles, error) {
+	return cli.service.GetRandomFile(context.TODO(), &pb.Empty{})
 }

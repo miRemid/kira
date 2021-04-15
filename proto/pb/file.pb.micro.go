@@ -55,6 +55,7 @@ type FileService interface {
 	DeleteFile(ctx context.Context, in *DeleteFileReq, opts ...client.CallOption) (*DeleteFileRes, error)
 	GetDetail(ctx context.Context, in *GetDetailReq, opts ...client.CallOption) (*GetDetailRes, error)
 	RefreshToken(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*TokenUserRes, error)
+	GetRandomFile(ctx context.Context, in *Empty, opts ...client.CallOption) (*RandomFiles, error)
 }
 
 type fileService struct {
@@ -179,6 +180,16 @@ func (c *fileService) RefreshToken(ctx context.Context, in *TokenReq, opts ...cl
 	return out, nil
 }
 
+func (c *fileService) GetRandomFile(ctx context.Context, in *Empty, opts ...client.CallOption) (*RandomFiles, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetRandomFile", in)
+	out := new(RandomFiles)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -195,6 +206,7 @@ type FileServiceHandler interface {
 	DeleteFile(context.Context, *DeleteFileReq, *DeleteFileRes) error
 	GetDetail(context.Context, *GetDetailReq, *GetDetailRes) error
 	RefreshToken(context.Context, *TokenReq, *TokenUserRes) error
+	GetRandomFile(context.Context, *Empty, *RandomFiles) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -210,6 +222,7 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
 		GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error
 		RefreshToken(ctx context.Context, in *TokenReq, out *TokenUserRes) error
+		GetRandomFile(ctx context.Context, in *Empty, out *RandomFiles) error
 	}
 	type FileService struct {
 		fileService
@@ -264,4 +277,8 @@ func (h *fileServiceHandler) GetDetail(ctx context.Context, in *GetDetailReq, ou
 
 func (h *fileServiceHandler) RefreshToken(ctx context.Context, in *TokenReq, out *TokenUserRes) error {
 	return h.FileServiceHandler.RefreshToken(ctx, in, out)
+}
+
+func (h *fileServiceHandler) GetRandomFile(ctx context.Context, in *Empty, out *RandomFiles) error {
+	return h.FileServiceHandler.GetRandomFile(ctx, in, out)
 }

@@ -25,6 +25,8 @@ func Route() *gin.Engine {
 
 	// route.Use(middleware.CORS())
 
+	route.GET("/getRandomFiles", GetRandomFile)
+
 	file := route.Group("/file", middleware.APICount("file"), CheckToken)
 	{
 		file.GET("/history", GetHistory)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/model"
+	"github.com/miRemid/kira/proto/pb"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/nfnt/resize"
@@ -25,7 +26,7 @@ type DeleteStruct struct {
 }
 
 type FileRepository interface {
-	GenerateToken(context.Context, string) (string, error)
+	GenerateToken(ctx context.Context, userid, userName string) (string, error)
 	RefreshToken(context.Context, string) (string, error)
 	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
@@ -36,6 +37,7 @@ type FileRepository interface {
 	ChangeStatus(ctx context.Context, userID string, status int64) error
 	CheckStatus(ctx context.Context, token string) (int64, error)
 	GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error)
+	GetRandomFile(ctx context.Context) ([]*pb.RandomUserFile, error)
 	Done()
 }
 
@@ -55,6 +57,18 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	go res.deleteG()
 	db.AutoMigrate(model.TokenUser{})
 	return res
+}
+
+func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context) ([]*pb.RandomUserFile, error) {
+	var res = make([]*pb.RandomUserFile, 0)
+	if err := repo.db.Raw(`select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height, tf.anony 
+	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id 
+	where tf.anony != 1 
+	and tf.id >= ((SELECT MAX(tf2.id) from tbl_file tf2) - (select MIN(tf3.id) from tbl_file tf3)) * RAND() + (select MIN(tu.id) from tbl_user tu)  
+	limit 20`).Scan(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error) {
@@ -149,13 +163,14 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 }
 
 // generate user's token, and create the user bucket
-func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID string) (string, error) {
+func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID, userName string) (string, error) {
 	log.Println("Generate Token For UserID: ", userID)
 	tx := repo.db.Begin()
 	token := ksuid.New().String()
 	var item model.TokenUser
 	item.UserID = userID
 	item.Token = token
+	item.UserName = userName
 	item.Status = 1
 	if err := tx.Create(&item).Error; err != nil {
 		tx.Rollback()

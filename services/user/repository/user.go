@@ -112,7 +112,7 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 	user.Password = string(user.GeneratePassword(password))
 	user.UserID = xid.New().String()
 
-	res, err := repo.fileCli.GenerateToken(user.UserID)
+	res, err := repo.fileCli.GenerateToken(user.UserID, username)
 	if err != nil || !res.Succ {
 		return err
 	}

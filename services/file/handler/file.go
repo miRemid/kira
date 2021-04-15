@@ -14,6 +14,18 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
+func (handler FileServiceHandler) GetRandomFile(ctx context.Context, in *pb.Empty, res *pb.RandomFiles) error {
+	resp, err := handler.Repo.GetRandomFile(ctx)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(resp); i++ {
+		resp[i].FileURL = config.Path(resp[i].FileID)
+	}
+	res.Files = resp
+	return nil
+}
+
 func (handler FileServiceHandler) GetUserImages(ctx context.Context, in *pb.GetUserImagesReq, res *pb.GetUserImagesRes) error {
 	items, total, err := handler.Repo.GetUserImages(ctx, in.Userid, in.Offset, in.Limit, in.Desc)
 	if err != nil {
@@ -53,7 +65,7 @@ func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageR
 
 func (handler FileServiceHandler) GenerateToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
 	log.Printf("Generate Token for %s\n", in.Userid)
-	token, err := handler.Repo.GenerateToken(ctx, in.Userid)
+	token, err := handler.Repo.GenerateToken(ctx, in.Userid, in.UserName)
 	if err != nil {
 		log.Printf("Generate Token Err: %v\n", err)
 		res.Msg = err.Error()

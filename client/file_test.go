@@ -20,9 +20,9 @@ func TestFile(t *testing.T) {
 	)
 	service.Init()
 	cli := client.NewFileClient(service.Client())
-	res, err := cli.GetToken("c0o8oov69kf5m1amt44g")
+	res, err := cli.GetRandomFile()
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(res.Token)
+	t.Log(res.Files)
 }
