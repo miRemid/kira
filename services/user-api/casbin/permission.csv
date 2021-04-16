@@ -1,7 +1,8 @@
 p, normal, /user/me, GET
 p, normal, /user/changePassword, POST
+p, normal, /user/getToken, GET
+
 p, admin, /user/changePassword, POST
-p, admin, /user/me, GET
 p, admin, /user/admin/deleteUser, DELETE
 p, admin, /user/admin/getUserList, GET
 p, admin, /user/admin/getUserFileList, GET

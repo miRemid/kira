@@ -12,6 +12,24 @@ import (
 	"github.com/miRemid/kira/proto/pb"
 )
 
+func LikeOrDislike(ctx *gin.Context) {
+	var req = new(pb.FileLikeReq)
+	var userid = ctx.GetHeader("userid")
+	req.Userid = userid
+	res, err := cli.Service.LikeOrDislike(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: res,
+	})
+}
+
 type UserPassword struct {
 	Username string `form:"user_name" binding:"required,usernameValidate"`
 	Password string `form:"password" binding:"required,passwordValidate"`

@@ -43,6 +43,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		auth := v1.Group("/", JwtAuth(e))
 		{
 			auth.POST("/changePassword", ChangePassword)
+			auth.GET("/getToken", GetUserToken)
 			admin := auth.Group("/admin")
 			{
 				admin.DELETE("/deleteUser", DeleteUser)
