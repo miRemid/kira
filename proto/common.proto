@@ -19,6 +19,7 @@ message Empty {
 }
 
 message Response {
-    bool succ = 1;
-    string message = 2;
+    int64 code = 1;
+    bool succ = 2;
+    string message = 3;
 }

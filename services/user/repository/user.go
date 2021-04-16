@@ -2,11 +2,9 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/database"
@@ -30,8 +28,6 @@ type UserRepository interface {
 	GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error)
 
 	ChangePassword(ctx context.Context, userid, old, raw string) error
-	LikeOrDislike(ctx context.Context, req *pb.FileLikeReq) error
-	GetUserToken(ctx context.Context, userid string) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -53,27 +49,6 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 		fileCli: fc,
 		pub:     pub,
 	}, err
-}
-
-func (repo UserRepositoryImpl) GetUserToken(ctx context.Context, userid string) (string, error) {
-	res, err := repo.fileCli.GetToken(userid)
-	return res.Token, err
-}
-
-func (repo UserRepositoryImpl) LikeOrDislike(ctx context.Context, req *pb.FileLikeReq) error {
-	// 1. call file service to incr count for fileid
-	file, err := repo.fileCli.Service.LikeOrDislike(ctx, req)
-	if err != nil {
-		return err
-	}
-	// 2. insert file's infomation into the user's like hash set
-	// key = user_id_likes
-	key := common.UserLikeKey(req.Userid)
-	conn := redis.Get()
-	defer conn.Close()
-	buffer, _ := json.Marshal(file)
-	_, err = conn.Do("SET", key, buffer)
-	return err
 }
 
 func (repo UserRepositoryImpl) GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error) {

@@ -15,20 +15,6 @@ type UserHandler struct {
 	Repo repository.UserRepository
 }
 
-func (handler UserHandler) GetUserToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
-	token, err := handler.Repo.GetUserToken(ctx, in.Userid)
-	res.Token = token
-	return err
-}
-
-func (handler UserHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.Response) error {
-	err := handler.Repo.LikeOrDislike(ctx, in)
-	if err == nil {
-		res.Succ = true
-	}
-	return err
-}
-
 func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb.SigninRes) error {
 	token, err := handler.Repo.Signin(in.Username, in.Password)
 	if err != nil {

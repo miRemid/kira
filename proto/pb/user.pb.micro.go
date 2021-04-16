@@ -48,11 +48,9 @@ type UserService interface {
 	Signin(ctx context.Context, in *SigninReq, opts ...client.CallOption) (*SigninRes, error)
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
 	GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error)
-	LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
 	// User
 	ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error)
-	GetUserToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
 	// Admin
 	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
 	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
@@ -103,16 +101,6 @@ func (c *userService) GetUserImages(ctx context.Context, in *GetUserImagesReqByN
 	return out, nil
 }
 
-func (c *userService) LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error) {
-	req := c.c.NewRequest(c.name, "UserService.LikeOrDislike", in)
-	out := new(Response)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.UserInfo", in)
 	out := new(UserInfoRes)
@@ -126,16 +114,6 @@ func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...cli
 func (c *userService) ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.ChangePassword", in)
 	out := new(UpdatePasswordRes)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userService) GetUserToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error) {
-	req := c.c.NewRequest(c.name, "UserService.GetUserToken", in)
-	out := new(TokenUserRes)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -191,11 +169,9 @@ type UserServiceHandler interface {
 	Signin(context.Context, *SigninReq, *SigninRes) error
 	Signup(context.Context, *SignupReq, *SignupRes) error
 	GetUserImages(context.Context, *GetUserImagesReqByNameReq, *GetUserImagesRes) error
-	LikeOrDislike(context.Context, *FileLikeReq, *Response) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
 	// User
 	ChangePassword(context.Context, *UpdatePasswordReq, *UpdatePasswordRes) error
-	GetUserToken(context.Context, *TokenUserReq, *TokenUserRes) error
 	// Admin
 	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
 	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
@@ -209,10 +185,8 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Signin(ctx context.Context, in *SigninReq, out *SigninRes) error
 		Signup(ctx context.Context, in *SignupReq, out *SignupRes) error
 		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
-		LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
 		ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error
-		GetUserToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
 		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
 		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
@@ -241,20 +215,12 @@ func (h *userServiceHandler) GetUserImages(ctx context.Context, in *GetUserImage
 	return h.UserServiceHandler.GetUserImages(ctx, in, out)
 }
 
-func (h *userServiceHandler) LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error {
-	return h.UserServiceHandler.LikeOrDislike(ctx, in, out)
-}
-
 func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error {
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
 }
 
 func (h *userServiceHandler) ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error {
 	return h.UserServiceHandler.ChangePassword(ctx, in, out)
-}
-
-func (h *userServiceHandler) GetUserToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error {
-	return h.UserServiceHandler.GetUserToken(ctx, in, out)
 }
 
 func (h *userServiceHandler) AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error {

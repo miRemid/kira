@@ -3,15 +3,20 @@ package repository
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"image"
 	"image/jpeg"
 	"log"
 	"strconv"
 
+	redigo "github.com/garyburd/redigo/redis"
+
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/model"
 	"github.com/miRemid/kira/proto/pb"
+	"github.com/miRemid/kira/services/file/config"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/nfnt/resize"
@@ -39,7 +44,8 @@ type FileRepository interface {
 	CheckStatus(ctx context.Context, token string) (int64, error)
 	GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error)
 	GetRandomFile(ctx context.Context) ([]*pb.UserFile, error)
-	LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (res *pb.UserFile, err error)
+	LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (err error)
+	GetHotLikeRank(ctx context.Context) ([]*pb.UserFile, error)
 	Done()
 }
 
@@ -61,9 +67,48 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	return res
 }
 
-func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (res *pb.UserFile, err error) {
+func (repo FileRepositoryImpl) GetHotLikeRank(ctx context.Context) ([]*pb.UserFile, error) {
+
 	conn := redis.Get()
 	defer conn.Close()
+
+	// 1. get top 10 from the set
+	fileMap, err := redigo.StringMap(conn.Do("ZREVRANGE", common.LikeRankKey, 0, 9, "WITHSCORES"))
+	if err != nil {
+		return nil, err
+	}
+	// 2. generate fileid to pb.UserFile
+	var files = make([]*pb.UserFile, 0)
+	for id, score := range fileMap {
+		var file = new(pb.UserFile)
+		if err = repo.db.Raw(`
+		select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height
+		from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
+		where tf.file_id = ?`, id).Scan(file).Error; err != nil {
+			return nil, err
+		}
+		file.FileURL = config.Path(file.FileID)
+		log.Println("FileID = ", file.FileID, ", Score = ", score)
+		file.Likes = score
+		files = append(files, file)
+	}
+	return files, nil
+}
+
+func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (err error) {
+	conn := redis.Get()
+	defer conn.Close()
+
+	// check like hash table
+	key := common.UserLikeKey(userid)
+	exist, err := redigo.Bool(conn.Do("HEXISTS", key, fileid))
+	if err != nil {
+		return err
+	}
+	if exist {
+		return response.ErrAlreadyLike
+	}
+
 	var offset = 1
 	if dislike {
 		offset = -1
@@ -72,13 +117,18 @@ func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string,
 	if err = repo.db.Raw(`
 	select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height
 	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
-	where ttu.user_id = ?`, userid).Scan(file).Error; err != nil {
-		return res, err
+	where tf.file_id = ?`, fileid).Scan(file).Error; err != nil {
+		return err
 	}
+	log.Printf("UserID = %s, FileID = %s, Offset = %v", userid, fileid, offset)
+	// 1. incr zset rank list
 	if _, err = conn.Do("zincrby", common.LikeRankKey, offset, fileid); err != nil {
-		return nil, err
+		return err
 	}
-	return file, nil
+	// 2. insert userid_like hash table, key = fileid, value = file
+	buffer, _ := json.Marshal(file)
+	_, err = conn.Do("HSET", key, fileid, buffer)
+	return err
 }
 
 func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context) ([]*pb.UserFile, error) {
@@ -89,6 +139,23 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context) ([]*pb.UserFil
 	and tf.id >= ((SELECT MAX(tf2.id) from tbl_file tf2) - (select MIN(tf3.id) from tbl_file tf3)) * RAND() + (select MIN(tu.id) from tbl_user tu)  
 	limit 20`).Scan(&res).Error; err != nil {
 		return nil, err
+	}
+	conn := redis.Get()
+	defer conn.Close()
+	for i := 0; i < len(res); i++ {
+		res[i].FileURL = config.Path(res[i].FileID)
+		// 1. get rank
+		index, err := redigo.Int64(conn.Do("ZRANK", common.LikeRankKey, res[i].FileID))
+		if err != nil {
+			res[i].Likes = "0"
+		} else {
+			likesMap, err := redigo.Int64Map(conn.Do("ZRANGE", common.LikeRankKey, index, index, "WITHSCORES"))
+			if err != nil {
+				res[i].Likes = "0"
+			} else {
+				res[i].Likes = strconv.Itoa(int(likesMap[res[i].FileID]))
+			}
+		}
 	}
 	return res, nil
 }

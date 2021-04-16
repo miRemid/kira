@@ -15,4 +15,5 @@ const (
 	StatusRedisCheck
 	StatusNeedToken
 	StatusUserSuspend
+	StatusAlreadyLike
 )

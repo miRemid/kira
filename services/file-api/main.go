@@ -4,6 +4,7 @@ import (
 	"log"
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
+	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
 
 	"github.com/miRemid/kira/common/wrapper/hystrix"
@@ -29,14 +30,10 @@ func main() {
 	}
 	defer closer.Close()
 
-	r := route.Route()
-	service := web.NewService(
-		web.Name("go.micro.api.file"),
-		web.Address(common.Getenv("API_ADDRESS", ":5001")),
-		web.Handler(r),
-		web.Registry(etcdRegistry),
-	)
-
+	e, err := casbin.NewEnforcer("./casbin/model.conf", "./casbin/permission.csv")
+	if err != nil {
+		log.Fatal(err)
+	}
 	cli := micro.NewService(
 		micro.Name("kira.micro.client.file"),
 		micro.Registry(etcdRegistry),
@@ -45,11 +42,18 @@ func main() {
 			opentracing.NewClientWrapper(jaegerTracer),
 		),
 	)
+	route.Init(cli.Client())
+	r := route.Route(e)
 
 	hystrixGo.DefaultMaxConcurrent = 50
 	hystrixGo.DefaultTimeout = 10000
 
-	route.Init(cli.Client())
+	service := web.NewService(
+		web.Name("go.micro.api.file"),
+		web.Address(common.Getenv("API_ADDRESS", ":5001")),
+		web.Handler(r),
+		web.Registry(etcdRegistry),
+	)
 	service.Init()
 	if err := service.Run(); err != nil {
 		log.Fatal(err)

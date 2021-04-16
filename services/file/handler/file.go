@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/file/repository"
@@ -14,17 +15,24 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
-func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.UserFile) error {
-	resp, err := handler.Repo.LikeOrDislike(ctx, in.Userid, in.Fileid, in.Dislike)
-	if err != nil {
-		return err
+func (handler FileServiceHandler) GetHotLikeRank(ctx context.Context, in *pb.Empty, res *pb.HotLikeRankList) error {
+	files, err := handler.Repo.GetHotLikeRank(ctx)
+	res.Files = files
+	return err
+}
+
+func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.Response) error {
+	err := handler.Repo.LikeOrDislike(ctx, in.Userid, in.Fileid, in.Dislike)
+	if err == nil {
+		res.Code = int64(response.StatusOK)
+		res.Message = "successful"
+	} else if err == response.ErrAlreadyLike {
+		res.Code = int64(response.StatusAlreadyLike)
+		res.Message = err.Error()
+	} else {
+		res.Code = int64(response.StatusInternalError)
+		res.Message = err.Error()
 	}
-	res.FileID = resp.FileID
-	res.FileName = resp.FileName
-	res.FileURL = config.Path(resp.FileID)
-	res.UserName = resp.UserName
-	res.Height = resp.Height
-	res.Width = resp.Width
 	return nil
 }
 

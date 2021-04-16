@@ -118,12 +118,10 @@ service UserService {
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
     rpc GetUserImages(GetUserImagesReqByNameReq) returns(kira.micro.service.file.GetUserImagesRes);
-    rpc LikeOrDislike(kira.micro.service.file.FileLikeReq) returns(kira.micro.common.Response);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
 
     // User
     rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
-    rpc GetUserToken(kira.micro.service.file.TokenUserReq) returns (kira.micro.service.file.TokenUserRes);
 
     // Admin
     rpc AdminUserList(UserListRequest) returns(UserListResponse);

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common/middleware"
@@ -17,22 +18,29 @@ func Init(clients microClient.Client) {
 	auth = client.NewAuthClient(clients)
 }
 
-func Route() *gin.Engine {
+func Route(e *casbin.Enforcer) *gin.Engine {
 
 	route := gin.New()
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
 
-	// route.Use(middleware.CORS())
-
-	route.GET("/getRandomFiles", GetRandomFile)
-
-	file := route.Group("/file", middleware.APICount("file"), CheckToken)
+	file := route.Group("/file", middleware.APICount("file"))
 	{
-		file.GET("/history", GetHistory)
-		file.DELETE("/delete", DeleteFile)
-		file.GET("/detail", GetDetail)
-		file.GET("/refreshToken", RefreshToken)
+		file.GET("/getRandomFiles", GetRandomFile)
+		file.GET("/getHotLikeRank", GetHotLikeRank)
+		token := file.Group("/", CheckToken)
+		{
+			token.GET("/history", GetHistory)
+			token.DELETE("/delete", DeleteFile)
+			token.GET("/detail", GetDetail)
+			token.GET("/refreshToken", RefreshToken)
+		}
+
+		auth := file.Group("/", middleware.JwtAuth(auth, e))
+		{
+			auth.GET("/getToken", GetUserToken)
+			auth.POST("/like", LikeOrDislike)
+		}
 	}
 
 	return route

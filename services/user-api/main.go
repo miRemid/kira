@@ -24,7 +24,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	r := route.Route(e)
 
 	etcdAddr := common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(
@@ -45,8 +44,8 @@ func main() {
 			opentracing.NewClientWrapper(jaegerTracer),
 		),
 	)
-
 	route.Init(cli.Client())
+	r := route.Route(e)
 
 	hystrixGo.DefaultMaxConcurrent = 50
 	hystrixGo.DefaultTimeout = 10000
@@ -55,9 +54,7 @@ func main() {
 		web.Name("go.micro.api.user"),
 		web.Address(common.Getenv("API_ADDRESS", ":5002")),
 		web.Handler(r),
-		web.Registry(etcd.NewRegistry(
-			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
-		)),
+		web.Registry(etcdRegistry),
 	)
 	service.Init()
 	if err := service.Run(); err != nil {

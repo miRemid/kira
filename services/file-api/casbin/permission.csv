@@ -1,0 +1,2 @@
+p, normal, /file/getToken, GET
+p, normal, /file/like, POST
