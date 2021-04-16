@@ -50,6 +50,7 @@ type FileService interface {
 	ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, opts ...client.CallOption) (*ChangeTokenStatusRes, error)
 	CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, opts ...client.CallOption) (*CheckTokenStatusRes, error)
 	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
+	LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*UserFile, error)
 	// API
 	GetHistory(ctx context.Context, in *GetHistoryReq, opts ...client.CallOption) (*GetHistoryRes, error)
 	DeleteFile(ctx context.Context, in *DeleteFileReq, opts ...client.CallOption) (*DeleteFileRes, error)
@@ -140,6 +141,16 @@ func (c *fileService) Ping(ctx context.Context, in *Ping, opts ...client.CallOpt
 	return out, nil
 }
 
+func (c *fileService) LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*UserFile, error) {
+	req := c.c.NewRequest(c.name, "FileService.LikeOrDislike", in)
+	out := new(UserFile)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *fileService) GetHistory(ctx context.Context, in *GetHistoryReq, opts ...client.CallOption) (*GetHistoryRes, error) {
 	req := c.c.NewRequest(c.name, "FileService.GetHistory", in)
 	out := new(GetHistoryRes)
@@ -201,6 +212,7 @@ type FileServiceHandler interface {
 	ChangeTokenStatus(context.Context, *ChangeTokenStatusReq, *ChangeTokenStatusRes) error
 	CheckTokenStatus(context.Context, *CheckTokenStatusReq, *CheckTokenStatusRes) error
 	Ping(context.Context, *Ping, *Pong) error
+	LikeOrDislike(context.Context, *FileLikeReq, *UserFile) error
 	// API
 	GetHistory(context.Context, *GetHistoryReq, *GetHistoryRes) error
 	DeleteFile(context.Context, *DeleteFileReq, *DeleteFileRes) error
@@ -218,6 +230,7 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, out *ChangeTokenStatusRes) error
 		CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, out *CheckTokenStatusRes) error
 		Ping(ctx context.Context, in *Ping, out *Pong) error
+		LikeOrDislike(ctx context.Context, in *FileLikeReq, out *UserFile) error
 		GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
 		GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error
@@ -261,6 +274,10 @@ func (h *fileServiceHandler) CheckTokenStatus(ctx context.Context, in *CheckToke
 
 func (h *fileServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {
 	return h.FileServiceHandler.Ping(ctx, in, out)
+}
+
+func (h *fileServiceHandler) LikeOrDislike(ctx context.Context, in *FileLikeReq, out *UserFile) error {
+	return h.FileServiceHandler.LikeOrDislike(ctx, in, out)
 }
 
 func (h *fileServiceHandler) GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error {

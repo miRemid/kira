@@ -17,3 +17,8 @@ message Pong {
 message Empty {
     
 }
+
+message Response {
+    bool succ = 1;
+    string message = 2;
+}

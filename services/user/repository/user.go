@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
+	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/database"
@@ -20,7 +22,7 @@ import (
 type UserRepository interface {
 	Signup(username, password string) error
 	Signin(username, password string) (string, error)
-	UserInfo(userid string) (model.UserModel, error)
+	UserInfo(username string) (model.UserModel, error)
 
 	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
 	ChangeUserStatus(ctx context.Context, userid string, status int64) error
@@ -28,6 +30,8 @@ type UserRepository interface {
 	GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error)
 
 	ChangePassword(ctx context.Context, userid, old, raw string) error
+	LikeOrDislike(ctx context.Context, req *pb.FileLikeReq) error
+	GetUserToken(ctx context.Context, userid string) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -49,6 +53,27 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 		fileCli: fc,
 		pub:     pub,
 	}, err
+}
+
+func (repo UserRepositoryImpl) GetUserToken(ctx context.Context, userid string) (string, error) {
+	res, err := repo.fileCli.GetToken(userid)
+	return res.Token, err
+}
+
+func (repo UserRepositoryImpl) LikeOrDislike(ctx context.Context, req *pb.FileLikeReq) error {
+	// 1. call file service to incr count for fileid
+	file, err := repo.fileCli.Service.LikeOrDislike(ctx, req)
+	if err != nil {
+		return err
+	}
+	// 2. insert file's infomation into the user's like hash set
+	// key = user_id_likes
+	key := common.UserLikeKey(req.Userid)
+	conn := redis.Get()
+	defer conn.Close()
+	buffer, _ := json.Marshal(file)
+	_, err = conn.Do("SET", key, buffer)
+	return err
 }
 
 func (repo UserRepositoryImpl) GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error) {
@@ -159,25 +184,16 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 	return res.Token, nil
 }
 
-func (repo UserRepositoryImpl) UserInfo(userid string) (model.UserModel, error) {
-	log.Println("receive", userid)
+func (repo UserRepositoryImpl) UserInfo(username string) (model.UserModel, error) {
+	log.Println("receive", username)
 	var user model.UserModel
 	tx := repo.db.Begin()
 	// Get User Info
-	if err := tx.Raw("select * from tbl_user where user_id = ?", userid).Scan(&user).Error; err != nil {
+	if err := tx.Table(user.TableName()).Where("user_name = ?", username).First(&user).Error; err != nil {
 		tx.Rollback()
 		return user, err
-	}
-	log.Println(user.UserName)
-	// Get User Token
-	if res, err := repo.fileCli.GetToken(userid); err != nil {
-		tx.Rollback()
-		return user, err
-	} else {
-		user.Token = res.Token
 	}
 	tx.Commit()
-	log.Println(user.UserName)
 	return user, nil
 }
 

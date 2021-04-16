@@ -4,13 +4,29 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/user/repository"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type UserHandler struct {
 	Repo repository.UserRepository
+}
+
+func (handler UserHandler) GetUserToken(ctx context.Context, in *pb.TokenUserReq, res *pb.TokenUserRes) error {
+	token, err := handler.Repo.GetUserToken(ctx, in.Userid)
+	res.Token = token
+	return err
+}
+
+func (handler UserHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.Response) error {
+	err := handler.Repo.LikeOrDislike(ctx, in)
+	if err == nil {
+		res.Succ = true
+	}
+	return err
 }
 
 func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb.SigninRes) error {
@@ -39,11 +55,12 @@ func (handler UserHandler) Signup(ctx context.Context, in *pb.SignupReq, res *pb
 }
 
 func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res *pb.UserInfoRes) error {
-	user, err := handler.Repo.UserInfo(in.UserID)
+	user, err := handler.Repo.UserInfo(in.UserName)
 	if err != nil {
-		res.Succ = false
-		res.Msg = err.Error()
-		return errors.WithMessage(err, "get user infomation")
+		if err == gorm.ErrRecordNotFound {
+			return response.ErrRecordNotFound
+		}
+		return err
 	}
 	res.Succ = true
 	res.Msg = "get user infomation success"
@@ -51,7 +68,6 @@ func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res
 	res.User.UserID = user.UserID
 	res.User.UserName = user.UserName
 	res.User.UserRole = user.Role
-	res.User.UserToken = user.Token
 	res.User.UserStatus = user.Status
 	return nil
 }

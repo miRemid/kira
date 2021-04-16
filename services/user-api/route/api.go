@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/cache/redis"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/proto/pb"
 )
@@ -83,9 +84,9 @@ func Signup(ctx *gin.Context) {
 }
 
 func GetInfo(ctx *gin.Context) {
-	userid := ctx.GetHeader("userid")
+	userName := ctx.Param("userName")
 
-	res, err := cli.UserInfo(userid)
+	res, err := cli.UserInfo(userName)
 	if err != nil {
 		log.Println("Get Info: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
@@ -93,22 +94,39 @@ func GetInfo(ctx *gin.Context) {
 			Error: err.Error(),
 		})
 		return
-	} else if !res.Succ {
-		ctx.JSON(http.StatusOK, response.Response{
-			Code:  response.StatusInternalError,
-			Error: res.Msg,
-		})
-		return
 	}
 	// Set user info to the redis, key is the userid
 	buffer, _ := json.Marshal(res.User)
 	conn := redis.Get()
 	defer conn.Close()
-	conn.Do("SET", userid, buffer, "EX", "60")
+	key := common.UserInfoKey(userName)
+	conn.Do("SET", key, buffer, "EX", "60")
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
 		Data:    res.User,
+	})
+}
+
+func GetUserToken(ctx *gin.Context) {
+	userid := ctx.GetHeader("userid")
+
+	res, err := cli.Service.GetUserToken(ctx, &pb.TokenUserReq{
+		Userid: userid,
+	})
+	if err != nil {
+		log.Println("Get Token Err: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: gin.H{
+			"token": res.Token,
+		},
 	})
 }
 
@@ -227,6 +245,14 @@ func ChangePassword(ctx *gin.Context) {
 }
 
 func GetUserImages(ctx *gin.Context) {
+	userName := ctx.Param("userName")
+	if userName == "" {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "check params",
+		})
+		return
+	}
 	var req pb.GetUserImagesReqByNameReq
 	if err := ctx.BindQuery(&req); err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
@@ -235,6 +261,7 @@ func GetUserImages(ctx *gin.Context) {
 		})
 		return
 	}
+	req.UserName = userName
 	log.Println(req.UserName, req.Offset, req.Limit, req.Desc)
 	if req.Limit == 0 {
 		req.Limit = 20

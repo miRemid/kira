@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -17,7 +18,24 @@ const (
 	AnonymousKey = "ANONYMOUS_FILES_ID"
 	AnonyEvent   = "kira.micro.service.upload.anony"
 	AnonyBucket  = "anony"
+
+	LikeRankKey        = "like_rank_set"
+	LikeRankHotListKey = "like_hot_rank_list"
 )
+
+func UserLikeKey(userid string) string {
+	var buf strings.Builder
+	buf.WriteString(userid)
+	buf.WriteString("_likes")
+	return buf.String()
+}
+
+func UserInfoKey(userName string) string {
+	var buf strings.Builder
+	buf.WriteString(userName)
+	buf.WriteString("_info")
+	return buf.String()
+}
 
 func Getenv(key, replace string) string {
 	res := os.Getenv(key)

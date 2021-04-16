@@ -31,21 +31,18 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		v.RegisterValidation("usernameValidate", usernameValidator)
 		v.RegisterValidation("passwordValidate", passwordValidator)
 	}
-	route.Use(middleware.APICount("user"))
 
-	route.GET("/userImages", GetUserImages)
-
-	v1 := route.Group("/user")
+	v1 := route.Group("/user", middleware.APICount("user"))
 	{
 
 		v1.POST("/signup", Signup)
 		v1.POST("/signin", Signin)
+		v1.GET("/userImages/:userName", GetUserImages)
+		v1.GET("/userInfo/:userName", GetUserInfoFromRedis, GetInfo)
 
 		auth := v1.Group("/", JwtAuth(e))
 		{
-			auth.GET("/me", GetUserInfoFromRedis, GetInfo)
 			auth.POST("/changePassword", ChangePassword)
-
 			admin := auth.Group("/admin")
 			{
 				admin.DELETE("/deleteUser", DeleteUser)

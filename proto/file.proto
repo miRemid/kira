@@ -116,7 +116,7 @@ message GetUserImagesRes {
     repeated File files = 2;
 }
 
-message RandomUserFile {
+message UserFile {
     //@inject_tag: gorm:"column:user_name"
     string userName = 1;
     //@inject_tag: gorm:"column:file_name"
@@ -131,7 +131,20 @@ message RandomUserFile {
 }
 
 message RandomFiles {
-    repeated RandomUserFile files = 1;
+    repeated UserFile files = 1;
+}
+
+message FileLikeReq {
+    string userid = 1;
+    //@inject_tag: form:"file_id" binding:"required"
+    string fileid = 2;
+    //@inject_tag: form:"dislike"
+    bool dislike = 3;
+}
+
+message GetUserTokenReq {
+    //@inject_tag: form:"user_id" binding:"required"
+    string userid = 1;
 }
 
 service FileService {
@@ -140,9 +153,10 @@ service FileService {
     rpc GetToken(TokenUserReq) returns (TokenUserRes);
     rpc GetImage(GetImageReq) returns(GetImageRes);
     rpc GetUserImages(GetUserImagesReq) returns(GetUserImagesRes);
-    rpc ChangeTokenStatus(ChangeTokenStatusReq) returns (ChangeTokenStatusRes) {};
-    rpc CheckTokenStatus(CheckTokenStatusReq) returns (CheckTokenStatusRes) {};
-    rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
+    rpc ChangeTokenStatus(ChangeTokenStatusReq) returns (ChangeTokenStatusRes);
+    rpc CheckTokenStatus(CheckTokenStatusReq) returns (CheckTokenStatusRes);
+    rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong);
+    rpc LikeOrDislike(FileLikeReq) returns (UserFile);
 
     // API
     rpc GetHistory(GetHistoryReq) returns(GetHistoryRes);

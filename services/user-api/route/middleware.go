@@ -11,6 +11,7 @@ import (
 	redigo "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/cache/redis"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/proto/pb"
 )
@@ -89,10 +90,18 @@ func PrintlnPath(ctx *gin.Context) {
 func GetUserInfoFromRedis(ctx *gin.Context) {
 	conn := redis.Get()
 	defer conn.Close()
-	userid := ctx.GetHeader("userid")
-	log.Println("UserID: ", userid)
+	userName := ctx.Param("userName")
+	if userName == "" {
+		ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "missing params",
+		})
+		return
+	}
+	log.Println("UserName: ", userName)
 	log.Println("Check Exists")
-	exit, err := redigo.Bool(conn.Do("EXISTS", userid))
+	key := common.UserInfoKey(userName)
+	exit, err := redigo.Bool(conn.Do("EXISTS", key))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
 			Code:  response.StatusRedisCheck,
@@ -102,7 +111,7 @@ func GetUserInfoFromRedis(ctx *gin.Context) {
 	}
 	if exit {
 		log.Println("Exists, read from redis")
-		data, err := redigo.Bytes(conn.Do("GET", userid))
+		data, err := redigo.Bytes(conn.Do("GET", key))
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
 				Code:  response.StatusRedisCheck,

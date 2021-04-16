@@ -9,25 +9,25 @@ import (
 )
 
 type UserClient struct {
-	service pb.UserService
+	Service pb.UserService
 }
 
 func NewUserClient(client client.Client) *UserClient {
 	var cli UserClient
 	srv := pb.NewUserService("kira.micro.service.user", client)
-	cli.service = srv
+	cli.Service = srv
 	return &cli
 }
 
 func (cli UserClient) Signup(username, password string) (*pb.SignupRes, error) {
-	return cli.service.Signup(context.TODO(), &pb.SignupReq{
+	return cli.Service.Signup(context.TODO(), &pb.SignupReq{
 		Username: username,
 		Password: password,
 	})
 }
 
 func (cli UserClient) Signin(username, password string) (*pb.SigninRes, error) {
-	return cli.service.Signin(context.TODO(), &pb.SigninReq{
+	return cli.Service.Signin(context.TODO(), &pb.SigninReq{
 		Username: username,
 		Password: password,
 	})
@@ -36,39 +36,39 @@ func (cli UserClient) Signin(username, password string) (*pb.SigninRes, error) {
 func (cli UserClient) UserInfo(userid string) (*pb.UserInfoRes, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	return cli.service.UserInfo(ctx, &pb.UserInfoReq{
-		UserID: userid,
+	return cli.Service.UserInfo(ctx, &pb.UserInfoReq{
+		UserName: userid,
 	})
 }
 
 func (cli UserClient) DeleteUser(userid string) (*pb.AdminCommonResponse, error) {
-	return cli.service.AdminDeleteUser(context.TODO(), &pb.DeleteUserRequest{
+	return cli.Service.AdminDeleteUser(context.TODO(), &pb.DeleteUserRequest{
 		UserID: userid,
 	})
 }
 
 func (cli UserClient) UpdateUser(userid string, status int64) (*pb.AdminCommonResponse, error) {
-	return cli.service.AdminUpdateUser(context.TODO(), &pb.UpdateUserRoleRequest{
+	return cli.Service.AdminUpdateUser(context.TODO(), &pb.UpdateUserRoleRequest{
 		UserID: userid,
 		Status: status,
 	})
 }
 
 func (cli UserClient) GetUserList(limit, offset int64) (*pb.UserListResponse, error) {
-	return cli.service.AdminUserList(context.TODO(), &pb.UserListRequest{
+	return cli.Service.AdminUserList(context.TODO(), &pb.UserListRequest{
 		Limit:  limit,
 		Offset: offset,
 	})
 }
 
 func (client *UserClient) Ping() (*pb.Pong, error) {
-	return client.service.Ping(context.TODO(), &pb.Ping{})
+	return client.Service.Ping(context.TODO(), &pb.Ping{})
 }
 
 func (client *UserClient) ChangePassword(req *pb.UpdatePasswordReq) (*pb.UpdatePasswordRes, error) {
-	return client.service.ChangePassword(context.TODO(), req)
+	return client.Service.ChangePassword(context.TODO(), req)
 }
 
 func (client *UserClient) GetUserImages(req *pb.GetUserImagesReqByNameReq) (*pb.GetUserImagesRes, error) {
-	return client.service.GetUserImages(context.TODO(), req)
+	return client.Service.GetUserImages(context.TODO(), req)
 }

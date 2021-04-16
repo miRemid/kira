@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/miRemid/kira/cache/redis"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/model"
 	"github.com/miRemid/kira/proto/pb"
 
@@ -37,7 +38,8 @@ type FileRepository interface {
 	ChangeStatus(ctx context.Context, userID string, status int64) error
 	CheckStatus(ctx context.Context, token string) (int64, error)
 	GetUserImages(ctx context.Context, userID string, offset, limit int64, desc bool) ([]model.FileModel, int64, error)
-	GetRandomFile(ctx context.Context) ([]*pb.RandomUserFile, error)
+	GetRandomFile(ctx context.Context) ([]*pb.UserFile, error)
+	LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (res *pb.UserFile, err error)
 	Done()
 }
 
@@ -59,8 +61,28 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	return res
 }
 
-func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context) ([]*pb.RandomUserFile, error) {
-	var res = make([]*pb.RandomUserFile, 0)
+func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (res *pb.UserFile, err error) {
+	conn := redis.Get()
+	defer conn.Close()
+	var offset = 1
+	if dislike {
+		offset = -1
+	}
+	var file = new(pb.UserFile)
+	if err = repo.db.Raw(`
+	select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height
+	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
+	where ttu.user_id = ?`, userid).Scan(file).Error; err != nil {
+		return res, err
+	}
+	if _, err = conn.Do("zincrby", common.LikeRankKey, offset, fileid); err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context) ([]*pb.UserFile, error) {
+	var res = make([]*pb.UserFile, 0)
 	if err := repo.db.Raw(`select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height, tf.anony 
 	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id 
 	where tf.anony != 1 

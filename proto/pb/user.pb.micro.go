@@ -44,15 +44,20 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 
 type UserService interface {
 	// API
+	// Common
 	Signin(ctx context.Context, in *SigninReq, opts ...client.CallOption) (*SigninRes, error)
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
+	GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error)
+	LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
+	// User
 	ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error)
+	GetUserToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
+	// Admin
 	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
 	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
 	AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
 	// RPC
-	GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error)
 	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 }
 
@@ -88,6 +93,26 @@ func (c *userService) Signup(ctx context.Context, in *SignupReq, opts ...client.
 	return out, nil
 }
 
+func (c *userService) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetUserImages", in)
+	out := new(GetUserImagesRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "UserService.LikeOrDislike", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.UserInfo", in)
 	out := new(UserInfoRes)
@@ -101,6 +126,16 @@ func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...cli
 func (c *userService) ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.ChangePassword", in)
 	out := new(UpdatePasswordRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) GetUserToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetUserToken", in)
+	out := new(TokenUserRes)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -138,16 +173,6 @@ func (c *userService) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleReq
 	return out, nil
 }
 
-func (c *userService) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error) {
-	req := c.c.NewRequest(c.name, "UserService.GetUserImages", in)
-	out := new(GetUserImagesRes)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userService) Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error) {
 	req := c.c.NewRequest(c.name, "UserService.Ping", in)
 	out := new(Pong)
@@ -162,15 +187,20 @@ func (c *userService) Ping(ctx context.Context, in *Ping, opts ...client.CallOpt
 
 type UserServiceHandler interface {
 	// API
+	// Common
 	Signin(context.Context, *SigninReq, *SigninRes) error
 	Signup(context.Context, *SignupReq, *SignupRes) error
+	GetUserImages(context.Context, *GetUserImagesReqByNameReq, *GetUserImagesRes) error
+	LikeOrDislike(context.Context, *FileLikeReq, *Response) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
+	// User
 	ChangePassword(context.Context, *UpdatePasswordReq, *UpdatePasswordRes) error
+	GetUserToken(context.Context, *TokenUserReq, *TokenUserRes) error
+	// Admin
 	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
 	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
 	AdminUpdateUser(context.Context, *UpdateUserRoleRequest, *AdminCommonResponse) error
 	// RPC
-	GetUserImages(context.Context, *GetUserImagesReqByNameReq, *GetUserImagesRes) error
 	Ping(context.Context, *Ping, *Pong) error
 }
 
@@ -178,12 +208,14 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 	type userService interface {
 		Signin(ctx context.Context, in *SigninReq, out *SigninRes) error
 		Signup(ctx context.Context, in *SignupReq, out *SignupRes) error
+		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
+		LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
 		ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error
+		GetUserToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
 		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
 		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
-		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
 		Ping(ctx context.Context, in *Ping, out *Pong) error
 	}
 	type UserService struct {
@@ -205,12 +237,24 @@ func (h *userServiceHandler) Signup(ctx context.Context, in *SignupReq, out *Sig
 	return h.UserServiceHandler.Signup(ctx, in, out)
 }
 
+func (h *userServiceHandler) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error {
+	return h.UserServiceHandler.GetUserImages(ctx, in, out)
+}
+
+func (h *userServiceHandler) LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error {
+	return h.UserServiceHandler.LikeOrDislike(ctx, in, out)
+}
+
 func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error {
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
 }
 
 func (h *userServiceHandler) ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error {
 	return h.UserServiceHandler.ChangePassword(ctx, in, out)
+}
+
+func (h *userServiceHandler) GetUserToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error {
+	return h.UserServiceHandler.GetUserToken(ctx, in, out)
 }
 
 func (h *userServiceHandler) AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error {
@@ -223,10 +267,6 @@ func (h *userServiceHandler) AdminDeleteUser(ctx context.Context, in *DeleteUser
 
 func (h *userServiceHandler) AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error {
 	return h.UserServiceHandler.AdminUpdateUser(ctx, in, out)
-}
-
-func (h *userServiceHandler) GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error {
-	return h.UserServiceHandler.GetUserImages(ctx, in, out)
 }
 
 func (h *userServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {

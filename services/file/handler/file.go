@@ -14,6 +14,20 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
+func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.UserFile) error {
+	resp, err := handler.Repo.LikeOrDislike(ctx, in.Userid, in.Fileid, in.Dislike)
+	if err != nil {
+		return err
+	}
+	res.FileID = resp.FileID
+	res.FileName = resp.FileName
+	res.FileURL = config.Path(resp.FileID)
+	res.UserName = resp.UserName
+	res.Height = resp.Height
+	res.Width = resp.Width
+	return nil
+}
+
 func (handler FileServiceHandler) GetRandomFile(ctx context.Context, in *pb.Empty, res *pb.RandomFiles) error {
 	resp, err := handler.Repo.GetRandomFile(ctx)
 	if err != nil {

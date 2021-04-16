@@ -74,12 +74,11 @@ message User {
     string userID = 1;
     string userName = 2;
     string userRole = 3;
-    string userToken = 4;
     int64 userStatus = 5;
 }
 
 message UserInfoReq {
-    string userID = 1;
+    string userName = 1;
 }
 
 message UserInfoRes {
@@ -103,7 +102,7 @@ message UpdatePasswordRes {
 }
 
 message GetUserImagesReqByNameReq {
-    //@inject_tag: form:"userName" binding:"required"
+    //@inject_tag: form:"userName"
     string userName = 1;
     //@inject_tag: form:"offset"
     int64 offset = 2;
@@ -115,15 +114,22 @@ message GetUserImagesReqByNameReq {
 
 service UserService {
     // API
+    // Common
     rpc Signin(SigninReq) returns(SigninRes);
     rpc Signup(SignupReq) returns(SignupRes);
+    rpc GetUserImages(GetUserImagesReqByNameReq) returns(kira.micro.service.file.GetUserImagesRes);
+    rpc LikeOrDislike(kira.micro.service.file.FileLikeReq) returns(kira.micro.common.Response);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+
+    // User
     rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
+    rpc GetUserToken(kira.micro.service.file.TokenUserReq) returns (kira.micro.service.file.TokenUserRes);
+
+    // Admin
     rpc AdminUserList(UserListRequest) returns(UserListResponse);
     rpc AdminDeleteUser(DeleteUserRequest) returns(AdminCommonResponse);
     rpc AdminUpdateUser(UpdateUserRoleRequest) returns(AdminCommonResponse);
 
     // RPC
-    rpc GetUserImages(GetUserImagesReqByNameReq) returns(kira.micro.service.file.GetUserImagesRes);
     rpc Ping(kira.micro.common.Ping) returns (kira.micro.common.Pong) {};
 }
