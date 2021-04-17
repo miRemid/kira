@@ -15,25 +15,21 @@ type Search struct {
 	Limit  int64 `json:"limit" form:"limit"`
 }
 
-type SearchRes struct {
-	Total int64      `json:"total"`
-	Files []*pb.File `json:"files"`
-}
-
 func GetHistory(ctx *gin.Context) {
-	var s Search
-	if err := ctx.BindQuery(&s); err != nil {
+	var req = new(pb.GetHistoryReq)
+	if err := ctx.ShouldBind(req); err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusBadParams,
 			Error: "missing params",
 		})
 		return
 	}
-	if s.Limit == 0 {
-		s.Limit = 10
+	if req.Limit == 0 {
+		req.Limit = 10
 	}
 	token := ctx.GetHeader(common.FileTokenHeader)
-	res, err := cli.GetHistory(token, s.Limit, s.Offset)
+	req.Token = token
+	res, err := cli.Service.GetHistory(ctx, req)
 	if err != nil {
 		log.Println("Get Histroy: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
@@ -50,13 +46,13 @@ func GetHistory(ctx *gin.Context) {
 		})
 		return
 	}
-	var sr SearchRes
-	sr.Total = res.Total
-	sr.Files = res.Files
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: "get success",
-		Data:    sr,
+		Data: gin.H{
+			"total": res.Total,
+			"files": res.Files,
+		},
 	})
 }
 

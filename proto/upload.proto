@@ -14,7 +14,7 @@ message UploadFileReq {
     int64 fileSize = 3;
     
     bytes fileBody = 4;
-    string owner = 5;
+    string token = 5;
     bool Anony = 8;
 
     string width = 6;
@@ -24,7 +24,7 @@ message UploadFileReq {
 message UploadFileRes {
     bool succ = 1;
     string msg = 2;
-    kira.micro.service.file.File file = 3;
+    kira.micro.service.file.UserFile file = 3;
 }
 
 service UploadService {

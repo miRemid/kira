@@ -7,19 +7,19 @@ option go_package = ".;pb";
 import "proto/common.proto";
 
 // Define
-message File {
-    string fileID = 1;
-    string fileName = 2;
-    int64 fileSize = 3;
-    string fileExt = 4;
-    string fileHash = 5;
-    string fileURL = 6;
-    string fileWidth = 8;
-    string fileHeight = 9;
-    //@inject_tag: json:"liked"
-    bool Liked = 10;
-    int64 Likes = 11;
-}
+// message File {
+//     string fileID = 1;
+//     string fileName = 2;
+//     int64 fileSize = 3;
+//     string fileExt = 4;
+//     string fileHash = 5;
+//     string fileURL = 6;
+//     string fileWidth = 8;
+//     string fileHeight = 9;
+//     //@inject_tag: json:"liked"
+//     bool Liked = 10;
+//     int64 Likes = 11;
+// }
 
 message UserFile {
     //@inject_tag: gorm:"column:user_name"
@@ -62,13 +62,15 @@ message TokenReq {
 message GetHistoryReq {
     //@inject_tag: form:"token"
     string token = 1;
+    //@inject_tag: form:"offset"
     int64 offset = 2;
+    //@inject_tag: form:"limit"
     int64 limit = 3;
 }
 
 message GetHistoryRes {
     int64 total = 1;
-    repeated File files = 2;
+    repeated UserFile files = 2;
     bool succ = 3;
     string msg = 4;
 }
@@ -92,7 +94,7 @@ message GetDetailReq {
 message GetDetailRes {
     bool succ = 1;
     string msg = 2;
-    File file = 3;
+    UserFile file = 3;
 }
 
 message GetImageReq {

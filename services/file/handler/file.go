@@ -128,22 +128,8 @@ func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHist
 		res.Msg = err.Error()
 		return errors.WithMessage(err, "get histroy")
 	}
-	var files = make([]*pb.File, 0)
-	for i := 0; i < len(items); i = i + 1 {
-		var file pb.File
-		file.FileExt = items[i].FileExt
-		file.FileName = items[i].FileName
-		file.FileID = items[i].FileID
-		file.FileHash = items[i].FileHash
-		file.FileWidth = items[i].FileWidth
-		file.FileHeight = items[i].FileHeight
-		file.FileSize = int64(items[i].FileSize)
-		file.FileURL = config.Path(items[i].FileID)
-		file.Liked = items[i].Liked
-		files = append(files, &file)
-	}
 	res.Total = total
-	res.Files = files
+	res.Files = items
 	res.Msg = "get success"
 	res.Succ = true
 	return nil
@@ -169,15 +155,7 @@ func (handler FileServiceHandler) GetDetail(ctx context.Context, in *pb.GetDetai
 	}
 	res.Succ = true
 	res.Msg = "get success"
-	res.File = new(pb.File)
-	res.File.FileID = resp.FileID
-	res.File.FileURL = config.Path(resp.FileID)
-	res.File.FileHash = resp.FileHash
-	res.File.FileName = resp.FileName
-	res.File.FileExt = resp.FileExt
-	res.File.FileSize = resp.FileSize
-	res.File.FileWidth = resp.FileWidth
-	res.File.FileHeight = resp.FileHeight
+	res.File = resp
 	return nil
 }
 

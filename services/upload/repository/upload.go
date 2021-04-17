@@ -95,28 +95,25 @@ func (repo RepositoryImpl) deleteAnony() {
 }
 
 func (repo RepositoryImpl) UploadFile(ctx context.Context,
-	owner, fileName, fileExt string,
+	token, fileName, fileExt string,
 	fileSize int64, fileWidth, fileHeight string, anony bool, fileBody []byte) (model.FileModel, error) {
 	var res model.FileModel
-	var tx = repo.db.Begin()
+
 	id, _ := idgen.Generate()
 
 	// 2. generate file's sha1 hash
 	hash := sha1.New()
 	reader := bytes.NewReader(fileBody)
 	if _, err := io.Copy(hash, reader); err != nil {
-		tx.Rollback()
 		return res, err
 	}
 	bucket := config.Bucket(anony)
-	reader.Seek(0, 0)
-	// 3. upload into minio
-	_, err := repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
-	if err != nil {
-		tx.Rollback()
-		return res, err
+	var tx = repo.db.Begin()
+	var userid string = common.AnonyEvent
+	if !anony {
+		tx.Model(model.TokenUser{}).Select("user_id").Where("token = ?", token).First(&userid)
 	}
-	res.Owner = owner
+	res.Owner = userid
 	hashInBytes := hash.Sum(nil)[:20]
 	res.FileHash = hex.EncodeToString(hashInBytes)
 	res.FileName = fileName
@@ -141,6 +138,13 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 		// save 5 day for the anony upload
 		delay := time.Now().Add(time.Hour * 24 * 5).Unix()
 		conn.Do("ZADD", common.AnonymousKey, delay, id)
+	}
+	reader.Seek(0, 0)
+	// 3. upload into minio
+	_, err := repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
+	if err != nil {
+		tx.Rollback()
+		return res, err
 	}
 	tx.Commit()
 	return res, nil

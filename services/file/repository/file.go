@@ -35,10 +35,10 @@ type FileRepository interface {
 	GenerateToken(ctx context.Context, userid, userName string) (string, error)
 	RefreshToken(context.Context, string) (string, error)
 	GetToken(context.Context, string) (string, error)
-	GetHistory(context.Context, string, int64, int64) ([]model.FileModel, int64, error)
+	GetHistory(context.Context, string, int64, int64) ([]*pb.UserFile, int64, error)
 	DeleteFile(context.Context, string, string) error
 	GetImage(ctx context.Context, fileID, width, height string) ([]byte, error)
-	GetDetail(ctx context.Context, fileID string) (model.FileModel, error)
+	GetDetail(ctx context.Context, fileID string) (*pb.UserFile, error)
 	DeleteUser(ctx context.Context, userID string) error
 	ChangeStatus(ctx context.Context, userID string, status int64) error
 	CheckStatus(ctx context.Context, token string) (int64, error)
@@ -290,12 +290,12 @@ func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offs
 }
 
 // Token Requests
-func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, limit, offset int64) ([]model.FileModel, int64, error) {
+func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, limit, offset int64) ([]*pb.UserFile, int64, error) {
 	conn := redis.Get()
 	defer conn.Close()
 
 	var total int64
-	var res = make([]model.FileModel, 0)
+	var res = make([]*pb.UserFile, 0)
 	var tx = repo.db.Begin()
 	owner, err := repo.token2UserID(tx, token)
 	if err != nil {
@@ -311,15 +311,14 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 		tx.Rollback()
 		return res, total, err
 	}
-	log.Println(owner)
 	for i := 0; i < len(res); i++ {
+		res[i].FileURL = config.Path(res[i].FileID)
 		exist, err := getUserFileLikeStatus(conn, res[i].FileID, owner)
 		if err != nil || !exist {
 			res[i].Liked = false
 		} else {
 			res[i].Liked = true
 		}
-		log.Println(res[i].FileID, res[i].Liked)
 	}
 
 	tx.Commit()
@@ -513,8 +512,8 @@ func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID, width, heig
 	return buffer.Bytes(), err
 }
 
-func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (model.FileModel, error) {
-	var file model.FileModel
+func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (*pb.UserFile, error) {
+	var file = new(pb.UserFile)
 	err := repo.db.Raw("select * from tbl_file where file_id = ?", fileID).Scan(&file).Error
 	return file, err
 }

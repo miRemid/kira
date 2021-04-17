@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"log"
-
 	"github.com/gomodule/redigo/redis"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/proto/pb"
@@ -38,7 +36,6 @@ func getFileFromHash(conn redis.Conn, userid, fileid string) *pb.UserFile {
 	file.Height = res["file_height"]
 	file.FileURL = config.Path(fileid)
 	if exist, err := getUserFileLikeStatus(conn, fileid, userid); err != nil {
-		log.Println(err)
 		file.Liked = false
 	} else {
 		file.Liked = exist
