@@ -52,8 +52,21 @@ func LikeOrDislike(ctx *gin.Context) {
 	})
 }
 
-func GetHotLikeRank(ctx *gin.Context) {
-	res, err := cli.Service.GetHotLikeRank(ctx, &pb.Empty{})
+func GetLikes(ctx *gin.Context) {
+	userid := ctx.GetHeader("userid")
+	var req = new(pb.GetLikesReq)
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	req.Userid = userid
+	if req.Limit == 0 {
+		req.Limit = 5
+	}
+	res, err := cli.Service.GetLikes(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
@@ -64,7 +77,8 @@ func GetHotLikeRank(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
 		Data: gin.H{
-			"files": res.Files,
+			"Total": res.Total,
+			"Files": res.Files,
 		},
 	})
 }

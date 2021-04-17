@@ -7,4 +7,5 @@ var (
 	ErrInternalBad    = errors.New("internal error")
 
 	ErrAlreadyLike = errors.New("already like")
+	ErrNotLike     = errors.New("not liked")
 )

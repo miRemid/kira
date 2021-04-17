@@ -7,9 +7,34 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miRemid/kira/client"
+	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/response"
 )
 
+func CheckFileToken(anony bool) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var token string = ""
+		if t := ctx.Query("token"); t != "" {
+			token = t
+		} else {
+			if tt := ctx.GetHeader(common.FileTokenHeader); tt != "" {
+				token = tt
+			}
+		}
+		if token == "" {
+			if !anony {
+				ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Response{
+					Code: response.StatusUnauthorized,
+				})
+				return
+			} else {
+				token = common.AnonyToken
+			}
+		}
+		ctx.Request.Header.Set(common.FileTokenHeader, token)
+		ctx.Next()
+	}
+}
 func parseToken(header string) (string, error) {
 	split := strings.Split(header, " ")
 	if len(split) != 2 {
@@ -25,7 +50,7 @@ func JwtAuth(authCli *client.AuthClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		header := ctx.Request.Header.Get("Authorization")
 		if header == "" {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+			ctx.Next()
 			return
 		}
 

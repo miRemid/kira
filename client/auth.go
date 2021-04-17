@@ -37,12 +37,6 @@ func (client *AuthClient) Refresh(tokenString string) (*pb.AuthResponse, error) 
 	})
 }
 
-func (client *AuthClient) FileToken(tokenString string) (*pb.FileTokenResponse, error) {
-	return client.service.FileToken(context.TODO(), &pb.FileTokenRequest{
-		Token: tokenString,
-	})
-}
-
 func (client *AuthClient) Ping() (*pb.Pong, error) {
 	return client.service.Ping(context.TODO(), &pb.Ping{})
 }

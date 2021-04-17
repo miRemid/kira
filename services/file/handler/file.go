@@ -15,8 +15,18 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
-func (handler FileServiceHandler) GetHotLikeRank(ctx context.Context, in *pb.Empty, res *pb.HotLikeRankList) error {
-	files, err := handler.Repo.GetHotLikeRank(ctx)
+func (handler FileServiceHandler) GetLikes(ctx context.Context, in *pb.GetLikesReq, res *pb.GetLikesRes) error {
+	resp, total, err := handler.Repo.GetLikes(ctx, in.Userid, in.Offset, in.Limit, in.Desc)
+	if err != nil {
+		return err
+	}
+	res.Files = resp
+	res.Total = total
+	return nil
+}
+
+func (handler FileServiceHandler) GetHotLikeRank(ctx context.Context, in *pb.TokenReq, res *pb.HotLikeRankList) error {
+	files, err := handler.Repo.GetHotLikeRank(ctx, in.Token)
 	res.Files = files
 	return err
 }
@@ -36,8 +46,8 @@ func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.File
 	return nil
 }
 
-func (handler FileServiceHandler) GetRandomFile(ctx context.Context, in *pb.Empty, res *pb.RandomFiles) error {
-	resp, err := handler.Repo.GetRandomFile(ctx)
+func (handler FileServiceHandler) GetRandomFile(ctx context.Context, in *pb.TokenReq, res *pb.RandomFiles) error {
+	resp, err := handler.Repo.GetRandomFile(ctx, in.Token)
 	if err != nil {
 		return err
 	}
@@ -49,24 +59,11 @@ func (handler FileServiceHandler) GetRandomFile(ctx context.Context, in *pb.Empt
 }
 
 func (handler FileServiceHandler) GetUserImages(ctx context.Context, in *pb.GetUserImagesReq, res *pb.GetUserImagesRes) error {
-	items, total, err := handler.Repo.GetUserImages(ctx, in.Userid, in.Offset, in.Limit, in.Desc)
+	items, total, err := handler.Repo.GetUserImages(ctx, in.Token, in.Userid, in.Offset, in.Limit, in.Desc)
 	if err != nil {
 		return errors.WithMessage(err, "get user images")
 	}
-	var files = make([]*pb.File, 0)
-	for i := 0; i < len(items); i = i + 1 {
-		var file pb.File
-		file.FileExt = items[i].FileExt
-		file.FileName = items[i].FileName
-		file.FileID = items[i].FileID
-		file.FileHash = items[i].FileHash
-		file.FileWidth = items[i].FileWidth
-		file.FileHeight = items[i].FileHeight
-		file.FileSize = int64(items[i].FileSize)
-		file.FileURL = config.Path(items[i].FileID)
-		files = append(files, &file)
-	}
-	res.Files = files
+	res.Files = items
 	res.Total = total
 	return nil
 }
@@ -142,6 +139,7 @@ func (handler FileServiceHandler) GetHistory(ctx context.Context, in *pb.GetHist
 		file.FileHeight = items[i].FileHeight
 		file.FileSize = int64(items[i].FileSize)
 		file.FileURL = config.Path(items[i].FileID)
+		file.Liked = items[i].Liked
 		files = append(files, &file)
 	}
 	res.Total = total

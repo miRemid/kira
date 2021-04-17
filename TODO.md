@@ -22,3 +22,8 @@ HASH中Key=file_id, Value=Proto中的UserFile的JSON数据
 排行榜信息每半小时刷新一次，将会使用定时任务完成。每次都在like_rank_set中选取score最高的10张照片保存在Redis中
 
 数据结构为List，Key=like_hot_rank_list, Value={Data:UserFile, Likes: INT}
+
+文件服务除必须登录操作外，全部通过Token操作且支持匿名操作例如
+- UploadFile
+- GetHotRank
+- GetUserImages

@@ -87,6 +87,8 @@ func (cli *FileClient) CheckStatus(token string) (*pb.CheckTokenStatusRes, error
 	})
 }
 
-func (cli *FileClient) GetRandomFile() (*pb.RandomFiles, error) {
-	return cli.Service.GetRandomFile(context.TODO(), &pb.Empty{})
+func (cli *FileClient) GetRandomFile(token string) (*pb.RandomFiles, error) {
+	return cli.Service.GetRandomFile(context.TODO(), &pb.TokenReq{
+		Token: token,
+	})
 }

@@ -6,6 +6,7 @@ option go_package = ".;pb";
 
 import "proto/common.proto";
 
+// Define
 message File {
     string fileID = 1;
     string fileName = 2;
@@ -13,24 +14,49 @@ message File {
     string fileExt = 4;
     string fileHash = 5;
     string fileURL = 6;
-    string delURL = 7;
     string fileWidth = 8;
     string fileHeight = 9;
+    //@inject_tag: json:"liked"
+    bool Liked = 10;
+    int64 Likes = 11;
+}
+
+message UserFile {
+    //@inject_tag: gorm:"column:user_name"
+    string userName = 1;
+    //@inject_tag: gorm:"column:file_name"
+    string fileName = 2;
+    string fileURL = 3;
+    //@inject_tag: gorm:"column:file_width"
+    string width = 4;
+    //@inject_tag: gorm:"column:file_height"
+    string height = 5;
+    //@inject_tag: gorm:"column:file_id"
+    string fileID = 6;
+    //@inject_tag: gorm:"-" json:"likes"
+    int64 likes = 7;
+    //@inject_tag: gorm:"-" json:"liked"
+    bool liked = 8;
+    //@inject_tag: gorm:"file_size"
+    int64 fileSize = 9;
+    //@inject_tag: gorm:"file_ext"
+    string ext = 10;
+    //@inject_tag: gorm:"file_hash"
+    string hash = 11;
 }
 
 message TokenUserReq {
     string userid = 1;
     string userName = 2;
 }
-
-message TokenReq {
-    string token = 1;
-}
-
 message TokenUserRes {
     bool succ = 1;
     string msg = 2;
     string token = 3;
+}
+
+message TokenReq {
+    string token = 1;
 }
 
 message GetHistoryReq {
@@ -69,7 +95,6 @@ message GetDetailRes {
     File file = 3;
 }
 
-
 message GetImageReq {
     string fileID = 1;
     string width = 2;
@@ -84,6 +109,7 @@ message GetImageRes {
     bytes image = 5;
 }
 
+// Admin RPCs
 message ChangeTokenStatusReq {
     string userid = 1;
     int64 status = 2;
@@ -104,38 +130,41 @@ message CheckTokenStatusRes {
     string msg = 3;
 }
 
+// Normal RPCs
 message GetUserImagesReq {
     string userid = 1;
     int64 offset = 2;
     int64 limit = 3;
     bool desc = 4;
+    string token = 5;
 }
 
+// TODO
 message GetUserImagesRes {
     int64 total = 1;
-    repeated File files = 2;
-}
-
-message UserFile {
-    //@inject_tag: gorm:"column:user_name"
-    string userName = 1;
-    //@inject_tag: gorm:"column:file_name"
-    string fileName = 2;
-    string fileURL = 3;
-    //@inject_tag: gorm:"column:file_width"
-    string width = 4;
-    //@inject_tag: gorm:"column:file_height"
-    string height = 5;
-    //@inject_tag: gorm:"column:file_id"
-    string fileID = 6;
-    //@inject_tag: gorm:"-"
-    string likes = 7;
+    repeated UserFile files = 2;
 }
 
 message RandomFiles {
     repeated UserFile files = 1;
 }
 
+message GetLikesReq {
+    string userid = 1;
+    //@inject_tag: form:"offset"
+    int64 offset = 2;
+    //@inject_tag: form:"limit"
+    int64 limit = 3;
+    //@inject_tag: form:"desc"
+    bool desc = 4;
+}
+
+message GetLikesRes {
+    int64 total = 1;
+    repeated UserFile files = 2;
+}
+
+// Signin User
 message FileLikeReq {
     string userid = 1;
     //@inject_tag: form:"file_id" binding:"required"
@@ -144,6 +173,7 @@ message FileLikeReq {
     bool dislike = 3;
 }
 
+// RPC
 message GetUserTokenReq {
     //@inject_tag: form:"user_id" binding:"required"
     string userid = 1;
@@ -152,6 +182,7 @@ message GetUserTokenReq {
 message HotLikeRankList {
     repeated UserFile files = 1;
 }
+
 
 service FileService {
     // RPC
@@ -167,10 +198,11 @@ service FileService {
     rpc DeleteFile(DeleteFileReq) returns(DeleteFileRes);
     rpc GetDetail(GetDetailReq) returns (GetDetailRes);
     rpc RefreshToken(TokenReq) returns (TokenUserRes);
-    rpc GetRandomFile(kira.micro.common.Empty) returns (RandomFiles);
-    rpc GetHotLikeRank(kira.micro.common.Empty) returns (HotLikeRankList);
+    rpc GetRandomFile(TokenReq) returns (RandomFiles);
+    rpc GetHotLikeRank(TokenReq) returns (HotLikeRankList);
 
     // User
     rpc GetToken(TokenUserReq) returns (TokenUserRes);
     rpc LikeOrDislike(FileLikeReq) returns (kira.micro.common.Response);
+    rpc GetLikes(GetLikesReq) returns (GetLikesRes);
 }

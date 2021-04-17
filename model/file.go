@@ -16,6 +16,8 @@ type FileModel struct {
 	FileSize   int64  `gorm:"column:file_size;"`
 	FileHash   string `gorm:"column:file_hash;index:idx_file_hash"`
 	FileURL    string `gorm:"-"`
+	Likes      int64  `gorm:"-"`
+	Liked      bool   `gorm:"-"`
 	Bucket     string `gorm:"column:bucket"`
 	Anony      bool   `gorm:"column:anony"`
 	FileWidth  string `gorm:"column:file_width"`

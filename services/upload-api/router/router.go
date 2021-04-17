@@ -23,7 +23,7 @@ func NewRouter(cli mClient.Client) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	upload := router.Group("/upload", middleware.APICount("upload"), CheckToken, CheckSuspend)
+	upload := router.Group("/upload", middleware.APICount("upload"), CheckFileToken(), CheckSuspend)
 	{
 		upload.PUT("/image", UploadFile)
 	}

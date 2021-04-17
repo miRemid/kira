@@ -54,11 +54,12 @@ type FileService interface {
 	DeleteFile(ctx context.Context, in *DeleteFileReq, opts ...client.CallOption) (*DeleteFileRes, error)
 	GetDetail(ctx context.Context, in *GetDetailReq, opts ...client.CallOption) (*GetDetailRes, error)
 	RefreshToken(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*TokenUserRes, error)
-	GetRandomFile(ctx context.Context, in *Empty, opts ...client.CallOption) (*RandomFiles, error)
-	GetHotLikeRank(ctx context.Context, in *Empty, opts ...client.CallOption) (*HotLikeRankList, error)
+	GetRandomFile(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*RandomFiles, error)
+	GetHotLikeRank(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*HotLikeRankList, error)
 	// User
 	GetToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
 	LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error)
+	GetLikes(ctx context.Context, in *GetLikesReq, opts ...client.CallOption) (*GetLikesRes, error)
 }
 
 type fileService struct {
@@ -173,7 +174,7 @@ func (c *fileService) RefreshToken(ctx context.Context, in *TokenReq, opts ...cl
 	return out, nil
 }
 
-func (c *fileService) GetRandomFile(ctx context.Context, in *Empty, opts ...client.CallOption) (*RandomFiles, error) {
+func (c *fileService) GetRandomFile(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*RandomFiles, error) {
 	req := c.c.NewRequest(c.name, "FileService.GetRandomFile", in)
 	out := new(RandomFiles)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -183,7 +184,7 @@ func (c *fileService) GetRandomFile(ctx context.Context, in *Empty, opts ...clie
 	return out, nil
 }
 
-func (c *fileService) GetHotLikeRank(ctx context.Context, in *Empty, opts ...client.CallOption) (*HotLikeRankList, error) {
+func (c *fileService) GetHotLikeRank(ctx context.Context, in *TokenReq, opts ...client.CallOption) (*HotLikeRankList, error) {
 	req := c.c.NewRequest(c.name, "FileService.GetHotLikeRank", in)
 	out := new(HotLikeRankList)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -213,6 +214,16 @@ func (c *fileService) LikeOrDislike(ctx context.Context, in *FileLikeReq, opts .
 	return out, nil
 }
 
+func (c *fileService) GetLikes(ctx context.Context, in *GetLikesReq, opts ...client.CallOption) (*GetLikesRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetLikes", in)
+	out := new(GetLikesRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -228,11 +239,12 @@ type FileServiceHandler interface {
 	DeleteFile(context.Context, *DeleteFileReq, *DeleteFileRes) error
 	GetDetail(context.Context, *GetDetailReq, *GetDetailRes) error
 	RefreshToken(context.Context, *TokenReq, *TokenUserRes) error
-	GetRandomFile(context.Context, *Empty, *RandomFiles) error
-	GetHotLikeRank(context.Context, *Empty, *HotLikeRankList) error
+	GetRandomFile(context.Context, *TokenReq, *RandomFiles) error
+	GetHotLikeRank(context.Context, *TokenReq, *HotLikeRankList) error
 	// User
 	GetToken(context.Context, *TokenUserReq, *TokenUserRes) error
 	LikeOrDislike(context.Context, *FileLikeReq, *Response) error
+	GetLikes(context.Context, *GetLikesReq, *GetLikesRes) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -247,10 +259,11 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
 		GetDetail(ctx context.Context, in *GetDetailReq, out *GetDetailRes) error
 		RefreshToken(ctx context.Context, in *TokenReq, out *TokenUserRes) error
-		GetRandomFile(ctx context.Context, in *Empty, out *RandomFiles) error
-		GetHotLikeRank(ctx context.Context, in *Empty, out *HotLikeRankList) error
+		GetRandomFile(ctx context.Context, in *TokenReq, out *RandomFiles) error
+		GetHotLikeRank(ctx context.Context, in *TokenReq, out *HotLikeRankList) error
 		GetToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error
+		GetLikes(ctx context.Context, in *GetLikesReq, out *GetLikesRes) error
 	}
 	type FileService struct {
 		fileService
@@ -303,11 +316,11 @@ func (h *fileServiceHandler) RefreshToken(ctx context.Context, in *TokenReq, out
 	return h.FileServiceHandler.RefreshToken(ctx, in, out)
 }
 
-func (h *fileServiceHandler) GetRandomFile(ctx context.Context, in *Empty, out *RandomFiles) error {
+func (h *fileServiceHandler) GetRandomFile(ctx context.Context, in *TokenReq, out *RandomFiles) error {
 	return h.FileServiceHandler.GetRandomFile(ctx, in, out)
 }
 
-func (h *fileServiceHandler) GetHotLikeRank(ctx context.Context, in *Empty, out *HotLikeRankList) error {
+func (h *fileServiceHandler) GetHotLikeRank(ctx context.Context, in *TokenReq, out *HotLikeRankList) error {
 	return h.FileServiceHandler.GetHotLikeRank(ctx, in, out)
 }
 
@@ -317,4 +330,8 @@ func (h *fileServiceHandler) GetToken(ctx context.Context, in *TokenUserReq, out
 
 func (h *fileServiceHandler) LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error {
 	return h.FileServiceHandler.LikeOrDislike(ctx, in, out)
+}
+
+func (h *fileServiceHandler) GetLikes(ctx context.Context, in *GetLikesReq, out *GetLikesRes) error {
+	return h.FileServiceHandler.GetLikes(ctx, in, out)
 }

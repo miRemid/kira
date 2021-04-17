@@ -18,9 +18,12 @@ const (
 	AnonymousKey = "ANONYMOUS_FILES_ID"
 	AnonyEvent   = "kira.micro.service.upload.anony"
 	AnonyBucket  = "anony"
+	AnonyToken   = "anony"
 
 	LikeRankKey        = "like_rank_set"
 	LikeRankHotListKey = "like_hot_rank_list"
+
+	FileTokenHeader = "KIRA_TOKEN_SIG"
 )
 
 func UserLikeKey(userid string) string {

@@ -1,7 +1,6 @@
 package router
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,30 +8,26 @@ import (
 	"github.com/miRemid/kira/common/response"
 )
 
-func CheckToken(ctx *gin.Context) {
-	owner := ""
-	if token := ctx.Query("token"); token == "" {
-		owner = ctx.ClientIP()
-		ctx.Set(common.AnonymousKey, true)
-	} else {
-		userid, err := auth.FileToken(token)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, response.Response{
-				Code:  response.StatusInternalError,
-				Error: err.Error(),
-			})
-			return
+func CheckFileToken() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var token string = ""
+		if t := ctx.Query("token"); t != "" {
+			token = t
+		} else {
+			if tt := ctx.GetHeader(common.FileTokenHeader); tt != "" {
+				token = tt
+			}
 		}
-		owner = userid.UserID
-		ctx.Set(common.AnonymousKey, false)
+		if token == "" {
+			token = common.AnonyToken
+		}
+		ctx.Request.Header.Set(common.FileTokenHeader, token)
+		ctx.Next()
 	}
-	log.Println("Owner: ", owner)
-	ctx.Set("owner", owner)
-	ctx.Next()
 }
 
 func CheckSuspend(ctx *gin.Context) {
-	if token := ctx.Query("token"); token != "" {
+	if token := ctx.GetHeader(common.FileTokenHeader); token != common.AnonyToken {
 		res, err := fileCli.CheckStatus(token)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusOK, response.Response{

@@ -60,19 +60,6 @@ func (handler AuthHandler) Refresh(ctx context.Context, in *pb.TokenRequest, res
 	return nil
 }
 
-func (handler AuthHandler) FileToken(ctx context.Context, in *pb.FileTokenRequest, res *pb.FileTokenResponse) error {
-	userid, err := handler.Repo.FileToken(ctx, in.Token)
-	if err != nil {
-		res.Succ = false
-		res.Msg = err.Error()
-		return errors.WithMessage(err, "file token")
-	}
-	res.Succ = true
-	res.Msg = "get success"
-	res.UserID = userid
-	return nil
-}
-
 func (handler AuthHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
 	res.Code = 0
 	res.Name = "auth"
