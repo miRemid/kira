@@ -135,8 +135,11 @@ message CheckTokenStatusRes {
 // Normal RPCs
 message GetUserImagesReq {
     string userid = 1;
+    //@inject_tag: form:"offset"
     int64 offset = 2;
+    //@inject_tag: form:"limit"
     int64 limit = 3;
+    //@inject_tag: form:"desc"
     bool desc = 4;
     string token = 5;
 }

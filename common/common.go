@@ -40,6 +40,13 @@ func UserInfoKey(userName string) string {
 	return buf.String()
 }
 
+func UserTokenKey(userid string) string {
+	var buf strings.Builder
+	buf.WriteString(userid)
+	buf.WriteString("_token")
+	return buf.String()
+}
+
 func Getenv(key, replace string) string {
 	res := os.Getenv(key)
 	if res == "" {

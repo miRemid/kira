@@ -9,13 +9,11 @@ import (
 )
 
 var (
-	auth    *client.AuthClient
 	upload  *client.UploadClient
 	fileCli *client.FileClient
 )
 
 func NewRouter(cli mClient.Client) *gin.Engine {
-	auth = client.NewAuthClient(cli)
 	upload = client.NewUploadClient(cli)
 	fileCli = client.NewFileClient(cli)
 

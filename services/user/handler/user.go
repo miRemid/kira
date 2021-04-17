@@ -16,7 +16,7 @@ type UserHandler struct {
 }
 
 func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb.SigninRes) error {
-	token, err := handler.Repo.Signin(in.Username, in.Password)
+	token, err := handler.Repo.Signin(ctx, in.Username, in.Password)
 	if err != nil {
 		res.Succ = false
 		res.Msg = err.Error()
@@ -29,7 +29,7 @@ func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb
 }
 
 func (handler UserHandler) Signup(ctx context.Context, in *pb.SignupReq, res *pb.SignupRes) error {
-	err := handler.Repo.Signup(in.Username, in.Password)
+	err := handler.Repo.Signup(ctx, in.Username, in.Password)
 	if err != nil {
 		res.Succ = false
 		res.Msg = err.Error()
@@ -41,7 +41,7 @@ func (handler UserHandler) Signup(ctx context.Context, in *pb.SignupReq, res *pb
 }
 
 func (handler UserHandler) UserInfo(ctx context.Context, in *pb.UserInfoReq, res *pb.UserInfoRes) error {
-	user, err := handler.Repo.UserInfo(in.UserName)
+	user, err := handler.Repo.UserInfo(ctx, in.UserName)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return response.ErrRecordNotFound

@@ -31,6 +31,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		{
 			normal.GET("/getRandomFiles", GetRandomFile)
 			normal.GET("/getHotLikeRank", GetHotLikeRank)
+			normal.GET("/getUserImages/:userName", GetUserImages)
 		}
 
 		token := file.Group("/", md.CheckFileToken(false))

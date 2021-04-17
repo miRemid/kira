@@ -3,6 +3,7 @@ package repository
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"log"
@@ -71,6 +72,12 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 func (repo FileRepositoryImpl) token2UserID(tx *gorm.DB, token string) (string, error) {
 	var userid string
 	err := tx.Model(model.TokenUser{}).Select("user_id").Where("token = ?", token).First(&userid).Error
+	return userid, err
+}
+
+func (repo FileRepositoryImpl) userName2UserID(tx *gorm.DB, userName string) (string, error) {
+	var userid string
+	err := tx.Model(model.TokenUser{}).Select("user_id").Where("user_name = ?", userName).First(&userid).Error
 	return userid, err
 }
 
@@ -166,24 +173,34 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) 
 	return res, nil
 }
 
-func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, userID string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error) {
+func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, userName string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error) {
 	var notfound bool
 	if token == common.AnonyToken {
 		notfound = true
 	}
-	log.Println(userID, offset, limit, desc)
 	tx := repo.db.Begin()
+	userID, err := repo.userName2UserID(tx, userName)
+	if err != nil {
+		return nil, 0, err
+	}
+	log.Println(userID)
 	var total int64
 	if err := tx.Model(model.FileModel{}).Where("owner = ?", userID).Count(&total).Error; err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
 	var files = make([]*pb.UserFile, 0)
-	var err error
+	sqlExec := `
+	select ttu.user_name as user_name, tf.file_name, tf.file_width , tf.file_height ,tf.file_id ,tf.file_size ,tf.file_ext , tf.file_hash 
+	from tbl_file tf left join tbl_token_user ttu 
+	on tf.owner = ttu.user_id 
+	where tf.owner = '%v' 
+	order by tf.created_at %v LIMIT %v, %v
+	`
 	if desc {
-		err = tx.Model(model.FileModel{}).Where("owner = ?", userID).Order("created_at desc").Limit(int(limit)).Offset(int(offset)).Find(&files).Error
+		err = tx.Raw(fmt.Sprintf(sqlExec, userID, "desc", offset, limit)).Scan(&files).Error
 	} else {
-		err = tx.Model(model.FileModel{}).Where("owner= ?", userID).Order("created_at asc").Limit(int(limit)).Offset(int(offset)).Find(&files).Error
+		err = tx.Raw(fmt.Sprintf(sqlExec, userID, "asc", offset, limit)).Scan(&files).Error
 	}
 	if err != nil {
 		tx.Rollback()
@@ -329,18 +346,6 @@ func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (
 	log.Println("Refresh Token for: ", token)
 	tx := repo.db.Begin()
 	ntoken := ksuid.New().String()
-	userid, err := repo.token2UserID(tx, token)
-	if err != nil {
-		log.Println("Refresh Token, Get infomation err: ", err)
-		tx.Rollback()
-		return "", err
-	}
-	conn := redis.Get()
-	if _, err := conn.Do("DEL", userid); err != nil {
-		log.Println("Delete key ", userid, " failed: ", err)
-		tx.Rollback()
-		return "", err
-	}
 	if err := tx.Exec("update tbl_token_user set token = ? where token = ?", ntoken, token).Error; err != nil {
 		tx.Rollback()
 		return "", err
@@ -470,7 +475,6 @@ func (repo FileRepositoryImpl) GenerateToken(ctx context.Context, userID, userNa
 
 // This method is for user service
 func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (string, error) {
-	log.Println("Get Token For UserID: ", userID)
 	tx := repo.db.Begin()
 	var token string
 	if err := tx.Raw("select token from tbl_token_user where user_id = ?", userID).Scan(&token).Error; err != nil {
@@ -478,7 +482,6 @@ func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (str
 		tx.Rollback()
 		return "", err
 	}
-	log.Println("UserID: ", userID, "; Token: ", token)
 	return token, nil
 }
 

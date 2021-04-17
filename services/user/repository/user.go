@@ -18,9 +18,9 @@ import (
 )
 
 type UserRepository interface {
-	Signup(username, password string) error
-	Signin(username, password string) (string, error)
-	UserInfo(username string) (model.UserModel, error)
+	Signup(ctx context.Context, username, password string) error
+	Signin(ctx context.Context, username, password string) (string, error)
+	UserInfo(ctx context.Context, username string) (model.UserModel, error)
 
 	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
 	ChangeUserStatus(ctx context.Context, userid string, status int64) error
@@ -93,7 +93,7 @@ func (repo UserRepositoryImpl) ChangePassword(ctx context.Context, userid, old, 
 	return nil
 }
 
-func (repo UserRepositoryImpl) Refresh(userid string) (string, error) {
+func (repo UserRepositoryImpl) Refresh(ctx context.Context, userid string) (string, error) {
 	res, err := repo.fileCli.RefreshToken(userid)
 	if err != nil || !res.Succ {
 		return "", errors.New("User Service: Refresh failed")
@@ -101,7 +101,7 @@ func (repo UserRepositoryImpl) Refresh(userid string) (string, error) {
 	return res.Token, nil
 }
 
-func (repo UserRepositoryImpl) Signup(username, password string) error {
+func (repo UserRepositoryImpl) Signup(ctx context.Context, username, password string) error {
 	var user model.UserModel
 	user.UserName = username
 	if err := repo.db.Model(user).Where("user_name = ?", username).First(&user).Error; err == nil {
@@ -128,7 +128,7 @@ func (repo UserRepositoryImpl) Signup(username, password string) error {
 	return nil
 }
 
-func (repo UserRepositoryImpl) Signin(username, password string) (string, error) {
+func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password string) (string, error) {
 	tx := repo.db.Begin()
 
 	// get user model
@@ -159,7 +159,7 @@ func (repo UserRepositoryImpl) Signin(username, password string) (string, error)
 	return res.Token, nil
 }
 
-func (repo UserRepositoryImpl) UserInfo(username string) (model.UserModel, error) {
+func (repo UserRepositoryImpl) UserInfo(ctx context.Context, username string) (model.UserModel, error) {
 	log.Println("receive", username)
 	var user model.UserModel
 	tx := repo.db.Begin()

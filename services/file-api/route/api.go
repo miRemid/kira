@@ -197,3 +197,43 @@ func GetHotLikeRank(ctx *gin.Context) {
 		},
 	})
 }
+
+func GetUserImages(ctx *gin.Context) {
+	userName := ctx.Param("userName")
+	if userName == "" {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "check params",
+		})
+		return
+	}
+	var req pb.GetUserImagesReq
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "check params",
+		})
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 10
+	}
+	token := ctx.GetHeader(common.FileTokenHeader)
+	req.Token = token
+	req.Userid = userName
+	res, err := cli.Service.GetUserImages(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: gin.H{
+			"total": res.Total,
+			"files": res.Files,
+		},
+	})
+}

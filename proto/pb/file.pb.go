@@ -1056,10 +1056,13 @@ type GetUserImagesReq struct {
 	unknownFields protoimpl.UnknownFields
 
 	Userid string `protobuf:"bytes,1,opt,name=userid,proto3" json:"userid,omitempty"`
-	Offset int64  `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
-	Limit  int64  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
-	Desc   bool   `protobuf:"varint,4,opt,name=desc,proto3" json:"desc,omitempty"`
-	Token  string `protobuf:"bytes,5,opt,name=token,proto3" json:"token,omitempty"`
+	//@inject_tag: form:"offset"
+	Offset int64 `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty" form:"offset"`
+	//@inject_tag: form:"limit"
+	Limit int64 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty" form:"limit"`
+	//@inject_tag: form:"desc"
+	Desc  bool   `protobuf:"varint,4,opt,name=desc,proto3" json:"desc,omitempty" form:"desc"`
+	Token string `protobuf:"bytes,5,opt,name=token,proto3" json:"token,omitempty"`
 }
 
 func (x *GetUserImagesReq) Reset() {

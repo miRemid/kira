@@ -100,7 +100,8 @@ func GetInfo(ctx *gin.Context) {
 	conn := redis.Get()
 	defer conn.Close()
 	key := common.UserInfoKey(userName)
-	conn.Do("SET", key, buffer, "EX", "60")
+	conn.Do("SETEX", key, "60", buffer)
+
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
@@ -219,44 +220,5 @@ func ChangePassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
-	})
-}
-
-func GetUserImages(ctx *gin.Context) {
-	userName := ctx.Param("userName")
-	if userName == "" {
-		ctx.JSON(http.StatusOK, response.Response{
-			Code:  response.StatusBadParams,
-			Error: "check params",
-		})
-		return
-	}
-	var req pb.GetUserImagesReqByNameReq
-	if err := ctx.BindQuery(&req); err != nil {
-		ctx.JSON(http.StatusOK, response.Response{
-			Code:  response.StatusBadParams,
-			Error: "check params",
-		})
-		return
-	}
-	req.UserName = userName
-	log.Println(req.UserName, req.Offset, req.Limit, req.Desc)
-	if req.Limit == 0 {
-		req.Limit = 20
-	}
-	res, err := cli.GetUserImages(&req)
-	if err != nil {
-		ctx.JSON(http.StatusOK, response.Response{
-			Code:  response.StatusInternalError,
-			Error: err.Error(),
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, response.Response{
-		Code: response.StatusOK,
-		Data: gin.H{
-			"toatl": res.Total,
-			"files": res.Files,
-		},
 	})
 }
