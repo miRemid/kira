@@ -47,6 +47,13 @@ func UserTokenKey(userid string) string {
 	return buf.String()
 }
 
+func ServiceKey(service string) string {
+	var buf strings.Builder
+	buf.WriteString(service)
+	buf.WriteString("_service")
+	return buf.String()
+}
+
 func Getenv(key, replace string) string {
 	res := os.Getenv(key)
 	if res == "" {
