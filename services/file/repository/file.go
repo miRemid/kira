@@ -378,6 +378,10 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, token string, fil
 		tx.Rollback()
 		return err
 	}
+	// 4. delete redis record
+	conn := redis.Get()
+	defer conn.Close()
+	deleteFileRedis(conn, fileID, owner)
 	tx.Commit()
 	return nil
 }
