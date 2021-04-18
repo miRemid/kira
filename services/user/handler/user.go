@@ -15,6 +15,17 @@ type UserHandler struct {
 	Repo repository.UserRepository
 }
 
+func (handler UserHandler) GetLoginUserInfo(ctx context.Context, in *pb.LoginUserInfoReq, res *pb.LoginUserInfoRes) error {
+	user, token, err := handler.Repo.LoginUserInfo(ctx, in.Userid)
+	res.User = new(pb.User)
+	res.User.UserID = user.UserID
+	res.User.UserName = user.UserName
+	res.User.UserRole = user.Role
+	res.User.UserStatus = user.Status
+	res.Token = token
+	return err
+}
+
 func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb.SigninRes) error {
 	token, err := handler.Repo.Signin(ctx, in.Username, in.Password)
 	if err != nil {

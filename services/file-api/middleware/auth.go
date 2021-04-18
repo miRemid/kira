@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 
 func CheckFileToken(anony bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		log.Println(ctx.Request.Header)
 		var token string = ""
 		if t := ctx.Query("token"); t != "" {
 			token = t
@@ -21,6 +23,7 @@ func CheckFileToken(anony bool) gin.HandlerFunc {
 				token = tt
 			}
 		}
+		log.Println("Token = ", token)
 		if token == "" {
 			if !anony {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Response{

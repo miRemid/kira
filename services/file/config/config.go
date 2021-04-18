@@ -15,7 +15,7 @@ var (
 		".gif":  "image/gif",
 	}
 
-	DOMAIN = "test.me:5000"
+	DOMAIN = "api.test.me"
 )
 
 func init() {

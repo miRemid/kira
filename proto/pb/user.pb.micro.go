@@ -51,6 +51,7 @@ type UserService interface {
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
 	// User
 	ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error)
+	GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, opts ...client.CallOption) (*LoginUserInfoRes, error)
 	// Admin
 	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
 	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
@@ -121,6 +122,16 @@ func (c *userService) ChangePassword(ctx context.Context, in *UpdatePasswordReq,
 	return out, nil
 }
 
+func (c *userService) GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, opts ...client.CallOption) (*LoginUserInfoRes, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetLoginUserInfo", in)
+	out := new(LoginUserInfoRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userService) AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error) {
 	req := c.c.NewRequest(c.name, "UserService.AdminUserList", in)
 	out := new(UserListResponse)
@@ -172,6 +183,7 @@ type UserServiceHandler interface {
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
 	// User
 	ChangePassword(context.Context, *UpdatePasswordReq, *UpdatePasswordRes) error
+	GetLoginUserInfo(context.Context, *LoginUserInfoReq, *LoginUserInfoRes) error
 	// Admin
 	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
 	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
@@ -187,6 +199,7 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
 		ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error
+		GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, out *LoginUserInfoRes) error
 		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
 		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
 		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
@@ -221,6 +234,10 @@ func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out 
 
 func (h *userServiceHandler) ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error {
 	return h.UserServiceHandler.ChangePassword(ctx, in, out)
+}
+
+func (h *userServiceHandler) GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, out *LoginUserInfoRes) error {
+	return h.UserServiceHandler.GetLoginUserInfo(ctx, in, out)
 }
 
 func (h *userServiceHandler) AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error {

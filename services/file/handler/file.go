@@ -32,6 +32,7 @@ func (handler FileServiceHandler) GetHotLikeRank(ctx context.Context, in *pb.Tok
 }
 
 func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.Response) error {
+	log.Printf("UserID = %v, FileID = %v, Dislike = %v", in.Userid, in.Fileid, in.Dislike)
 	err := handler.Repo.LikeOrDislike(ctx, in.Userid, in.Fileid, in.Dislike)
 	if err == nil {
 		res.Code = int64(response.StatusOK)

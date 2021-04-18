@@ -40,9 +40,10 @@ services:
       - JAEGER_ADDRESS=jaeger:6831
       - REDIS_ADDRESS=redis:6379
     labels: 
-      - traefik.enable=true
-      - traefik.http.routers.file.rule=PathPrefix(`/file`)
-      - traefik.http.services.file.loadbalancer.server.port=5001
+      - "traefik.enable=true"
+      - "traefik.http.routers.file.rule=PathPrefix(`/file`)"
+      - "traefik.http.services.file.loadbalancer.server.port=5001"
+
   user:
     image: kira/user
     container_name: user
@@ -67,11 +68,12 @@ services:
       - API_ADDRESS=:5002
       - JAEGER_ADDRESS=jaeger:6831
       - REDIS_ADDRESS=redis:6379
+      - GIN_MODE=release
     labels: 
-      - traefik.enable=true
-      - traefik.http.routers.user.rule=PathPrefix(`/user`)
-      - traefik.http.services.user.loadbalancer.server.port=5002
-  
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=PathPrefix(`/user`)"
+      - "traefik.http.services.user.loadbalancer.server.port=5002"
+      
   site:
     image: kira/site
     container_name: site
@@ -84,10 +86,11 @@ services:
       - REDIS_ADDRESS=redis:6379
       - REGISTRY_ADDRESS=etcd:2379
       - JAEGER_ADDRESS=jaeger:6831
+      - GIN_MODE=release
     labels: 
-      - traefik.enable=true
-      - traefik.http.routers.site.rule=PathPrefix(`/site`) || PathPrefix(`/image`)
-      - traefik.http.services.site.loadbalancer.server.port=5000
+      - "traefik.enable=true"
+      - "traefik.http.routers.site.rule=PathPrefix(`/site`) || PathPrefix(`/image`)"
+      - "traefik.http.services.site.loadbalancer.server.port=5000"
   
   upload:
     image: kira/upload
@@ -117,9 +120,9 @@ services:
       - GIN_MODE=release
       - REDIS_ADDRESS=redis:6379
     labels: 
-      - traefik.enable=true
-      - traefik.http.routers.upload.rule=PathPrefix(`/upload`)
-      - traefik.http.services.upload.loadbalancer.server.port=5003
+      - "traefik.enable=true"
+      - "traefik.http.routers.upload.rule=PathPrefix(`/upload`)"
+      - "traefik.http.services.upload.loadbalancer.server.port=5003"
   
   # gateway:
   #   image: kira/gateway

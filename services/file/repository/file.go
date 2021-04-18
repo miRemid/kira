@@ -183,7 +183,6 @@ func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, 
 	if err != nil {
 		return nil, 0, err
 	}
-	log.Println(userID)
 	var total int64
 	if err := tx.Model(model.FileModel{}).Where("owner = ?", userID).Count(&total).Error; err != nil {
 		tx.Rollback()
@@ -238,6 +237,11 @@ func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, 
 func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (err error) {
 	conn := redis.Get()
 	defer conn.Close()
+	// 1. check fileid
+	var id uint
+	if err := repo.db.Table("tbl_file").Select("id").Where("fild_id = ?", fileid).First(&id).Error; err == gorm.ErrRecordNotFound {
+		return err
+	}
 	key := common.UserLikeKey(userid)
 	exist, err := getUserFileLikeStatus(conn, fileid, userid)
 	if err != nil {

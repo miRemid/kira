@@ -112,6 +112,15 @@ message GetUserImagesReqByNameReq {
     bool desc = 4;
 }
 
+message LoginUserInfoReq {
+    string userid = 1;
+}
+
+message LoginUserInfoRes {
+    User user = 1;
+    string token = 2;
+}
+
 service UserService {
     // API
     // Common
@@ -122,6 +131,7 @@ service UserService {
 
     // User
     rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
+    rpc GetLoginUserInfo(LoginUserInfoReq) returns (LoginUserInfoRes);
 
     // Admin
     rpc AdminUserList(UserListRequest) returns(UserListResponse);

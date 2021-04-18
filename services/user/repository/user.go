@@ -21,6 +21,7 @@ type UserRepository interface {
 	Signup(ctx context.Context, username, password string) error
 	Signin(ctx context.Context, username, password string) (string, error)
 	UserInfo(ctx context.Context, username string) (model.UserModel, error)
+	LoginUserInfo(ctx context.Context, userID string) (model.UserModel, string, error)
 
 	GetUserList(ctx context.Context, limit, offset int64) ([]model.UserModel, int64, error)
 	ChangeUserStatus(ctx context.Context, userid string, status int64) error
@@ -49,6 +50,17 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 		fileCli: fc,
 		pub:     pub,
 	}, err
+}
+
+func (repo UserRepositoryImpl) LoginUserInfo(ctx context.Context, userID string) (model.UserModel, string, error) {
+	// 1. get user info
+	var user model.UserModel
+	if err := repo.db.Model(user).Where("user_id = ?", userID).First(&user).Error; err != nil {
+		return user, "", err
+	}
+	// 2. get user token
+	token, err := repo.fileCli.GetToken(userID)
+	return user, token.Token, err
 }
 
 func (repo UserRepositoryImpl) GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error) {

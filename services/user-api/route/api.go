@@ -109,6 +109,28 @@ func GetInfo(ctx *gin.Context) {
 	})
 }
 
+func GetMe(ctx *gin.Context) {
+	userID := ctx.GetHeader("userID")
+	res, err := cli.Service.GetLoginUserInfo(ctx, &pb.LoginUserInfoReq{
+		Userid: userID,
+	})
+	if err != nil {
+		log.Println("Get Info: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: gin.H{
+			"info":  res.User,
+			"token": res.Token,
+		},
+	})
+}
+
 type DeleteReq struct {
 	UserID string `json:"user_id" form:"user_id" binding:"required"`
 }
