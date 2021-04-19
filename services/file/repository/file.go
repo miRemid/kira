@@ -100,7 +100,7 @@ func (repo FileRepositoryImpl) GetHotLikeRank(ctx context.Context, token string)
 		return nil, err
 	}
 	var files = make([]*pb.UserFile, 0)
-	for i := 0; i < len(fileScore)/2; i = i + 2 {
+	for i := 0; i < len(fileScore); i = i + 2 {
 		id, score := fileScore[i], fileScore[i+1]
 		var file = new(pb.UserFile)
 		if err = repo.db.Raw(`
@@ -112,17 +112,17 @@ func (repo FileRepositoryImpl) GetHotLikeRank(ctx context.Context, token string)
 		file.FileURL = config.Path(file.FileID)
 		s, _ := strconv.Atoi(score)
 		file.Likes = int64(s)
-		files = append(files, file)
 		// 2. if token != ""
 		if !notfound {
 			userKey := common.UserLikeKey(userid)
-			exist, err := redigo.Bool(conn.Do("HEXISTS", userKey, files[i].FileID))
+			exist, err := redigo.Bool(conn.Do("HEXISTS", userKey, file.FileID))
 			if err != nil || !exist {
-				files[i].Liked = false
+				file.Liked = false
 			} else {
-				files[i].Liked = true
+				file.Liked = true
 			}
 		}
+		files = append(files, file)
 	}
 	return files, nil
 }
@@ -174,11 +174,18 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) 
 }
 
 func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, userName string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error) {
+	tx := repo.db.Begin()
 	var notfound bool
+	var userTokenID string
 	if token == common.AnonyToken {
 		notfound = true
+	} else {
+		id, err := repo.token2UserID(tx, token)
+		if err != nil {
+			return nil, 0, err
+		}
+		userTokenID = id
 	}
-	tx := repo.db.Begin()
 	userID, err := repo.userName2UserID(tx, userName)
 	if err != nil {
 		return nil, 0, err
@@ -222,11 +229,11 @@ func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, 
 		}
 		// 2. if token != ""
 		if !notfound {
-			exist, err := getUserFileLikeStatus(conn, files[i].FileID, userID)
-			if err != nil || !exist {
+			exist, err := getUserFileLikeStatus(conn, files[i].FileID, userTokenID)
+			if err != nil {
 				files[i].Liked = false
 			} else {
-				files[i].Liked = true
+				files[i].Liked = exist
 			}
 		}
 	}
@@ -239,12 +246,13 @@ func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string,
 	defer conn.Close()
 	// 1. check fileid
 	var id uint
-	if err := repo.db.Table("tbl_file").Select("id").Where("fild_id = ?", fileid).First(&id).Error; err == gorm.ErrRecordNotFound {
+	if err := repo.db.Model(model.FileModel{}).Select("id").Where("fild_id = ?", fileid).First(&id).Error; err == gorm.ErrRecordNotFound {
 		return err
 	}
 	key := common.UserLikeKey(userid)
 	exist, err := getUserFileLikeStatus(conn, fileid, userid)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	if !dislike && exist {
@@ -267,6 +275,13 @@ func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string,
 	// 1. incr zset rank list
 	if _, err = conn.Do("zincrby", common.LikeRankKey, offset, fileid); err != nil {
 		return err
+	}
+	likes, err := getFileLikes(conn, fileid)
+	if err != nil {
+		return err
+	}
+	if likes == 0 {
+		conn.Do("ZREM", common.LikeRankKey, fileid)
 	}
 	if dislike {
 		// remove the id from the user's set
@@ -297,8 +312,8 @@ func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offs
 	if desc {
 		cmd = "ZREVRANGE"
 	}
-	log.Printf("UserID = %s, Offset = %v, Limit = %v", userKey, offset, offset+limit)
-	fileids, err := redigo.Strings(conn.Do(cmd, userKey, offset, offset+limit))
+	log.Printf("UserID = %s, Offset = %v, Limit = %v", userKey, offset, limit)
+	fileids, err := redigo.Strings(conn.Do(cmd, userKey, offset, offset+limit-1))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -339,6 +354,12 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 			res[i].Liked = false
 		} else {
 			res[i].Liked = true
+		}
+		likes, err := getFileLikes(conn, res[i].FileID)
+		if err != nil {
+			res[i].Likes = 0
+		} else {
+			res[i].Likes = likes
 		}
 	}
 

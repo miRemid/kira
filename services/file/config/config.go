@@ -21,7 +21,7 @@ var (
 func init() {
 	pro := common.Getenv("GIN_MODE", "")
 	if pro == gin.ReleaseMode {
-		DOMAIN = common.Getenv("DOMAIN", "img.test.me")
+		DOMAIN = common.Getenv("DOMAIN", "api.test.me")
 	}
 }
 

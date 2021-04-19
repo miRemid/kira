@@ -4,18 +4,28 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/proto/pb"
-	"github.com/miRemid/kira/services/upload/config"
+	"github.com/miRemid/kira/services/file/config"
 )
 
 func getUserFileLikeStatus(conn redis.Conn, fileid, userid string) (bool, error) {
 	userKey := common.UserLikeKey(userid)
 	_, err := redis.Int64(conn.Do("ZRANK", userKey, fileid))
-	if err == redis.ErrNil {
-		return false, nil
-	} else if err == nil {
-		return true, nil
+	if err != nil {
+		if err == redis.ErrNil {
+			return false, nil
+		}
+		return false, err
 	}
-	return false, err
+	return true, nil
+}
+
+func getFileLikes(conn redis.Conn, fileid string) (int64, error) {
+	index, err := redis.Int64(conn.Do("ZRANK", common.LikeRankKey, fileid))
+	if err != nil {
+		return 0, err
+	}
+	likes, err := redis.Int64Map(conn.Do("ZRANGE", common.LikeRankKey, index, index, "withscores"))
+	return likes[fileid], err
 }
 
 func setFileIntoHash(conn redis.Conn, file *pb.UserFile) {
@@ -39,6 +49,7 @@ func getFileFromHash(conn redis.Conn, userid, fileid string) *pb.UserFile {
 		file.Liked = false
 	} else {
 		file.Liked = exist
+		file.Likes, _ = getFileLikes(conn, fileid)
 	}
 	return file
 }
