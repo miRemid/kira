@@ -14,7 +14,6 @@ import (
 
 func CheckFileToken(anony bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		log.Println(ctx.Request.Header)
 		var token string = ""
 		if t := ctx.Query("token"); t != "" {
 			token = t

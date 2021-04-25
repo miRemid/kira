@@ -4,9 +4,10 @@ import (
 	"log"
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
-	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/casbin"
 	"github.com/miRemid/kira/common/wrapper/hystrix"
+	"github.com/pkg/errors"
 
 	"github.com/miRemid/kira/common/wrapper/tracer"
 	"github.com/miRemid/kira/services/user-api/route"
@@ -20,10 +21,20 @@ import (
 func main() {
 	log.SetFlags(log.Llongfile)
 
-	e, err := casbin.NewEnforcer("./casbin/model.conf", "./casbin/permission.csv")
+	db, err := common.DBConnect()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.WithMessage(err, "connect to database"))
 	}
+	e := casbin.New(db, "./casbin/model.conf")
+	e.LoadPolicy()
+	e.AddPolicy("p", "normal", "/user/me", "GET")
+	e.AddPolicy("p", "normal", "/user/changePassword", "POST")
+	e.AddPolicy("p", "admin", "/user/changePassword", "POST")
+	e.AddPolicy("p", "admin", "/user/admin/deleteUser", "DELETE")
+	e.AddPolicy("p", "admin", "/user/admin/getUserList", "GET")
+	e.AddPolicy("p", "admin", "/user/admin/getUserFileList", "GET")
+	e.AddPolicy("p", "admin", "/user/admin/updateUserStatus", "POST")
+	e.SavePolicy()
 
 	etcdAddr := common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(

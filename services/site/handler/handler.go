@@ -10,23 +10,22 @@ import (
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common/response"
+	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/site/client"
 	"golang.org/x/sync/errgroup"
 )
 
 func GetImage(ctx *gin.Context) {
-	fileID := ctx.Query("id")
-	if fileID == "" {
+	var in = new(pb.GetImageReq)
+	if err := ctx.ShouldBind(in); err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusBadParams,
-			Error: "mising fileid param",
+			Error: "mising params",
 		})
 		return
 	}
-	width := ctx.DefaultQuery("width", "0")
-	height := ctx.DefaultQuery("height", "0")
-	res, err := client.File().GetImage(fileID, width, height)
+	res, err := client.File().Service.GetImage(ctx, in)
 	if err != nil {
 		log.Println("Get Image: ", err)
 		ctx.JSON(http.StatusOK, response.Response{
@@ -44,6 +43,7 @@ func GetImage(ctx *gin.Context) {
 	// 写文件
 	ctx.Writer.WriteHeader(http.StatusOK)
 	ctx.Writer.Header().Add("Content-Type", config.ContentType(res.FileExt))
+	ctx.Writer.Header().Add("Content-Disposition", "filename="+res.FileName+res.FileExt)
 	ctx.Writer.Write(res.Image)
 }
 

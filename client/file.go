@@ -22,7 +22,7 @@ func (cli FileClient) GetUserImages(in *pb.GetUserImagesReq) (*pb.GetUserImagesR
 	return cli.Service.GetUserImages(context.TODO(), in)
 }
 
-func (cli FileClient) GetImage(fileid, width, height string) (*pb.GetImageRes, error) {
+func (cli FileClient) GetImage(fileid string, width, height int64) (*pb.GetImageRes, error) {
 	return cli.Service.GetImage(context.TODO(), &pb.GetImageReq{
 		FileID: fileid,
 		Width:  width,

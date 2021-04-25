@@ -19,9 +19,10 @@ import (
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
 
+	"github.com/disintegration/gift"
 	"github.com/minio/minio-go/v7"
-	"github.com/nfnt/resize"
 	"github.com/segmentio/ksuid"
+
 	"gorm.io/gorm"
 )
 
@@ -38,7 +39,7 @@ type FileRepository interface {
 	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]*pb.UserFile, int64, error)
 	DeleteFile(context.Context, string, string) error
-	GetImage(ctx context.Context, fileID, width, height string) ([]byte, error)
+	GetImage(ctx context.Context, in *pb.GetImageReq) ([]byte, error)
 	GetDetail(ctx context.Context, fileID string) (*pb.UserFile, error)
 	DeleteUser(ctx context.Context, userID string) error
 	ChangeStatus(ctx context.Context, userID string, status int64) error
@@ -514,33 +515,47 @@ func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (str
 	return token, nil
 }
 
-func (repo FileRepositoryImpl) GetImage(ctx context.Context, fileID, width, height string) ([]byte, error) {
+func (repo FileRepositoryImpl) GetImage(ctx context.Context, in *pb.GetImageReq) ([]byte, error) {
 	// 1. Get bucket
 	var bucket string
-	if err := repo.db.Model(model.FileModel{}).Select("bucket").Where("file_id = ?", fileID).Scan(&bucket).Error; err != nil {
+	if err := repo.db.Model(model.FileModel{}).Select("bucket").Where("file_id = ?", in.FileID).Scan(&bucket).Error; err != nil {
 		return nil, err
 	}
 	// 2. Get Files body
-	obj, err := repo.minioCli.GetObject(ctx, bucket, fileID, minio.GetObjectOptions{})
+	obj, err := repo.minioCli.GetObject(ctx, bucket, in.FileID, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
 	img, _, _ := image.Decode(obj)
-	w, err := strconv.Atoi(width)
-	if err != nil {
-		return nil, err
+	g := gift.New()
+	need := false
+	// 3. check width and height
+	if in.Width != 0 && in.Height != 0 {
+		need = true
+		g.Add(gift.Resize(int(in.Width), int(in.Height), gift.LanczosResampling))
 	}
-	h, err := strconv.Atoi(height)
-	if err != nil {
-		return nil, err
+	// 4. check gray
+	if in.Gray || in.Binary {
+		need = true
+		g.Add(gift.Grayscale())
 	}
-	var out image.Image = img
-	if w != 0 && h != 0 {
-		out = resize.Resize(uint(w), uint(h), img, resize.Lanczos3)
+	if in.Binary {
+		need = true
+		g.Add(gift.Threshold(float32(in.Threshold)))
 	}
-
+	// 4. check blur
+	if in.Blur {
+		need = true
+		g.Add(gift.GaussianBlur(float32(in.BlurSeed)))
+	}
 	var buffer bytes.Buffer
-	err = jpeg.Encode(&buffer, out, nil)
+	if need {
+		out := image.NewNRGBA(g.Bounds(img.Bounds()))
+		g.Draw(out, img)
+		err = jpeg.Encode(&buffer, out, nil)
+	} else {
+		err = jpeg.Encode(&buffer, img, nil)
+	}
 	return buffer.Bytes(), err
 }
 

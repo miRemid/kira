@@ -6,21 +6,6 @@ option go_package = ".;pb";
 
 import "proto/common.proto";
 
-// Define
-// message File {
-//     string fileID = 1;
-//     string fileName = 2;
-//     int64 fileSize = 3;
-//     string fileExt = 4;
-//     string fileHash = 5;
-//     string fileURL = 6;
-//     string fileWidth = 8;
-//     string fileHeight = 9;
-//     //@inject_tag: json:"liked"
-//     bool Liked = 10;
-//     int64 Likes = 11;
-// }
-
 message UserFile {
     //@inject_tag: gorm:"column:user_name"
     string userName = 1;
@@ -98,9 +83,22 @@ message GetDetailRes {
 }
 
 message GetImageReq {
+    //@inject_tag: form:"id" binding:"required"
     string fileID = 1;
-    string width = 2;
-    string height = 3;
+    //@inject_tag: form:"width"
+    int64 width = 2;
+    //@inject_tag: form:"height"
+    int64 height = 3;
+    //@inject_tag: form:"gray"
+    bool gray = 4;
+    //@inject_tag: form:"blur"
+    bool blur = 5;
+    //@inject_tag: form:"seed"
+    int64 blurSeed = 6;
+    //@inject_tag: form:"binary"
+    bool binary = 7;
+    //@inject_tag: form:"th"
+    int64 threshold = 8;
 }
 
 message GetImageRes {

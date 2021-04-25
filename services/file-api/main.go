@@ -4,8 +4,9 @@ import (
 	"log"
 
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
-	"github.com/casbin/casbin/v2"
 	"github.com/miRemid/kira/common"
+	"github.com/miRemid/kira/common/casbin"
+	"github.com/pkg/errors"
 
 	"github.com/miRemid/kira/common/wrapper/hystrix"
 	"github.com/miRemid/kira/common/wrapper/tracer"
@@ -30,10 +31,17 @@ func main() {
 	}
 	defer closer.Close()
 
-	e, err := casbin.NewEnforcer("./casbin/model.conf", "./casbin/permission.csv")
+	db, err := common.DBConnect()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.WithMessage(err, "connect to database"))
 	}
+	e := casbin.New(db, "./casbin/model.conf")
+	e.LoadPolicy()
+	e.AddPolicy("p", "normal", "/file/getToken", "GET")
+	e.AddPolicy("p", "normal", "/file/like", "POST")
+	e.AddPolicy("p", "normal", "/file/getLikes", "GET")
+	e.SavePolicy()
+
 	cli := micro.NewService(
 		micro.Name("kira.micro.client.file"),
 		micro.Registry(etcdRegistry),

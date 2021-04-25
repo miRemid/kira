@@ -2,10 +2,7 @@ package client
 
 import (
 	"github.com/miRemid/kira/client"
-	"github.com/miRemid/kira/common"
-	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
+	mClient "github.com/micro/go-micro/v2/client"
 )
 
 var (
@@ -15,18 +12,11 @@ var (
 	UploadCli *client.UploadClient
 )
 
-func init() {
-	service := micro.NewService(
-		micro.Name("kira.service.service.site"),
-		micro.Registry(etcd.NewRegistry(
-			registry.Addrs(common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")),
-		)),
-	)
-	service.Init()
-	FileCli = client.NewFileClient(service.Client())
-	UserCli = client.NewUserClient(service.Client())
-	AuthCli = client.NewAuthClient(service.Client())
-	UploadCli = client.NewUploadClient(service.Client())
+func Init(cli mClient.Client) {
+	FileCli = client.NewFileClient(cli)
+	UserCli = client.NewUserClient(cli)
+	AuthCli = client.NewAuthClient(cli)
+	UploadCli = client.NewUploadClient(cli)
 }
 
 func File() *client.FileClient {
