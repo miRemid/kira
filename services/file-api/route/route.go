@@ -25,12 +25,11 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 	route.Use(gin.Logger())
 	route.Use(gin.Recovery())
 
-	file := route.Group("/file", middleware.APICount("file"), md.JwtAuth(auth))
+	file := route.Group("/file", middleware.APICount("file"))
 	{
 		normal := file.Group("/", md.CheckFileToken(true))
 		{
 			normal.GET("/getRandomFiles", GetRandomFile)
-			normal.GET("/getHotLikeRank", GetHotLikeRank)
 			normal.GET("/getUserImages/:userName", GetUserImages)
 		}
 
@@ -42,7 +41,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 			token.GET("/refreshToken", RefreshToken)
 		}
 
-		auth := file.Group("/", middleware.Casbin(e))
+		auth := file.Group("/", md.JwtAuth(auth), middleware.Casbin(e))
 		{
 			auth.GET("/getToken", GetUserToken)
 			auth.POST("/like", LikeOrDislike)

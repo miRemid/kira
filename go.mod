@@ -21,6 +21,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.7
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.7.0
 	github.com/rs/xid v1.2.1
 	github.com/segmentio/ksuid v1.0.3

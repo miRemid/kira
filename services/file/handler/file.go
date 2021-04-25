@@ -26,14 +26,12 @@ func (handler FileServiceHandler) GetLikes(ctx context.Context, in *pb.GetLikesR
 }
 
 func (handler FileServiceHandler) GetHotLikeRank(ctx context.Context, in *pb.TokenReq, res *pb.HotLikeRankList) error {
-	files, err := handler.Repo.GetHotLikeRank(ctx, in.Token)
-	res.Files = files
-	return err
+	return nil
 }
 
 func (handler FileServiceHandler) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq, res *pb.Response) error {
 	log.Printf("UserID = %v, FileID = %v, Dislike = %v", in.Userid, in.Fileid, in.Dislike)
-	err := handler.Repo.LikeOrDislike(ctx, in.Userid, in.Fileid, in.Dislike)
+	err := handler.Repo.LikeOrDislike(ctx, in)
 	if err == nil {
 		res.Code = int64(response.StatusOK)
 		res.Message = "successful"

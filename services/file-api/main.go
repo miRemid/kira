@@ -37,9 +37,9 @@ func main() {
 	}
 	e := casbin.New(db, "./casbin/model.conf")
 	e.LoadPolicy()
-	e.AddPolicy("p", "normal", "/file/getToken", "GET")
-	e.AddPolicy("p", "normal", "/file/like", "POST")
-	e.AddPolicy("p", "normal", "/file/getLikes", "GET")
+	e.AddPolicy("normal", "/file/getToken", "GET")
+	e.AddPolicy("normal", "/file/like", "POST")
+	e.AddPolicy("normal", "/file/getLikes", "GET")
 	e.SavePolicy()
 
 	cli := micro.NewService(

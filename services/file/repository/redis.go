@@ -53,13 +53,3 @@ func getFileFromHash(conn redis.Conn, userid, fileid string) *pb.UserFile {
 	}
 	return file
 }
-
-func deleteFileRedis(conn redis.Conn, fileid string, userid string) {
-	// 1. delete redis cache
-	conn.Do("DEL", fileid)
-	// 2. delete like in user_key
-	likeKey := common.UserLikeKey(userid)
-	conn.Do("ZREM", likeKey, fileid)
-	// 3. delete like in rank key
-	conn.Do("ZREM", common.LikeRankKey, fileid)
-}

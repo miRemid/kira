@@ -7,20 +7,19 @@ import (
 	"image"
 	"image/jpeg"
 	"log"
-	"strconv"
-	"time"
+	"strings"
 
 	redigo "github.com/garyburd/redigo/redis"
 
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/common"
-	"github.com/miRemid/kira/common/response"
 	"github.com/miRemid/kira/model"
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
 
 	"github.com/disintegration/gift"
 	"github.com/minio/minio-go/v7"
+	"github.com/robfig/cron/v3"
 	"github.com/segmentio/ksuid"
 
 	"gorm.io/gorm"
@@ -30,6 +29,7 @@ type DeleteStruct struct {
 	FileID   string `gorm:"file_id"`
 	Bucket   string `gorm:"bucket"`
 	FileName string `gorm:"file_name"`
+	UserID   string `gorm:"-"`
 	Count    int    `gorm:"-"`
 }
 
@@ -46,8 +46,7 @@ type FileRepository interface {
 	CheckStatus(ctx context.Context, token string) (int64, error)
 	GetUserImages(ctx context.Context, token, userID string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error)
 	GetRandomFile(ctx context.Context, token string) ([]*pb.UserFile, error)
-	LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (err error)
-	GetHotLikeRank(ctx context.Context, token string) ([]*pb.UserFile, error)
+	LikeOrDislike(ctx context.Context, in *pb.FileLikeReq) (err error)
 	GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error)
 	Done()
 }
@@ -57,6 +56,7 @@ type FileRepositoryImpl struct {
 	db         *gorm.DB
 	deleteChan chan DeleteStruct
 	done       chan struct{}
+	c          *cron.Cron
 }
 
 func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
@@ -66,7 +66,9 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	res.deleteChan = make(chan DeleteStruct)
 	res.done = make(chan struct{}, 1)
 	go res.deleteG()
-	db.AutoMigrate(model.TokenUser{})
+	res.c = cron.New()
+	res.cronInit()
+	db.AutoMigrate(model.TokenUser{}, model.LikeModel{})
 	return res
 }
 
@@ -80,52 +82,6 @@ func (repo FileRepositoryImpl) userName2UserID(tx *gorm.DB, userName string) (st
 	var userid string
 	err := tx.Model(model.TokenUser{}).Select("user_id").Where("user_name = ?", userName).First(&userid).Error
 	return userid, err
-}
-
-// Normal And Anony Requests
-func (repo FileRepositoryImpl) GetHotLikeRank(ctx context.Context, token string) ([]*pb.UserFile, error) {
-	var userid string
-	var notfound bool
-	if token == common.AnonyToken {
-		notfound = true
-	} else {
-		userid, _ = repo.token2UserID(repo.db, token)
-	}
-
-	conn := redis.Get()
-	defer conn.Close()
-
-	// 1. get top 10 from the set
-	fileScore, err := redigo.Strings(conn.Do("ZREVRANGE", common.LikeRankKey, 0, 9, "WITHSCORES"))
-	if err != nil {
-		return nil, err
-	}
-	var files = make([]*pb.UserFile, 0)
-	for i := 0; i < len(fileScore); i = i + 2 {
-		id, score := fileScore[i], fileScore[i+1]
-		var file = new(pb.UserFile)
-		if err = repo.db.Raw(`
-		select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height
-		from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
-		where tf.file_id = ?`, id).Scan(file).Error; err != nil {
-			return nil, err
-		}
-		file.FileURL = config.Path(file.FileID)
-		s, _ := strconv.Atoi(score)
-		file.Likes = int64(s)
-		// 2. if token != ""
-		if !notfound {
-			userKey := common.UserLikeKey(userid)
-			exist, err := redigo.Bool(conn.Do("HEXISTS", userKey, file.FileID))
-			if err != nil || !exist {
-				file.Liked = false
-			} else {
-				file.Liked = true
-			}
-		}
-		files = append(files, file)
-	}
-	return files, nil
 }
 
 func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) ([]*pb.UserFile, error) {
@@ -163,12 +119,7 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) 
 		}
 		// 2. if token != ""
 		if !notfound {
-			exist, err := getUserFileLikeStatus(conn, res[i].FileID, userid)
-			if err != nil || !exist {
-				res[i].Liked = false
-			} else {
-				res[i].Liked = true
-			}
+			res[i].Liked = repo.findLike(conn, repo.db, res[i].FileID, userid)
 		}
 	}
 	return res, nil
@@ -230,98 +181,75 @@ func (repo FileRepositoryImpl) GetUserImages(ctx context.Context, token string, 
 		}
 		// 2. if token != ""
 		if !notfound {
-			exist, err := getUserFileLikeStatus(conn, files[i].FileID, userTokenID)
-			if err != nil {
-				files[i].Liked = false
-			} else {
-				files[i].Liked = exist
-			}
+			files[i].Liked = repo.findLike(conn, repo.db, files[i].FileID, userTokenID)
 		}
 	}
 	return files, total, err
 }
 
-// Signin User Requests
-func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, userid string, fileid string, dislike bool) (err error) {
-	conn := redis.Get()
-	defer conn.Close()
-	// 1. check fileid
-	var id uint
-	if err := repo.db.Model(model.FileModel{}).Select("id").Where("fild_id = ?", fileid).First(&id).Error; err == gorm.ErrRecordNotFound {
-		return err
+func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, in *pb.FileLikeReq) error {
+	if in.Dislike {
+		return repo.disLike(ctx, in)
 	}
-	key := common.UserLikeKey(userid)
-	exist, err := getUserFileLikeStatus(conn, fileid, userid)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	if !dislike && exist {
-		return response.ErrAlreadyLike
-	} else if dislike && !exist {
-		return response.ErrNotLike
-	}
-
-	var offset = 1
-	if dislike {
-		offset = -1
-	}
-	var file = new(pb.UserFile)
-	if err = repo.db.Raw(`
-	select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height
-	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
-	where tf.file_id = ?`, fileid).Scan(file).Error; err != nil {
-		return err
-	}
-	// 1. incr zset rank list
-	if _, err = conn.Do("zincrby", common.LikeRankKey, offset, fileid); err != nil {
-		return err
-	}
-	likes, err := getFileLikes(conn, fileid)
-	if err != nil {
-		return err
-	}
-	if likes == 0 {
-		conn.Do("ZREM", common.LikeRankKey, fileid)
-	}
-	if dislike {
-		// remove the id from the user's set
-		conn.Do("ZREM", key, fileid)
-	} else {
-		// save file's infomation
-		setFileIntoHash(conn, file)
-		// 2. insert userid_like hash table, key = fileid, value = file
-		datetime := time.Now().Unix()
-		conn.Do("ZADD", key, datetime, file.FileID)
-	}
-	return err
+	return repo.like(ctx, in)
 }
 
 // Get User's Likes
 func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error) {
+	// Get From Redis
 	conn := redis.Get()
 	defer conn.Close()
+	var fileIDs = make([]string, 0)
 
-	userKey := common.UserLikeKey(userid)
-
-	total, err := redigo.Int64(conn.Do("ZCARD", userKey))
+	res, err := redigo.Values(conn.Do("HSCAN", common.LikeRankHash, "0", "match", userid+":*", "count", "1"))
 	if err != nil {
 		return nil, 0, err
 	}
-
-	cmd := "ZRANGE"
-	if desc {
-		cmd = "ZREVRANGE"
+	values, _ := redigo.StringMap(res[1], nil)
+	for k, _ := range values {
+		arg := strings.Split(k, ":")
+		fileIDs = append(fileIDs, arg[1])
 	}
-	log.Printf("UserID = %s, Offset = %v, Limit = %v", userKey, offset, limit)
-	fileids, err := redigo.Strings(conn.Do(cmd, userKey, offset, offset+limit-1))
-	if err != nil {
+	// Get From Database
+	var total int64
+	if err := repo.db.Model(model.LikeModel{}).Where("user_id = ?", userid).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+	var ids = make([]string, 0)
+	if err := repo.db.Model(model.LikeModel{}).
+		Select("file_id").
+		Where("user_id = ? and status = 1", userid).
+		Offset(int(offset)).
+		Limit(int(limit)).
+		Find(&ids).Error; err != nil {
+		return nil, 0, err
+	}
+	fileIDs = append(fileIDs, ids...)
+
+	// get file infomation
+	// 1. get username
+	var username string
+	if err := repo.db.Model(model.TokenUser{}).Select("user_name").Where("user_id = ?", userid).Find(&username).Error; err != nil {
+		return nil, 0, err
+	}
+
 	var files = make([]*pb.UserFile, 0)
-	log.Println(len(fileids))
-	for i := 0; i < len(fileids); i++ {
-		files = append(files, getFileFromHash(conn, userid, fileids[i]))
+	for _, id := range fileIDs {
+		var file model.FileModel
+		if err := repo.db.Model(model.FileModel{}).Where("file_id = ?", id).First(&file).Error; err != nil {
+			continue
+		}
+		files = append(files, &pb.UserFile{
+			UserName: username,
+			FileName: file.FileName,
+			Width:    file.FileWidth,
+			Height:   file.FileHeight,
+			FileID:   id,
+			Liked:    true,
+			Ext:      file.FileExt,
+			Hash:     file.FileHash,
+			FileURL:  config.Path(id),
+		})
 	}
 	return files, total, nil
 }
@@ -350,18 +278,7 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 	}
 	for i := 0; i < len(res); i++ {
 		res[i].FileURL = config.Path(res[i].FileID)
-		exist, err := getUserFileLikeStatus(conn, res[i].FileID, owner)
-		if err != nil || !exist {
-			res[i].Liked = false
-		} else {
-			res[i].Liked = true
-		}
-		likes, err := getFileLikes(conn, res[i].FileID)
-		if err != nil {
-			res[i].Likes = 0
-		} else {
-			res[i].Likes = likes
-		}
+		res[i].Liked = repo.findLike(conn, repo.db, res[i].FileID, owner)
 	}
 
 	tx.Commit()
@@ -388,26 +305,36 @@ func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, token string, fil
 		tx.Rollback()
 		return err
 	}
-	// 1. get bucket
+
+	// 1. delete database
+	if err := tx.Exec("delete from tbl_file where file_id = ?", fileID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Exec("delete from tbl_likes where file_id = ?", fileID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 2. delete redis
+	conn := redis.Get()
+	defer conn.Close()
+	if _, err = conn.Do("HDEL", common.LikeRankHash, common.UserLikeFileKey(owner, fileID)); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 3. delete minio
 	var bucket string
 	if err := tx.Model(model.FileModel{}).Select("bucket").Where("file_id = ? and owner = ?", fileID, owner).Scan(&bucket).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	// 2. delete minio file
 	if err := repo.minioCli.RemoveObject(ctx, bucket, fileID, minio.RemoveObjectOptions{}); err != nil {
 		tx.Rollback()
 		return err
 	}
-	// 3. delete database record
-	if err := tx.Exec("delete from tbl_file where file_id = ?", fileID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// 4. delete redis record
-	conn := redis.Get()
-	defer conn.Close()
-	deleteFileRedis(conn, fileID, owner)
+
 	tx.Commit()
 	return nil
 }
@@ -445,6 +372,7 @@ func (repo FileRepositoryImpl) Done() {
 	repo.done <- struct{}{}
 	close(repo.done)
 	close(repo.deleteChan)
+	repo.c.Stop()
 }
 
 func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) error {
@@ -462,6 +390,9 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 		return err
 	}
 	// 2. 批量删除
+	conn := redis.Get()
+	defer conn.Close()
+
 	var offset, limit = 0, 5
 	for i := 0; i < total; i += limit {
 		offset += i
@@ -471,6 +402,7 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 			return err
 		}
 		for i := range dels {
+			conn.Do("HDEL", common.LikeRankHash, common.UserLikeFileKey(userID, dels[i].FileID))
 			repo.deleteChan <- dels[i]
 		}
 	}
@@ -478,7 +410,10 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
+	if err := tx.Exec("delete from tbl_likes where user_id = ?", userID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 	log.Println("Delete userid: ", userID)
 	return nil
 }

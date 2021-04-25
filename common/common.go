@@ -20,11 +20,19 @@ const (
 	AnonyBucket  = "anony"
 	AnonyToken   = "anony"
 
-	LikeRankKey        = "like_rank_set"
-	LikeRankHotListKey = "like_hot_rank_list"
+	LikeRankKey  = "like_rank_set"
+	LikeRankHash = "like_rank_table"
 
 	FileTokenHeader = "KIRA_TOKEN_SIG"
 )
+
+func UserLikeFileKey(userid, fileid string) string {
+	var buf strings.Builder
+	buf.WriteString(userid)
+	buf.WriteRune(':')
+	buf.WriteString(fileid)
+	return buf.String()
+}
 
 func UserLikeKey(userid string) string {
 	var buf strings.Builder
