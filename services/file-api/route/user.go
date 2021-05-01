@@ -78,7 +78,7 @@ func GetLikes(ctx *gin.Context) {
 		Code: response.StatusOK,
 		Data: gin.H{
 			"Total": res.Total,
-			"Files": res.Files,
+			"Files": [][]*pb.UserFile{res.RedisFiles, res.DbFiles},
 		},
 	})
 }

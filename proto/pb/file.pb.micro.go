@@ -60,6 +60,7 @@ type FileService interface {
 	GetToken(ctx context.Context, in *TokenUserReq, opts ...client.CallOption) (*TokenUserRes, error)
 	LikeOrDislike(ctx context.Context, in *FileLikeReq, opts ...client.CallOption) (*Response, error)
 	GetLikes(ctx context.Context, in *GetLikesReq, opts ...client.CallOption) (*GetLikesRes, error)
+	DeleteUserFile(ctx context.Context, in *DeleteUserFileReq, opts ...client.CallOption) (*DeleteUserFileRes, error)
 }
 
 type fileService struct {
@@ -224,6 +225,16 @@ func (c *fileService) GetLikes(ctx context.Context, in *GetLikesReq, opts ...cli
 	return out, nil
 }
 
+func (c *fileService) DeleteUserFile(ctx context.Context, in *DeleteUserFileReq, opts ...client.CallOption) (*DeleteUserFileRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.DeleteUserFile", in)
+	out := new(DeleteUserFileRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileService service
 
 type FileServiceHandler interface {
@@ -245,6 +256,7 @@ type FileServiceHandler interface {
 	GetToken(context.Context, *TokenUserReq, *TokenUserRes) error
 	LikeOrDislike(context.Context, *FileLikeReq, *Response) error
 	GetLikes(context.Context, *GetLikesReq, *GetLikesRes) error
+	DeleteUserFile(context.Context, *DeleteUserFileReq, *DeleteUserFileRes) error
 }
 
 func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts ...server.HandlerOption) error {
@@ -264,6 +276,7 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		GetToken(ctx context.Context, in *TokenUserReq, out *TokenUserRes) error
 		LikeOrDislike(ctx context.Context, in *FileLikeReq, out *Response) error
 		GetLikes(ctx context.Context, in *GetLikesReq, out *GetLikesRes) error
+		DeleteUserFile(ctx context.Context, in *DeleteUserFileReq, out *DeleteUserFileRes) error
 	}
 	type FileService struct {
 		fileService
@@ -334,4 +347,8 @@ func (h *fileServiceHandler) LikeOrDislike(ctx context.Context, in *FileLikeReq,
 
 func (h *fileServiceHandler) GetLikes(ctx context.Context, in *GetLikesReq, out *GetLikesRes) error {
 	return h.FileServiceHandler.GetLikes(ctx, in, out)
+}
+
+func (h *fileServiceHandler) DeleteUserFile(ctx context.Context, in *DeleteUserFileReq, out *DeleteUserFileRes) error {
+	return h.FileServiceHandler.DeleteUserFile(ctx, in, out)
 }

@@ -164,7 +164,8 @@ message GetLikesReq {
 
 message GetLikesRes {
     int64 total = 1;
-    repeated UserFile files = 2;
+    repeated UserFile redisFiles = 2;
+    repeated UserFile dbFiles = 3;
 }
 
 // Signin User
@@ -186,6 +187,15 @@ message HotLikeRankList {
     repeated UserFile files = 1;
 }
 
+message DeleteUserFileReq {
+    string userID = 1;
+    string fileID = 2;
+}
+
+message DeleteUserFileRes {
+    bool succ = 1;
+    string msg = 2;
+}
 
 service FileService {
     // RPC
@@ -208,4 +218,5 @@ service FileService {
     rpc GetToken(TokenUserReq) returns (TokenUserRes);
     rpc LikeOrDislike(FileLikeReq) returns (kira.micro.common.Response);
     rpc GetLikes(GetLikesReq) returns (GetLikesRes);
+    rpc DeleteUserFile(DeleteUserFileReq) returns (DeleteUserFileRes);
 }

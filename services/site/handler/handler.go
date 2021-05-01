@@ -34,7 +34,7 @@ func GetImage(ctx *gin.Context) {
 		})
 		return
 	} else if !res.Succ {
-		ctx.JSON(http.StatusOK, response.Response{
+		ctx.JSON(http.StatusNotFound, response.Response{
 			Code:  response.StatusInternalError,
 			Error: res.Msg,
 		})

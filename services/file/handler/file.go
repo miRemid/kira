@@ -15,12 +15,23 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
+func (handler FileServiceHandler) DeleteUserFile(ctx context.Context, in *pb.DeleteUserFileReq, res *pb.DeleteUserFileRes) error {
+	if err := handler.Repo.DeleteUserFile(ctx, in); err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return err
+	}
+	res.Succ = true
+	return nil
+}
+
 func (handler FileServiceHandler) GetLikes(ctx context.Context, in *pb.GetLikesReq, res *pb.GetLikesRes) error {
 	resp, total, err := handler.Repo.GetLikes(ctx, in.Userid, in.Offset, in.Limit, in.Desc)
 	if err != nil {
 		return err
 	}
-	res.Files = resp
+	res.RedisFiles = resp[0]
+	res.DbFiles = resp[1]
 	res.Total = total
 	return nil
 }
