@@ -13,11 +13,13 @@ import (
 var (
 	cli     *client.UserClient
 	authCli *client.AuthClient
+	fileCli *client.FileClient
 )
 
 func Init(clients microClient.Client) {
 	cli = client.NewUserClient(clients)
 	authCli = client.NewAuthClient(clients)
+	fileCli = client.NewFileClient(clients)
 }
 
 func Route(e *casbin.Enforcer) *gin.Engine {
@@ -46,6 +48,7 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 			admin := auth.Group("/admin")
 			{
 				admin.DELETE("/deleteUser", DeleteUser)
+				admin.DELETE("/deleteUserFile", DeleteUserFile)
 				admin.GET("/getUserList", GetUserList)
 				admin.POST("/updateUserStatus", UpdateUser)
 				admin.GET("/getUserFileList", GetUserFileList)

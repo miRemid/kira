@@ -334,7 +334,13 @@ func (repo FileRepositoryImpl) DeleteUserFile(ctx context.Context, in *pb.Delete
 	var tx = repo.db.Begin()
 	conn := redis.Get()
 	defer conn.Close()
-	return repo.deleteFile(ctx, in.UserID, in.FileID, tx, conn)
+	// 1. get userid
+	userId, err := repo.userName2UserID(tx, in.UserName)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return repo.deleteFile(ctx, userId, in.FileID, tx, conn)
 }
 
 func (repo FileRepositoryImpl) DeleteFile(ctx context.Context, token string, fileID string) error {
@@ -372,6 +378,17 @@ func (repo FileRepositoryImpl) deleteG() {
 			}
 			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileID, minio.RemoveObjectOptions{})
 			repo.db.Exec("delete from tbl_file where file_id = ?", item.FileID)
+			conn := redis.Get()
+			res, err := redigo.Values(conn.Do("HSCAN", common.LikeRankHash, "0", "match", "*:"+item.FileID, "count", "1"))
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			values, _ := redigo.StringMap(res[1], nil)
+			for k := range values {
+				conn.Do("HDEL", common.LikeRankHash, k)
+			}
+			conn.Close()
 		case <-repo.done:
 			return
 		}
@@ -403,6 +420,7 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 	conn := redis.Get()
 	defer conn.Close()
 
+	// delete file records
 	var offset, limit = 0, 5
 	for i := 0; i < total; i += limit {
 		offset += i
@@ -416,15 +434,34 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 			repo.deleteChan <- dels[i]
 		}
 	}
+
+	// delete file records
+	if err := tx.Exec("delete from tbl_file where owner = ?", userID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// delete token
 	if err := tx.Exec("delete from tbl_token_user where user_id = ?", userID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
+
+	// delete likes
 	if err := tx.Exec("delete from tbl_likes where user_id = ?", userID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	log.Println("Delete userid: ", userID)
+	res, err := redigo.Values(conn.Do("HSCAN", common.LikeRankHash, "0", "match", userID+":*", "count", "1"))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	values, _ := redigo.StringMap(res[1], nil)
+	for k := range values {
+		conn.Do("HDEL", common.LikeRankHash, k)
+	}
+
 	return nil
 }
 

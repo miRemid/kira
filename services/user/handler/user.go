@@ -27,7 +27,7 @@ func (handler UserHandler) GetLoginUserInfo(ctx context.Context, in *pb.LoginUse
 }
 
 func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb.SigninRes) error {
-	token, err := handler.Repo.Signin(ctx, in.Username, in.Password)
+	token, role, err := handler.Repo.Signin(ctx, in.Username, in.Password)
 	if err != nil {
 		res.Succ = false
 		res.Msg = err.Error()
@@ -36,6 +36,11 @@ func (handler UserHandler) Signin(ctx context.Context, in *pb.SigninReq, res *pb
 	res.Succ = true
 	res.Msg = "sign in success"
 	res.Token = token
+	if role == "admin" {
+		res.Admin = true
+	} else {
+		res.Admin = false
+	}
 	return nil
 }
 

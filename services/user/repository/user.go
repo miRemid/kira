@@ -19,7 +19,7 @@ import (
 
 type UserRepository interface {
 	Signup(ctx context.Context, username, password string) error
-	Signin(ctx context.Context, username, password string) (string, error)
+	Signin(ctx context.Context, username, password string) (string, string, error)
 	UserInfo(ctx context.Context, username string) (model.UserModel, error)
 	LoginUserInfo(ctx context.Context, userID string) (model.UserModel, string, error)
 
@@ -140,7 +140,7 @@ func (repo UserRepositoryImpl) Signup(ctx context.Context, username, password st
 	return nil
 }
 
-func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password string) (string, error) {
+func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password string) (string, string, error) {
 	tx := repo.db.Begin()
 
 	// get user model
@@ -148,9 +148,9 @@ func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password st
 	if err := tx.Model(model.UserModel{}).Where("user_name = ?", username).First(&user).Error; err != nil {
 		tx.Rollback()
 		if err == gorm.ErrRecordNotFound {
-			return "", errors.New("username not found")
+			return "", "", errors.New("username not found")
 		}
-		return "", errors.WithMessage(err, "get user model")
+		return "", "", errors.WithMessage(err, "get user model")
 	}
 
 	log.Printf("UserID = %s, UserName = %s", user.UserID, username)
@@ -158,17 +158,17 @@ func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password st
 	// 2. check password
 	if !user.CheckPassword(password) {
 		tx.Rollback()
-		return "", errors.New("wrong password")
+		return "", "", errors.New("wrong password")
 	}
 
 	// 3. generate token
 	res, err := repo.authCli.Auth(user.UserID, user.Role)
 	if err != nil || !res.Succ {
 		tx.Rollback()
-		return "", errors.WithMessage(err, res.Msg)
+		return "", "", errors.WithMessage(err, res.Msg)
 	}
 	tx.Commit()
-	return res.Token, nil
+	return res.Token, user.Role, nil
 }
 
 func (repo UserRepositoryImpl) UserInfo(ctx context.Context, username string) (model.UserModel, error) {

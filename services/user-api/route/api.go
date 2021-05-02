@@ -47,6 +47,7 @@ func Signin(ctx *gin.Context) {
 		Message: res.Msg,
 		Data: gin.H{
 			"token": res.Token,
+			"admin": res.Admin,
 		},
 	})
 
@@ -242,5 +243,35 @@ func ChangePassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code:    response.StatusOK,
 		Message: res.Msg,
+	})
+}
+
+func DeleteUserFile(ctx *gin.Context) {
+	var in pb.DeleteUserFileReq
+	if err := ctx.ShouldBind(&in); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	res, err := fileCli.Service.DeleteUserFile(ctx, &in)
+	if err != nil {
+		log.Println("Delete User File Error: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	}
+	if !res.Succ {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
 	})
 }

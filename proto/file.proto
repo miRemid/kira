@@ -188,7 +188,9 @@ message HotLikeRankList {
 }
 
 message DeleteUserFileReq {
-    string userID = 1;
+    //@inject_tag: form:"userName"
+    string userName = 1;
+    //@inject_tag: form:"file_id"
     string fileID = 2;
 }
 

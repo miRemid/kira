@@ -31,6 +31,7 @@ func main() {
 	e.AddPolicy("normal", "/user/changePassword", "POST")
 	e.AddPolicy("admin", "/user/changePassword", "POST")
 	e.AddPolicy("admin", "/user/admin/deleteUser", "DELETE")
+	e.AddPolicy("admin", "/user/admin/deleteUserFile", "DELETE")
 	e.AddPolicy("admin", "/user/admin/getUserList", "GET")
 	e.AddPolicy("admin", "/user/admin/getUserFileList", "GET")
 	e.AddPolicy("admin", "/user/admin/updateUserStatus", "POST")

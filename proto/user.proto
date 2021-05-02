@@ -56,6 +56,7 @@ message SigninRes {
     bool succ = 1;
     string msg = 2;
     string token =3;
+    bool admin = 4;
 }
 
 message SignupReq {
