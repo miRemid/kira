@@ -79,7 +79,7 @@ func (handler FileServiceHandler) GetUserImages(ctx context.Context, in *pb.GetU
 }
 
 func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageReq, res *pb.GetImageRes) error {
-	data, err := handler.Repo.GetImage(ctx, in)
+	file, data, err := handler.Repo.GetImage(ctx, in)
 	if err != nil {
 		res.Msg = err.Error()
 		res.Succ = false
@@ -89,6 +89,8 @@ func (handler FileServiceHandler) GetImage(ctx context.Context, in *pb.GetImageR
 	res.Msg = "get success"
 	res.Succ = true
 	res.Image = data
+	res.FileExt = file.FileExt
+	res.FileName = file.FileName
 	return nil
 }
 

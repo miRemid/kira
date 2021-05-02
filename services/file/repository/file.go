@@ -39,7 +39,7 @@ type FileRepository interface {
 	GetToken(context.Context, string) (string, error)
 	GetHistory(context.Context, string, int64, int64) ([]*pb.UserFile, int64, error)
 	DeleteFile(context.Context, string, string) error
-	GetImage(ctx context.Context, in *pb.GetImageReq) ([]byte, error)
+	GetImage(ctx context.Context, in *pb.GetImageReq) (model.FileModel, []byte, error)
 	GetDetail(ctx context.Context, fileID string) (*pb.UserFile, error)
 	DeleteUser(ctx context.Context, userID string) error
 	ChangeStatus(ctx context.Context, userID string, status int64) error
@@ -107,17 +107,6 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) 
 	for i := 0; i < len(res); i++ {
 		res[i].FileURL = config.Path(res[i].FileID)
 		// 1. get rank
-		index, err := redigo.Int64(conn.Do("ZRANK", common.LikeRankKey, res[i].FileID))
-		if err != nil {
-			res[i].Likes = 0
-		} else {
-			likesMap, err := redigo.Int64Map(conn.Do("ZRANGE", common.LikeRankKey, index, index, "WITHSCORES"))
-			if err != nil {
-				res[i].Likes = 0
-			} else {
-				res[i].Likes = likesMap[res[i].FileID]
-			}
-		}
 		// 2. if token != ""
 		if !notfound {
 			res[i].Liked = repo.findLike(conn, repo.db, res[i].FileID, userid)
@@ -471,16 +460,16 @@ func (repo FileRepositoryImpl) GetToken(ctx context.Context, userID string) (str
 	return token, nil
 }
 
-func (repo FileRepositoryImpl) GetImage(ctx context.Context, in *pb.GetImageReq) ([]byte, error) {
+func (repo FileRepositoryImpl) GetImage(ctx context.Context, in *pb.GetImageReq) (model.FileModel, []byte, error) {
 	// 1. Get bucket
-	var bucket string
-	if err := repo.db.Model(model.FileModel{}).Select("bucket").Where("file_id = ?", in.FileID).Scan(&bucket).Error; err != nil {
-		return nil, err
+	var file model.FileModel
+	if err := repo.db.Model(model.FileModel{}).Where("file_id = ?", in.FileID).Find(&file).Error; err != nil {
+		return file, nil, err
 	}
 	// 2. Get Files body
-	obj, err := repo.minioCli.GetObject(ctx, bucket, in.FileID, minio.GetObjectOptions{})
+	obj, err := repo.minioCli.GetObject(ctx, file.Bucket, in.FileID, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, err
+		return file, nil, err
 	}
 	img, _, _ := image.Decode(obj)
 	g := gift.New()
@@ -512,7 +501,7 @@ func (repo FileRepositoryImpl) GetImage(ctx context.Context, in *pb.GetImageReq)
 	} else {
 		err = jpeg.Encode(&buffer, img, nil)
 	}
-	return buffer.Bytes(), err
+	return file, buffer.Bytes(), err
 }
 
 func (repo FileRepositoryImpl) GetDetail(ctx context.Context, fileID string) (*pb.UserFile, error) {
