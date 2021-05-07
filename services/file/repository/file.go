@@ -47,7 +47,7 @@ type FileRepository interface {
 	GetUserImages(ctx context.Context, token, userID string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error)
 	GetRandomFile(ctx context.Context, token string) ([]*pb.UserFile, error)
 	LikeOrDislike(ctx context.Context, in *pb.FileLikeReq) (err error)
-	GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([][]*pb.UserFile, int64, error)
+	GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error)
 	DeleteUserFile(ctx context.Context, in *pb.DeleteUserFileReq) error
 	Done()
 }
@@ -173,7 +173,7 @@ func (repo FileRepositoryImpl) LikeOrDislike(ctx context.Context, in *pb.FileLik
 }
 
 // Get User's Likes
-func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([][]*pb.UserFile, int64, error) {
+func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error) {
 	// Get From Redis
 	conn := redis.Get()
 	defer conn.Close()
@@ -197,45 +197,22 @@ func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offs
 	if err := repo.db.Model(model.LikeModel{}).
 		Select("file_id").
 		Where("user_id = ? and status = 1", userid).
-		Offset(int(offset)).
-		Limit(int(limit)).
 		Find(&ids).Error; err != nil {
 		return nil, 0, err
 	}
+	ids = append(ids, redisIDS...)
 
-	// get file infomation
-	// 1. get username
 	var username string
 	if err := repo.db.Model(model.TokenUser{}).Select("user_name").Where("user_id = ?", userid).Find(&username).Error; err != nil {
 		return nil, 0, err
 	}
-	var r = make([][]*pb.UserFile, 2)
-	var files = make([]*pb.UserFile, 0)
-	for _, id := range redisIDS {
-		var file model.FileModel
-		if err := repo.db.Model(model.FileModel{}).Where("file_id = ?", id).First(&file).Error; err != nil {
-			continue
-		}
-		files = append(files, &pb.UserFile{
-			UserName: username,
-			FileName: file.FileName,
-			Width:    file.FileWidth,
-			Height:   file.FileHeight,
-			FileID:   id,
-			Liked:    true,
-			Ext:      file.FileExt,
-			Hash:     file.FileHash,
-			FileURL:  config.Path(id),
-		})
-	}
-	r[0] = files
-	var dbFiles = make([]*pb.UserFile, 0)
+	var r = make([]*pb.UserFile, 0)
 	for _, id := range ids {
 		var file model.FileModel
 		if err := repo.db.Model(model.FileModel{}).Where("file_id = ?", id).First(&file).Error; err != nil {
 			continue
 		}
-		dbFiles = append(dbFiles, &pb.UserFile{
+		r = append(r, &pb.UserFile{
 			UserName: username,
 			FileName: file.FileName,
 			Width:    file.FileWidth,
@@ -247,8 +224,6 @@ func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offs
 			FileURL:  config.Path(id),
 		})
 	}
-	r[1] = dbFiles
-
 	return r, total, nil
 }
 

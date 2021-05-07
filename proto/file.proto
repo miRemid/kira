@@ -164,8 +164,7 @@ message GetLikesReq {
 
 message GetLikesRes {
     int64 total = 1;
-    repeated UserFile redisFiles = 2;
-    repeated UserFile dbFiles = 3;
+    repeated UserFile files = 2;
 }
 
 // Signin User

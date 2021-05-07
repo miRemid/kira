@@ -30,8 +30,7 @@ func (handler FileServiceHandler) GetLikes(ctx context.Context, in *pb.GetLikesR
 	if err != nil {
 		return err
 	}
-	res.RedisFiles = resp[0]
-	res.DbFiles = resp[1]
+	res.Files = resp
 	res.Total = total
 	return nil
 }

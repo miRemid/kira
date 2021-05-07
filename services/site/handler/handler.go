@@ -41,7 +41,7 @@ func GetImage(ctx *gin.Context) {
 		return
 	}
 	ctx.Writer.Header().Set("Content-Type", config.ContentType(res.FileExt))
-	ctx.Writer.Header().Set("Content-Disposition", "attachment;filename="+res.FileName)
+	ctx.Writer.Header().Set("Content-Disposition", "filename="+res.FileName)
 	ctx.Writer.WriteHeader(http.StatusOK)
 	ctx.Writer.Write(res.Image)
 }

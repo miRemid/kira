@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	redigo "github.com/garyburd/redigo/redis"
+	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common"
 	"github.com/miRemid/kira/common/database"
@@ -55,11 +57,30 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 func (repo UserRepositoryImpl) LoginUserInfo(ctx context.Context, userID string) (model.UserModel, string, error) {
 	// 1. get user info
 	var user model.UserModel
+	// 1. check redis
+	conn := redis.Get()
+	defer conn.Close()
+	key := common.UserInfoKey(userID)
+	exist, err := redigo.Bool(conn.Do("EXISTS", key))
+	if err != nil {
+		return user, "", err
+	}
+	if exist {
+		user.UserID = userID
+		user.UserName, _ = redigo.String(conn.Do("HGET", key, "userName"))
+		user.Role, _ = redigo.String(conn.Do("HGET", key, "userRole"))
+		user.Status, _ = redigo.Int64(conn.Do("HGET", key, "userStatus"))
+		token, _ := redigo.String(conn.Do("HGET", key, "token"))
+		return user, token, nil
+	}
+
 	if err := repo.db.Model(user).Where("user_id = ?", userID).First(&user).Error; err != nil {
 		return user, "", err
 	}
 	// 2. get user token
 	token, err := repo.fileCli.GetToken(userID)
+	conn.Do("HMSET", key, "userName", user.UserName, "userID", userID, "userRole", user.Role, "userStatus", user.Status, "token", token.Token)
+	conn.Do("EXPIRE", key, "3600")
 	return user, token.Token, err
 }
 
@@ -110,6 +131,9 @@ func (repo UserRepositoryImpl) Refresh(ctx context.Context, userid string) (stri
 	if err != nil || !res.Succ {
 		return "", errors.New("User Service: Refresh failed")
 	}
+	conn := redis.Get()
+	defer conn.Close()
+	conn.Do("DEL", common.UserInfoKey(userid))
 	return res.Token, nil
 }
 
@@ -172,7 +196,6 @@ func (repo UserRepositoryImpl) Signin(ctx context.Context, username, password st
 }
 
 func (repo UserRepositoryImpl) UserInfo(ctx context.Context, username string) (model.UserModel, error) {
-	log.Println("receive", username)
 	var user model.UserModel
 	tx := repo.db.Begin()
 	// Get User Info
