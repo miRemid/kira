@@ -5,8 +5,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
-	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -112,32 +110,23 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	if _, err := io.Copy(hash, reader); err != nil {
 		return res, err
 	}
-	im, _, err := image.DecodeConfig(reader)
-	if err != nil {
-		log.Println(err)
-		return res, err
-	}
-	res.FileWidth = fmt.Sprintf("%d", im.Width)
-	res.FileHeight = fmt.Sprintf("%d", im.Height)
-	reader.Seek(0, 0)
 
 	bucket := config.Bucket(anony)
 	var tx = repo.db.Begin()
-	var userid string = common.AnonyEvent
+	var userid string = common.AnonyBucket
 	if !anony {
 		tx.Model(model.TokenUser{}).Select("user_id").Where("token = ?", token).First(&userid)
 	}
 	res.Owner = userid
 	hashInBytes := hash.Sum(nil)[:20]
+	res.FileWidth = fileWidth
+	res.FileHeight = fileHeight
 	res.FileHash = hex.EncodeToString(hashInBytes)
 	res.FileName = fileName
 	res.FileSize = fileSize
 	res.FileExt = fileExt
 	res.FileID = id
 	res.Bucket = bucket
-	if anony {
-		res.Anony = true
-	}
 	// 4. insert record into database
 	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
 		tx.Rollback()
@@ -145,6 +134,7 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	}
 	// 5. if anony upload, insert into redis delay queue
 	if anony {
+		res.Anony = true
 		conn := redis.Get()
 		defer conn.Close()
 		// save 5 day for the anony upload
@@ -153,7 +143,7 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	}
 	reader.Seek(0, 0)
 	// 3. upload into minio
-	_, err = repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
+	_, err := repo.mini.PutObject(ctx, bucket, id, reader, int64(fileSize), minio.PutObjectOptions{})
 	if err != nil {
 		tx.Rollback()
 		return res, err

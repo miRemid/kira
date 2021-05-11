@@ -1,0 +1,19 @@
+skinparam DefaultFontName ttf-wqy-zenhei
+@startuml 匿名用户用例图
+left to right direction
+actor 匿名用户 as anony
+package Server {
+    usecase "上传文件" as upload
+    usecase "获取随机图片" as random
+    usecase "获取用户图片" as user
+    usecase "注册" as Signup
+    usecase "登录" as Signin
+}
+
+anony --> upload
+anony --> random
+anony --> user
+anony --> Signup
+anony --> Signin
+
+@enduml

@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"image"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"log"
 	"strings"
 
@@ -261,11 +263,19 @@ func (repo FileRepositoryImpl) GetHistory(ctx context.Context, token string, lim
 func (repo FileRepositoryImpl) RefreshToken(ctx context.Context, token string) (string, error) {
 	log.Println("Refresh Token for: ", token)
 	tx := repo.db.Begin()
+	var userid string
+	if err := tx.Raw("select user_id from tbl_token_user where token = ?", token).Scan(&userid).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
 	ntoken := ksuid.New().String()
 	if err := tx.Exec("update tbl_token_user set token = ? where token = ?", ntoken, token).Error; err != nil {
 		tx.Rollback()
 		return "", err
 	}
+	conn := redis.Get()
+	defer conn.Close()
+	conn.Do("HSET", common.UserInfoKey(userid), "token", ntoken)
 	tx.Commit()
 	log.Println("Refresh Token: ", ntoken)
 	return ntoken, nil
@@ -351,18 +361,30 @@ func (repo FileRepositoryImpl) deleteG() {
 			if !ok {
 				return
 			}
-			repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileID, minio.RemoveObjectOptions{})
-			repo.db.Exec("delete from tbl_file where file_id = ?", item.FileID)
+			log.Println("Delete ", item.UserID, "'s ", item.FileID)
+			tx := repo.db.Begin()
 			conn := redis.Get()
+			if err := tx.Exec("delete from tbl_file where file_id = ?", item.FileID).Error; err != nil {
+				tx.Rollback()
+				log.Println(err)
+				continue
+			}
+			if err := repo.minioCli.RemoveObject(context.Background(), item.Bucket, item.FileID, minio.RemoveObjectOptions{}); err != nil {
+				tx.Rollback()
+				log.Println(err)
+				continue
+			}
 			res, err := redigo.Values(conn.Do("HSCAN", common.LikeRankHash, "0", "match", "*:"+item.FileID, "count", "1"))
 			if err != nil {
 				log.Println(err)
+				tx.Rollback()
 				continue
 			}
 			values, _ := redigo.StringMap(res[1], nil)
 			for k := range values {
 				conn.Do("HDEL", common.LikeRankHash, k)
 			}
+			tx.Commit()
 			conn.Close()
 		case <-repo.done:
 			return
@@ -400,43 +422,41 @@ func (repo FileRepositoryImpl) DeleteUser(ctx context.Context, userID string) er
 	for i := 0; i < total; i += limit {
 		offset += i
 		var dels = make([]DeleteStruct, 0)
-		if err := tx.Raw("select file_id, bucket, file_name from tbl_file where owner = ? limit ?, ?", userID, offset, limit).Scan(&dels).Error; err != nil {
+		if err := tx.Raw("select owner, file_id, bucket, file_name from tbl_file where owner = ? limit ?, ?", userID, offset, limit).Scan(&dels).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 		for i := range dels {
 			conn.Do("HDEL", common.LikeRankHash, common.UserLikeFileKey(userID, dels[i].FileID))
+			dels[i].UserID = userID
 			repo.deleteChan <- dels[i]
 		}
-	}
-
-	// delete file records
-	if err := tx.Exec("delete from tbl_file where owner = ?", userID).Error; err != nil {
-		tx.Rollback()
-		return err
 	}
 
 	// delete token
 	if err := tx.Exec("delete from tbl_token_user where user_id = ?", userID).Error; err != nil {
 		tx.Rollback()
+		log.Println(err)
 		return err
 	}
 
 	// delete likes
 	if err := tx.Exec("delete from tbl_likes where user_id = ?", userID).Error; err != nil {
 		tx.Rollback()
+		log.Println(err)
 		return err
 	}
 	res, err := redigo.Values(conn.Do("HSCAN", common.LikeRankHash, "0", "match", userID+":*", "count", "1"))
 	if err != nil {
 		tx.Rollback()
+		log.Println(err)
 		return err
 	}
 	values, _ := redigo.StringMap(res[1], nil)
 	for k := range values {
 		conn.Do("HDEL", common.LikeRankHash, k)
 	}
-
+	tx.Commit()
 	return nil
 }
 
@@ -485,34 +505,25 @@ func (repo FileRepositoryImpl) GetImage(ctx context.Context, in *pb.GetImageReq)
 	}
 	img, _, _ := image.Decode(obj)
 	g := gift.New()
-	need := false
 	// 3. check width and height
 	if in.Width != 0 && in.Height != 0 {
-		need = true
 		g.Add(gift.Resize(int(in.Width), int(in.Height), gift.LanczosResampling))
 	}
 	// 4. check gray
 	if in.Gray || in.Binary {
-		need = true
 		g.Add(gift.Grayscale())
 	}
 	if in.Binary {
-		need = true
 		g.Add(gift.Threshold(float32(in.Threshold)))
 	}
 	// 4. check blur
 	if in.Blur {
-		need = true
 		g.Add(gift.GaussianBlur(float32(in.BlurSeed)))
 	}
 	var buffer bytes.Buffer
-	if need {
-		out := image.NewNRGBA(g.Bounds(img.Bounds()))
-		g.Draw(out, img)
-		err = jpeg.Encode(&buffer, out, nil)
-	} else {
-		err = jpeg.Encode(&buffer, img, nil)
-	}
+	out := image.NewNRGBA(g.Bounds(img.Bounds()))
+	g.Draw(out, img)
+	err = jpeg.Encode(&buffer, out, nil)
 	return file, buffer.Bytes(), err
 }
 

@@ -1,0 +1,21 @@
+skinparam DefaultFontName ttf-wqy-zenhei
+@startuml 管理员用例图
+left to right direction
+actor 管理员 as Admin
+package Server {
+    usecase "获取用户列表" as UserList
+    usecase "获取用户上传列表" as FileList
+    usecase "更改用户状态" as ChangeUserStatus
+    usecase "删除用户上传图片" as DeleteFile
+    usecase "删除用户账号" as DeleteAccount
+    usecase "登录" as Signin
+}
+
+Admin --> UserList
+Admin --> FileList
+Admin --> ChangeUserStatus 
+Admin --> DeleteFile
+Admin --> DeleteAccount
+Admin --> Signin
+
+@enduml

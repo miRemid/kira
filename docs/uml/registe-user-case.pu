@@ -1,0 +1,25 @@
+skinparam DefaultFontName ttf-wqy-zenhei
+@startuml 注册用户用例图
+left to right direction
+actor 注册用户 as user
+package Server {
+    usecase "上传文件" as Upload
+    usecase "获取随机图片" as Random
+    usecase "获取用户图片" as User
+    usecase "获取上传历史" as History
+    usecase "删除图片" as Delete
+    usecase "点赞或取消点赞图片" as LikeOrDislike
+    usecase "获取点赞列表" as LikeList
+    usecase "更改密码" as ChangePassword
+    usecase "更新图片令牌" as ChangeToken
+}
+user --> Upload
+user --> Random
+user --> User
+user --> History
+user --> Delete
+user --> LikeOrDislike 
+user --> LikeList
+user --> ChangePassword
+user --> ChangeToken
+@enduml

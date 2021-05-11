@@ -108,9 +108,9 @@ func DBConnect() (*gorm.DB, error) {
 
 func MinioConnect() (*minio.Client, error) {
 	var ssl = false
-	endpoint := Getenv("MINIO_ENDPOINT", "127.0.0.1:9900")
-	accessKey := Getenv("MINIO_ACCESSKEY", "kira")
-	secretKey := Getenv("MINIO_SECRETKEY", "1234567890")
+	endpoint := Getenv("MINIO_ENDPOINT", "127.0.0.1:9000")
+	accessKey := Getenv("MINIO_ACCESSKEY", "minio")
+	secretKey := Getenv("MINIO_SECRETKEY", "minio123")
 	secure := Getenv("MINIO_SECURE", "false")
 	if secure == "true" {
 		ssl = true

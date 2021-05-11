@@ -19,8 +19,10 @@ func PrintlnPath(ctx *gin.Context) {
 }
 
 func GetUserInfoFromRedis(ctx *gin.Context) {
+	// Get Redis Conn from Conn Pool
 	conn := redis.Get()
 	defer conn.Close()
+	// get userName from url
 	userName := ctx.Param("userName")
 	if userName == "" {
 		ctx.AbortWithStatusJSON(http.StatusOK, response.Response{
@@ -29,9 +31,9 @@ func GetUserInfoFromRedis(ctx *gin.Context) {
 		})
 		return
 	}
-	log.Println("UserName: ", userName)
-	log.Println("Check Exists")
+	// get redis info key
 	key := common.UserInfoKey(userName)
+	// check exist
 	exit, err := redigo.Bool(conn.Do("EXISTS", key))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusOK, response.Response{

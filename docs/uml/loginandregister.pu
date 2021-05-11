@@ -1,0 +1,15 @@
+skinparam DefaultFontName ttf-wqy-zenhei
+@startuml 登陆注册流程图
+(*) --> "进入登陆注册界面"
+if "用户未注册" then
+    ->[是] "进入注册界面"
+    -> "输入用户名、密码、重复密码"
+    if "格式是否正确" then
+        -> [是] "注册成功" ===登录===
+    else
+        -> [否] "重新输入账号密码" 
+    endif
+else -->[否] ===登录===
+    -> "输入账号密码"
+endif
+@enduml
