@@ -12,7 +12,11 @@ test:
 
 .PHONY: wrk
 wrk:
-	wrk -c 100 -t 5 -d 1m -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTQ0MjM1NzQsIlVzZXJJRCI6ImMwbzhvb3Y2OWtmNW0xYW10NDRnIiwiUm9sZSI6ImFkbWluIn0.yey4dA_s7Mi1_5rh574SOi2tfOZw7cDMkNiIctF3MeXBHrB3j65KAHoIL1bjvtJc04XFM7wyGptT7fnizjm-WNjqz7IvfkbmjaXy0ft6l3g-JHyBQrTRdlhkZICwiw_8kS5wAWHjQloEm7SukNXDIDMG92heyGnu13pnNZDvt30" http://api.test.me/v1/user/me
+	wrk -c 100 -t 12 -d 30s --latency -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjI4MDE1MDIsIlVzZXJJRCI6ImMyb2MzajlkM2NsNWRpMnZuZWswIiwiUm9sZSI6Im5vcm1hbCJ9.qsUmdaVBy7jioHVynVVMNuSZeme-MLOxhiQ2nK_4W-c5Zn7ezLTr9xF24bV8-KpEitgoVYfcXMKQrX8v9ttVVB6y-ghaXlVsNKy1xqgZKqH9qfgdZOIKjC1qP2vok1hSyMsc2d-nEShSPf0Bl14Y_yIMEa6NhOk1PNId0lwGA_k" http://api.test.me/user/me
+
+.PHONY:
+test-image:
+	wrk -c 100 -t 12 -d 30s --latency http://api.test.me/image?id=YJnyxmcuI&gray=true
 
 .PHONY: docker
 docker: static

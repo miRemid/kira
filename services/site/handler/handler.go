@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	redigo "github.com/gomodule/redigo/redis"
@@ -13,6 +14,9 @@ import (
 	"github.com/miRemid/kira/proto/pb"
 	"github.com/miRemid/kira/services/file/config"
 	"github.com/miRemid/kira/services/site/client"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/mem"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -144,5 +148,24 @@ func Ping(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
 		Data: res,
+	})
+}
+
+func GetHostStat(ctx *gin.Context) {
+	mstat, _ := mem.VirtualMemory()
+	dstat, _ := disk.Usage("/")
+	cstat, _ := cpu.Percent(time.Second, true)
+	cpuStat := 0.0
+	for _, v := range cstat {
+		cpuStat += v
+	}
+
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+		Data: gin.H{
+			"memory": mstat.UsedPercent,
+			"disk":   dstat.UsedPercent,
+			"cpu":    cpuStat,
+		},
 	})
 }

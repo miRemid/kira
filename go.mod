@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
+	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/casbin/casbin/v2 v2.25.5
 	github.com/casbin/gorm-adapter/v3 v3.2.8
@@ -11,6 +12,7 @@ require (
 	github.com/disintegration/gift v1.2.1
 	github.com/garyburd/redigo v1.6.2
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/golang/protobuf v1.4.3
 	github.com/gomodule/redigo v1.8.3
@@ -25,7 +27,9 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/rs/xid v1.2.1
 	github.com/segmentio/ksuid v1.0.3
+	github.com/shirou/gopsutil v3.21.4+incompatible
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
+	github.com/tklauser/go-sysconf v0.3.6 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
