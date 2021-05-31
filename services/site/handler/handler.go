@@ -50,6 +50,36 @@ func GetImage(ctx *gin.Context) {
 	ctx.Writer.Write(res.Image)
 }
 
+func DownloadImage(ctx *gin.Context) {
+	var in = new(pb.GetImageReq)
+	if err := ctx.ShouldBind(in); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: "mising params",
+		})
+		return
+	}
+	res, err := client.File().Service.GetImage(ctx, in)
+	if err != nil {
+		log.Println("Get Image: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
+		})
+		return
+	} else if !res.Succ {
+		ctx.JSON(http.StatusNotFound, response.Response{
+			Code:  response.StatusInternalError,
+			Error: res.Msg,
+		})
+		return
+	}
+	ctx.Writer.Header().Set("Content-Type", config.ContentType(res.FileExt))
+	ctx.Writer.Header().Set("Content-Disposition", "attachment;filename="+res.FileName)
+	ctx.Writer.WriteHeader(http.StatusOK)
+	ctx.Writer.Write(res.Image)
+}
+
 func GetAPICounts(ctx *gin.Context) {
 	// 1. Get services list
 	conn := redis.Get()
@@ -153,6 +183,7 @@ func Ping(ctx *gin.Context) {
 
 func GetHostStat(ctx *gin.Context) {
 	mstat, _ := mem.VirtualMemory()
+	sstat, _ := mem.SwapMemory()
 	dstat, _ := disk.Usage("/")
 	cstat, _ := cpu.Percent(time.Second, true)
 	cpuStat := 0.0
@@ -163,9 +194,10 @@ func GetHostStat(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response.Response{
 		Code: response.StatusOK,
 		Data: gin.H{
-			"memory": mstat.UsedPercent,
-			"disk":   dstat.UsedPercent,
-			"cpu":    cpuStat,
+			"Memory": mstat.UsedPercent,
+			"Disk":   dstat.UsedPercent,
+			"Cpu":    cpuStat,
+			"Swap":   sstat.UsedPercent,
 		},
 	})
 }

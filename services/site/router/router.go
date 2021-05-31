@@ -20,6 +20,7 @@ func New() *gin.Engine {
 	}
 
 	route.GET("/image", handler.GetImage)
+	route.GET("/download", handler.DownloadImage)
 
 	return route
 }

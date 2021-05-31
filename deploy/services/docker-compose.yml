@@ -93,7 +93,7 @@ services:
       - GIN_MODE=release
     labels: 
       - "traefik.enable=true"
-      - "traefik.http.routers.site.rule=PathPrefix(`/site`) || PathPrefix(`/image`)"
+      - "traefik.http.routers.site.rule=PathPrefix(`/site`) || PathPrefix(`/image`) || PathPrefix(`/download`)"
       - "traefik.http.services.site.loadbalancer.server.port=5000"
   
   upload:
