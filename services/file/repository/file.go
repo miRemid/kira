@@ -99,11 +99,16 @@ func (repo FileRepositoryImpl) GetRandomFile(ctx context.Context, token string) 
 	var res = make([]*pb.UserFile, 0)
 	if err := repo.db.Raw(`select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height, tf.anony 
 	from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id 
-	where tf.anony != 1 
-	and tf.id >= ((SELECT MAX(tf2.id) from tbl_file tf2) - (select MIN(tf3.id) from tbl_file tf3)) * RAND() + (select MIN(tu.id) from tbl_user tu)  
-	limit 20`).Scan(&res).Error; err != nil {
+	where tf.anony != 1 ORDER BY RAND() limit 0,20`).Scan(&res).Error; err != nil {
 		return nil, err
 	}
+	// if err := repo.db.Raw(`select ttu.user_name, tf.file_name, tf.file_id, tf.file_width, tf.file_height, tf.anony
+	// from tbl_file tf left join tbl_token_user ttu on tf.owner = ttu.user_id
+	// where tf.anony != 1
+	// and tf.id >= ((SELECT MAX(tf2.id) from tbl_file tf2) - (select MIN(tf3.id) from tbl_file tf3)) * RAND() + (select MIN(tu.id) from tbl_user tu)
+	// limit 20`).Scan(&res).Error; err != nil {
+	// 	return nil, err
+	// }
 	conn := redis.Get()
 	defer conn.Close()
 	for i := 0; i < len(res); i++ {
@@ -204,14 +209,14 @@ func (repo FileRepositoryImpl) GetLikes(ctx context.Context, userid string, offs
 	}
 	ids = append(ids, redisIDS...)
 
-	var username string
-	if err := repo.db.Model(model.TokenUser{}).Select("user_name").Where("user_id = ?", userid).Find(&username).Error; err != nil {
-		return nil, 0, err
-	}
 	var r = make([]*pb.UserFile, 0)
 	for _, id := range ids {
 		var file model.FileModel
+		var username string
 		if err := repo.db.Model(model.FileModel{}).Where("file_id = ?", id).First(&file).Error; err != nil {
+			continue
+		}
+		if err := repo.db.Model(model.TokenUser{}).Select("user_name").Where("user_id = ?", file.Owner).First(&username).Error; err != nil {
 			continue
 		}
 		r = append(r, &pb.UserFile{

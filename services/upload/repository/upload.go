@@ -127,11 +127,6 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 	res.FileExt = fileExt
 	res.FileID = id
 	res.Bucket = bucket
-	// 4. insert record into database
-	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
-		tx.Rollback()
-		return res, err
-	}
 	// 5. if anony upload, insert into redis delay queue
 	if anony {
 		res.Anony = true
@@ -140,6 +135,11 @@ func (repo RepositoryImpl) UploadFile(ctx context.Context,
 		// save 5 day for the anony upload
 		delay := time.Now().Add(time.Hour * 24 * 5).Unix()
 		conn.Do("ZADD", common.AnonymousKey, delay, id)
+	}
+	// 4. insert record into database
+	if err := tx.Model(model.FileModel{}).Create(&res).Error; err != nil {
+		tx.Rollback()
+		return res, err
 	}
 	reader.Seek(0, 0)
 	// 3. upload into minio

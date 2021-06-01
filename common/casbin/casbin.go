@@ -8,13 +8,13 @@ import (
 
 type CasbinRule struct {
 	ID    uint   `gorm:"primaryKey;autoIncrement"`
-	Ptype string `gorm:"size:256;uniqueIndex:unique_index"`
-	V0    string `gorm:"size:256;uniqueIndex:unique_index"`
-	V1    string `gorm:"size:256;uniqueIndex:unique_index"`
-	V2    string `gorm:"size:256;uniqueIndex:unique_index"`
-	V3    string `gorm:"size:256;uniqueIndex:unique_index"`
-	V4    string `gorm:"size:256;uniqueIndex:unique_index"`
-	V5    string `gorm:"size:256;uniqueIndex:unique_index"`
+	Ptype string `gorm:"size:256;"`
+	V0    string `gorm:"size:256;"`
+	V1    string `gorm:"size:256;"`
+	V2    string `gorm:"size:256;"`
+	V3    string `gorm:"size:256;"`
+	V4    string `gorm:"size:256;"`
+	V5    string `gorm:"size:256;"`
 }
 
 func New(db *gorm.DB, conf string) *casbin.Enforcer {

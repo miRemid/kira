@@ -95,13 +95,14 @@ func (repo FileRepositoryImpl) findLike(conn redigo.Conn, db *gorm.DB, fileid, u
 }
 
 func (repo FileRepositoryImpl) cronInit() {
-	// repo.c.AddFunc("@hourly", repo.saveRedisToDatabase)
-	repo.c.AddFunc("@every 1h", repo.saveRedisToDatabase)
+	log.Println("Init cron tasks...")
+	repo.c.AddFunc("@hourly", repo.saveRedisToDatabase)
 	repo.c.Start()
+	log.Println("Init cron tasks finished...")
 }
 
 func (repo FileRepositoryImpl) saveRedisToDatabase() {
-	log.Println("Save redis like to database trigger")
+	log.Println("Save redis' likes to database trigger")
 	// 1. get all keys from redis
 	// 2. insert into the database
 	conn := redis.Get()
