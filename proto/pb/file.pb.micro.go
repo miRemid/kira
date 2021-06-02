@@ -48,6 +48,8 @@ type FileService interface {
 	GetUserImages(ctx context.Context, in *GetUserImagesReq, opts ...client.CallOption) (*GetUserImagesRes, error)
 	ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, opts ...client.CallOption) (*ChangeTokenStatusRes, error)
 	CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, opts ...client.CallOption) (*CheckTokenStatusRes, error)
+	GetAnonyFiles(ctx context.Context, in *GetAnonyFilesReq, opts ...client.CallOption) (*GetAnonyFilesRes, error)
+	DeleteAnonyFile(ctx context.Context, in *DeleteAnonyReq, opts ...client.CallOption) (*DeleteAnonyRes, error)
 	Ping(ctx context.Context, in *Ping, opts ...client.CallOption) (*Pong, error)
 	// API
 	GetHistory(ctx context.Context, in *GetHistoryReq, opts ...client.CallOption) (*GetHistoryRes, error)
@@ -118,6 +120,26 @@ func (c *fileService) ChangeTokenStatus(ctx context.Context, in *ChangeTokenStat
 func (c *fileService) CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, opts ...client.CallOption) (*CheckTokenStatusRes, error) {
 	req := c.c.NewRequest(c.name, "FileService.CheckTokenStatus", in)
 	out := new(CheckTokenStatusRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileService) GetAnonyFiles(ctx context.Context, in *GetAnonyFilesReq, opts ...client.CallOption) (*GetAnonyFilesRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.GetAnonyFiles", in)
+	out := new(GetAnonyFilesRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileService) DeleteAnonyFile(ctx context.Context, in *DeleteAnonyReq, opts ...client.CallOption) (*DeleteAnonyRes, error) {
+	req := c.c.NewRequest(c.name, "FileService.DeleteAnonyFile", in)
+	out := new(DeleteAnonyRes)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -244,6 +266,8 @@ type FileServiceHandler interface {
 	GetUserImages(context.Context, *GetUserImagesReq, *GetUserImagesRes) error
 	ChangeTokenStatus(context.Context, *ChangeTokenStatusReq, *ChangeTokenStatusRes) error
 	CheckTokenStatus(context.Context, *CheckTokenStatusReq, *CheckTokenStatusRes) error
+	GetAnonyFiles(context.Context, *GetAnonyFilesReq, *GetAnonyFilesRes) error
+	DeleteAnonyFile(context.Context, *DeleteAnonyReq, *DeleteAnonyRes) error
 	Ping(context.Context, *Ping, *Pong) error
 	// API
 	GetHistory(context.Context, *GetHistoryReq, *GetHistoryRes) error
@@ -266,6 +290,8 @@ func RegisterFileServiceHandler(s server.Server, hdlr FileServiceHandler, opts .
 		GetUserImages(ctx context.Context, in *GetUserImagesReq, out *GetUserImagesRes) error
 		ChangeTokenStatus(ctx context.Context, in *ChangeTokenStatusReq, out *ChangeTokenStatusRes) error
 		CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, out *CheckTokenStatusRes) error
+		GetAnonyFiles(ctx context.Context, in *GetAnonyFilesReq, out *GetAnonyFilesRes) error
+		DeleteAnonyFile(ctx context.Context, in *DeleteAnonyReq, out *DeleteAnonyRes) error
 		Ping(ctx context.Context, in *Ping, out *Pong) error
 		GetHistory(ctx context.Context, in *GetHistoryReq, out *GetHistoryRes) error
 		DeleteFile(ctx context.Context, in *DeleteFileReq, out *DeleteFileRes) error
@@ -307,6 +333,14 @@ func (h *fileServiceHandler) ChangeTokenStatus(ctx context.Context, in *ChangeTo
 
 func (h *fileServiceHandler) CheckTokenStatus(ctx context.Context, in *CheckTokenStatusReq, out *CheckTokenStatusRes) error {
 	return h.FileServiceHandler.CheckTokenStatus(ctx, in, out)
+}
+
+func (h *fileServiceHandler) GetAnonyFiles(ctx context.Context, in *GetAnonyFilesReq, out *GetAnonyFilesRes) error {
+	return h.FileServiceHandler.GetAnonyFiles(ctx, in, out)
+}
+
+func (h *fileServiceHandler) DeleteAnonyFile(ctx context.Context, in *DeleteAnonyReq, out *DeleteAnonyRes) error {
+	return h.FileServiceHandler.DeleteAnonyFile(ctx, in, out)
 }
 
 func (h *fileServiceHandler) Ping(ctx context.Context, in *Ping, out *Pong) error {

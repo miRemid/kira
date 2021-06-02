@@ -15,6 +15,28 @@ type FileServiceHandler struct {
 	Repo repository.FileRepository
 }
 
+func (handler FileServiceHandler) DeleteAnonyFile(ctx context.Context, in *pb.DeleteAnonyReq, res *pb.DeleteAnonyRes) error {
+	if err := handler.Repo.DeleteAnonyFile(ctx, in.Fileid); err != nil {
+		res.Msg = err.Error()
+		return err
+	}
+	res.Succ = true
+	return nil
+}
+
+func (handler FileServiceHandler) GetAnonyFiles(ctx context.Context, in *pb.GetAnonyFilesReq, res *pb.GetAnonyFilesRes) error {
+	files, total, err := handler.Repo.GetAnonyFiles(ctx, in)
+	if err != nil {
+		res.Succ = false
+		res.Msg = err.Error()
+		return err
+	}
+	res.Succ = true
+	res.Files = files
+	res.Total = total
+	return nil
+}
+
 func (handler FileServiceHandler) DeleteUserFile(ctx context.Context, in *pb.DeleteUserFileReq, res *pb.DeleteUserFileRes) error {
 	if err := handler.Repo.DeleteUserFile(ctx, in); err != nil {
 		res.Succ = false
@@ -176,7 +198,7 @@ func (handler FileServiceHandler) DeleteUser(ctx context.Context, in *pb.DeleteU
 
 func (handler FileServiceHandler) DeleteAnony(ctx context.Context, in *pb.DeleteFileReq) error {
 	log.Println("Delete Anony File, FileID = ", in.FileID)
-	return handler.Repo.DeleteFile(ctx, "", in.FileID)
+	return handler.Repo.DeleteFile(ctx, "anony", in.FileID)
 }
 
 func (handler FileServiceHandler) Ping(ctx context.Context, in *pb.Ping, res *pb.Pong) error {
@@ -185,7 +207,6 @@ func (handler FileServiceHandler) Ping(ctx context.Context, in *pb.Ping, res *pb
 	res.Message = "ok"
 	return nil
 }
-
 func (handler FileServiceHandler) ChangeTokenStatus(ctx context.Context, in *pb.ChangeTokenStatusReq, res *pb.ChangeTokenStatusRes) error {
 	if err := handler.Repo.ChangeStatus(ctx, in.Userid, in.Status); err != nil {
 		res.Succ = false

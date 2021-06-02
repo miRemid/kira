@@ -210,9 +210,6 @@ func UpdateUser(ctx *gin.Context) {
 	})
 }
 
-func GetUserFileList(ctx *gin.Context) {
-}
-
 func ChangePassword(ctx *gin.Context) {
 	userid := ctx.GetHeader("userid")
 	var req pb.UpdatePasswordReq
@@ -268,6 +265,22 @@ func DeleteUserFile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
 			Error: res.Msg,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, response.Response{
+		Code: response.StatusOK,
+	})
+}
+
+func DeleteAccount(ctx *gin.Context) {
+	userid := ctx.GetHeader("userid")
+	_, err := cli.DeleteUser(userid)
+	if err != nil {
+		log.Println("Delete User: ", err)
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusInternalError,
+			Error: err.Error(),
 		})
 		return
 	}

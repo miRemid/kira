@@ -51,6 +51,8 @@ type FileRepository interface {
 	LikeOrDislike(ctx context.Context, in *pb.FileLikeReq) (err error)
 	GetLikes(ctx context.Context, userid string, offset, limit int64, desc bool) ([]*pb.UserFile, int64, error)
 	DeleteUserFile(ctx context.Context, in *pb.DeleteUserFileReq) error
+	GetAnonyFiles(ctx context.Context, in *pb.GetAnonyFilesReq) ([]*pb.AnonyFile, int64, error)
+	DeleteAnonyFile(ctx context.Context, fileid string) error
 	Done()
 }
 
@@ -73,6 +75,47 @@ func NewFileRepository(db *gorm.DB, mini *minio.Client) FileRepository {
 	res.cronInit()
 	db.AutoMigrate(model.TokenUser{}, model.LikeModel{})
 	return res
+}
+
+func (repo FileRepositoryImpl) DeleteAnonyFile(ctx context.Context, fileid string) error {
+	// 1. delete dadtabase
+	conn := redis.Get()
+	defer conn.Close()
+	tx := repo.db.Begin()
+	defer tx.Commit()
+	if err := repo.deleteFile(ctx, "anony", fileid, tx, conn); err != nil {
+		return err
+	}
+	if _, err := conn.Do("ZREM", common.AnonymousKey, fileid); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo FileRepositoryImpl) GetAnonyFiles(ctx context.Context, in *pb.GetAnonyFilesReq) ([]*pb.AnonyFile, int64, error) {
+	// 1. get redis
+	conn := redis.Get()
+	defer conn.Close()
+	// get total
+	total, err := redigo.Int64(conn.Do("ZCARD", common.AnonymousKey))
+	if err != nil {
+		return nil, 0, err
+	}
+	// begin: offset
+	// end: offset + limit - 1
+	kv, err := redigo.StringMap(conn.Do("ZRANGE", common.AnonymousKey, in.Offset, in.Offset+in.Limit-1, "withscores"))
+	if err != nil {
+		return nil, total, err
+	}
+	var res = make([]*pb.AnonyFile, 0)
+	for fileid, score := range kv {
+		var anony = new(pb.AnonyFile)
+		anony.Fileid = fileid
+		anony.Expire = score
+		anony.Url = config.Path(fileid)
+		res = append(res, anony)
+	}
+	return res, total, nil
 }
 
 func (repo FileRepositoryImpl) token2UserID(tx *gorm.DB, token string) (string, error) {

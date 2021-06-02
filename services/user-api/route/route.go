@@ -45,13 +45,16 @@ func Route(e *casbin.Enforcer) *gin.Engine {
 		{
 			auth.POST("/changePassword", ChangePassword)
 			auth.GET("/me", GetMe)
+			auth.DELETE("/deleteAccount", DeleteAccount)
+
 			admin := auth.Group("/admin")
 			{
-				admin.DELETE("/deleteUser", DeleteUser)
 				admin.DELETE("/deleteUserFile", DeleteUserFile)
 				admin.GET("/getUserList", GetUserList)
 				admin.POST("/updateUserStatus", UpdateUser)
-				admin.GET("/getUserFileList", GetUserFileList)
+
+				admin.GET("/getAnonyList", GetAnonyList)
+				admin.DELETE("/deleteAnony", DeleteAnony)
 			}
 		}
 	}
