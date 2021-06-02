@@ -12,7 +12,7 @@ import (
 	"github.com/miRemid/kira/common/database"
 	"github.com/miRemid/kira/model"
 	"github.com/miRemid/kira/proto/pb"
-	"github.com/micro/go-micro/v2"
+	"github.com/miRemid/kira/services/user/publisher"
 	mClient "github.com/micro/go-micro/v2/client"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
@@ -37,11 +37,9 @@ type UserRepositoryImpl struct {
 	db      *gorm.DB
 	authCli *client.AuthClient
 	fileCli *client.FileClient
-
-	pub micro.Event
 }
 
-func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (UserRepository, error) {
+func NewUserRepository(service mClient.Client, db *gorm.DB) (UserRepository, error) {
 	ac := client.NewAuthClient(service)
 	fc := client.NewFileClient(service)
 	err := db.AutoMigrate(model.UserModel{})
@@ -50,7 +48,6 @@ func NewUserRepository(service mClient.Client, db *gorm.DB, pub micro.Event) (Us
 		db:      db,
 		authCli: ac,
 		fileCli: fc,
-		pub:     pub,
 	}, err
 }
 
@@ -235,7 +232,7 @@ func (repo UserRepositoryImpl) DeleteUser(ctx context.Context, userid string) er
 		return err
 	}
 	// publish delete event
-	return repo.pub.Publish(ctx, &pb.DeleteUserRequest{
+	return publisher.FilePub.Publish(ctx, &pb.DeleteUserRequest{
 		UserID: userid,
 	})
 }

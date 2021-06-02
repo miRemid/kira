@@ -1754,8 +1754,10 @@ type GetAnonyFilesReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
-	Limit  int64 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	//@inject_tag: form:"offset" json:"offset"
+	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset" form:"offset"`
+	//@inject_tag: form:"limit" json:"limit"
+	Limit int64 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit" form:"limit"`
 }
 
 func (x *GetAnonyFilesReq) Reset() {

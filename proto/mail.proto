@@ -1,0 +1,20 @@
+syntax="proto3";
+
+package kira.micro.service.mail;
+
+option go_package = ".;pb";
+
+message SendMailReq {
+    string to = 1;
+    string subject = 2;
+    string content = 3;
+}
+
+message SendMailRes {
+    bool success = 2;
+    string error = 1;
+}
+
+service MailService {
+    rpc SendMail(SendMailReq) returns(SendMailRes);
+}

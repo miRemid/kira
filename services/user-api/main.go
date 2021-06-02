@@ -27,17 +27,17 @@ func main() {
 	}
 	e := casbin.New(db, "./casbin/model.conf")
 	e.LoadPolicy()
-	e.AddPolicy("normal", "/user/me", "GET")
-	e.AddPolicy("normal", "/user/changePassword", "POST")
-	e.AddPolicy("normal", "/user/deleteAccount", "DELETE")
+	// e.AddPolicy("normal", "/user/me", "GET")
+	// e.AddPolicy("normal", "/user/changePassword", "POST")
+	// e.AddPolicy("normal", "/user/deleteAccount", "DELETE")
 
-	e.AddPolicy("admin", "/user/changePassword", "POST")
-	e.AddPolicy("admin", "/user/admin/deleteUserFile", "DELETE")
-	e.AddPolicy("admin", "/user/admin/getUserList", "GET")
-	e.AddPolicy("admin", "/user/admin/updateUserStatus", "POST")
-	e.AddPolicy("admin", "/user/admin/getAnonyList", "GET")
-	e.AddPolicy("admin", "/user/admin/deleteAnony", "DELETE")
-	e.SavePolicy()
+	// e.AddPolicy("admin", "/user/changePassword", "POST")
+	// e.AddPolicy("admin", "/user/admin/deleteUserFile", "DELETE")
+	// e.AddPolicy("admin", "/user/admin/getUserList", "GET")
+	// e.AddPolicy("admin", "/user/admin/updateUserStatus", "POST")
+	// e.AddPolicy("admin", "/user/admin/getAnonyList", "GET")
+	// e.AddPolicy("admin", "/user/admin/deleteAnony", "DELETE")
+	// e.SavePolicy()
 
 	etcdAddr := common.Getenv("REGISTRY_ADDRESS", "127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(

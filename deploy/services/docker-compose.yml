@@ -3,7 +3,6 @@ version: "3"
 services: 
   auth:
     image: kira/auth
-    container_name: auth
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     environment: 
@@ -15,7 +14,6 @@ services:
 
   file:
     image: kira/file
-    container_name: file
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     networks: 
@@ -35,7 +33,6 @@ services:
 
   file-api:
     image: kira/file-api
-    container_name: file-api
     # ports: 
     #   - "5001:5001"
     volumes: 
@@ -55,7 +52,6 @@ services:
 
   user:
     image: kira/user
-    container_name: user
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     networks:
@@ -69,7 +65,6 @@ services:
 
   user-api:
     image: kira/user-api
-    container_name: user-api
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     # ports: 
@@ -90,7 +85,6 @@ services:
       
   site:
     image: kira/site
-    container_name: site
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     # ports: 
@@ -110,7 +104,6 @@ services:
   
   upload:
     image: kira/upload
-    container_name: upload
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     networks: 
@@ -125,10 +118,22 @@ services:
       - JAEGER_ADDRESS=jaeger:6831
       - GIN_MODE=release
       - DOMAIN=api.test.me
+  
+  mail:
+    image: kira/mail
+    volumes: 
+      - /etc/localtime:/etc/localtime:ro
+    networks: 
+      - kira
+    environment: 
+      - MAIL_ACCOUNT=${MAIL_ACCOUNT}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - REGISTRY_ADDRESS=etcd:2379
+      - JAEGER_ADDRESS=jaeger:6831
+      - NATS_ADDRESS=nats://nats:4222
  
   upload-api:
     image: kira/upload-api
-    container_name: upload-api
     volumes: 
       - /etc/localtime:/etc/localtime:ro
     # ports: 
@@ -145,6 +150,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.upload.rule=PathPrefix(`/upload`)"
       - "traefik.http.services.upload.loadbalancer.server.port=5003"
+  
+  
   
   # gateway:
   #   image: kira/gateway

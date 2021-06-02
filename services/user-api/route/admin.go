@@ -1,6 +1,7 @@
 package route
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,16 @@ import (
 )
 
 func GetAnonyList(ctx *gin.Context) {
-	resp, err := fileCli.Service.GetAnonyFiles(ctx, &pb.GetAnonyFilesReq{})
+	var req pb.GetAnonyFilesReq
+	if err := ctx.BindQuery(&req); err != nil {
+		ctx.JSON(http.StatusOK, response.Response{
+			Code:  response.StatusBadParams,
+			Error: err.Error(),
+		})
+		return
+	}
+	log.Println(req.Limit, req.Offset)
+	resp, err := fileCli.Service.GetAnonyFiles(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code:  response.StatusInternalError,
@@ -28,7 +38,7 @@ func GetAnonyList(ctx *gin.Context) {
 
 func DeleteAnony(ctx *gin.Context) {
 	var req pb.DeleteAnonyReq
-	if err := ctx.ShouldBind(&req); err != nil {
+	if err := ctx.BindQuery(&req); err != nil {
 		ctx.JSON(http.StatusOK, response.Response{
 			Code: response.StatusBadParams,
 		})

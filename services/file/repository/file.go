@@ -103,6 +103,7 @@ func (repo FileRepositoryImpl) GetAnonyFiles(ctx context.Context, in *pb.GetAnon
 	}
 	// begin: offset
 	// end: offset + limit - 1
+	log.Println(in.Offset, in.Limit)
 	kv, err := redigo.StringMap(conn.Do("ZRANGE", common.AnonymousKey, in.Offset, in.Offset+in.Limit-1, "withscores"))
 	if err != nil {
 		return nil, total, err

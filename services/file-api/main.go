@@ -37,10 +37,10 @@ func main() {
 	}
 	e := casbin.New(db, "./casbin/model.conf")
 	e.LoadPolicy()
-	e.AddPolicy("normal", "/file/getToken", "GET")
-	e.AddPolicy("normal", "/file/like", "POST")
-	e.AddPolicy("normal", "/file/getLikes", "GET")
-	e.SavePolicy()
+	// e.AddPolicy("normal", "/file/getToken", "GET")
+	// e.AddPolicy("normal", "/file/like", "POST")
+	// e.AddPolicy("normal", "/file/getLikes", "GET")
+	// e.SavePolicy()
 
 	cli := micro.NewService(
 		micro.Name("kira.micro.client.file"),
