@@ -13,6 +13,7 @@ type UserModel struct {
 	Role     string `gorm:"column:role"`
 	Status   int64  `gorm:"column:status"` // 0 inactive, 1 active
 	Token    string `gorm:"-"`
+	Mail     string `gorm:"column:mail"`
 }
 
 func (UserModel) TableName() string {

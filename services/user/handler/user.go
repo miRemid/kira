@@ -15,6 +15,48 @@ type UserHandler struct {
 	Repo repository.UserRepository
 }
 
+func (handler UserHandler) ForgetPassword(ctx context.Context, in *pb.ForgetPasswordRequest, res *pb.ForgetPasswordResponse) error {
+	err := handler.Repo.ForgetPassword(ctx, in.Username, in.Email)
+	if err != nil {
+		res.Error = err.Error()
+		return err
+	}
+	res.Success = true
+	return nil
+}
+
+func (handler UserHandler) ModifyPassword(ctx context.Context, in *pb.ModifyPasswordRequest, res *pb.ModifyPasswordResponse) error {
+	code, err := handler.Repo.ModifyPassword(ctx, in.Random, in.Email, in.Password)
+	if err != nil {
+		res.Error = err.Error()
+		return err
+	}
+	res.Success = true
+	res.Code = code
+	return nil
+}
+
+func (handler UserHandler) BindMail(ctx context.Context, in *pb.BindMailRequest, res *pb.BindMailResponse) error {
+	err := handler.Repo.BindMail(ctx, in.Mail, in.Userid)
+	if err != nil {
+		res.Error = err.Error()
+		return err
+	}
+	res.Success = true
+	return nil
+}
+
+func (handler UserHandler) VertifyBindMail(ctx context.Context, in *pb.VertifyBindMailRequest, res *pb.VertifyBindMailResponse) error {
+	code, err := handler.Repo.BindMailFinal(ctx, in.Random, in.Userid)
+	if err != nil {
+		res.Error = err.Error()
+		return err
+	}
+	res.Success = true
+	res.Code = int64(code)
+	return nil
+}
+
 func (handler UserHandler) GetLoginUserInfo(ctx context.Context, in *pb.LoginUserInfoReq, res *pb.LoginUserInfoRes) error {
 	user, token, err := handler.Repo.LoginUserInfo(ctx, in.Userid)
 	res.User = new(pb.User)

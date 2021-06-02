@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	redigo "github.com/garyburd/redigo/redis"
+	"github.com/gofrs/uuid"
 	"github.com/miRemid/kira/cache/redis"
 	"github.com/miRemid/kira/client"
 	"github.com/miRemid/kira/common"
@@ -31,6 +33,10 @@ type UserRepository interface {
 	GetUserImages(ctx context.Context, userName string, offset, limit int64, desc bool) (*pb.GetUserImagesRes, error)
 
 	ChangePassword(ctx context.Context, userid, old, raw string) error
+	BindMail(ctx context.Context, to string, userid string) error
+	BindMailFinal(ctx context.Context, random string, userid string) (int, error)
+	ForgetPassword(ctx context.Context, username string, email string) error
+	ModifyPassword(ctx context.Context, random string, email, password string) (int64, error)
 }
 
 type UserRepositoryImpl struct {
@@ -49,6 +55,127 @@ func NewUserRepository(service mClient.Client, db *gorm.DB) (UserRepository, err
 		authCli: ac,
 		fileCli: fc,
 	}, err
+}
+
+func (repo UserRepositoryImpl) ForgetPassword(ctx context.Context, username string, email string) error {
+	// check database
+	var user model.UserModel
+	if err := repo.db.Model(model.UserModel{}).Where("user_name = ? and mail = ?", username, email).First(&user).Error; err != nil && err == gorm.ErrRecordNotFound {
+		return err
+	}
+	value := uuid.Must(uuid.NewV4()).String()
+	conn := redis.Get()
+	defer conn.Close()
+
+	prefix := "forget:" + email + ":"
+	ids, err := redigo.Strings(conn.Do("KEYS", prefix+"*"))
+	if err != nil {
+		return err
+	}
+	if len(ids) != 0 {
+		splits := strings.Split(ids[0], ":")
+		value = splits[2]
+	}
+
+	key := prefix + value
+	conn.Do("SET", key, username)
+	conn.Do("EXPIRE", key, 300)
+
+	link := fmt.Sprintf("http://localhost:3400/modifyPassword?tx=%s&tc=%s", value, email)
+	publisher.MailPub.Publish(ctx, &pb.SendMailReq{
+		To:      email,
+		Subject: "Modify your password",
+		Content: link,
+	})
+	return nil
+}
+
+func (repo UserRepositoryImpl) ModifyPassword(ctx context.Context, random string, email, password string) (int64, error) {
+
+	conn := redis.Get()
+	defer conn.Close()
+
+	key := "forget:" + email + ":" + random
+	exist, err := redigo.Bool(conn.Do("EXISTS", key))
+	if err != nil {
+		return -1, err
+	}
+	if !exist {
+		return 1, nil
+	}
+	username, err := redigo.String(conn.Do("GET", key))
+	if err != nil {
+		return -1, err
+	}
+
+	tx := repo.db.Begin()
+	var user model.UserModel
+	psw := user.GeneratePassword(password)
+	if err := tx.Exec("update tbl_user set password = ? where user_name = ?", psw, username).Error; err != nil {
+		return -1, err
+	}
+	conn.Do("DEL", key)
+	tx.Commit()
+	return 0, nil
+}
+
+func (repo UserRepositoryImpl) BindMail(ctx context.Context, to string, userid string) error {
+
+	// 1. generate random string
+	value := uuid.Must(uuid.NewV4()).String()
+	conn := redis.Get()
+	defer conn.Close()
+
+	prefix := "bind:" + userid + ":"
+	ids, err := redigo.Strings(conn.Do("KEYS", prefix+"*"))
+	if err != nil {
+		return err
+	}
+	if len(ids) != 0 {
+		value = strings.Split(ids[0], ":")[2]
+	}
+	key := "bind:" + userid + ":" + value
+	conn.Do("SET", key, to)
+	conn.Do("EXPIRE", key, 300)
+	// redis key: userid:random, value: mail
+	// link: http://localhost:3000/checkMail?tx=random
+	link := fmt.Sprintf("http://localhost:3400/vertifyMail?tx=%s", value)
+
+	publisher.MailPub.Publish(ctx, &pb.SendMailReq{
+		To:      to,
+		Subject: "Vertify your email",
+		Content: link,
+	})
+
+	return nil
+}
+
+func (repo UserRepositoryImpl) BindMailFinal(ctx context.Context, random string, userid string) (int, error) {
+	// 1. check value
+	conn := redis.Get()
+	defer conn.Close()
+
+	key := "bind:" + userid + ":" + random
+
+	exist, err := redigo.Bool(conn.Do("EXISTS", key))
+	if err != nil {
+		return -1, err
+	}
+	if !exist {
+		return 1, nil
+	}
+	mail, err := redigo.String(conn.Do("GET", key))
+	if err != nil {
+		return -1, err
+	}
+	tx := repo.db.Begin()
+	// insert into the database
+	if err := tx.Exec("update tbl_user set mail = ? where user_id = ?", mail, userid).Error; err != nil {
+		return -1, err
+	}
+	conn.Do("DEL", key)
+	tx.Commit()
+	return 0, nil
 }
 
 func (repo UserRepositoryImpl) LoginUserInfo(ctx context.Context, userID string) (model.UserModel, string, error) {

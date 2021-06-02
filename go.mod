@@ -15,12 +15,11 @@ require (
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-playground/validator/v10 v10.2.0
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.4.3
 	github.com/gomodule/redigo v1.8.3
 	github.com/micro/cli/v2 v2.1.2
-	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-micro/v2 v2.9.1
-	github.com/micro/go-plugins/wrapper/trace/opentracing v0.0.0-20200119172437-4fe21aa238fd
 	github.com/micro/go-plugins/wrapper/trace/opentracing/v2 v2.9.1
 	github.com/micro/micro/v2 v2.9.3
 	github.com/minio/minio-go/v7 v7.0.7
@@ -39,6 +38,7 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
 	gorm.io/driver/mysql v1.0.3
 	gorm.io/gorm v1.20.12
 )

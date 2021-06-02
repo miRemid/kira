@@ -49,9 +49,13 @@ type UserService interface {
 	Signup(ctx context.Context, in *SignupReq, opts ...client.CallOption) (*SignupRes, error)
 	GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, opts ...client.CallOption) (*GetUserImagesRes, error)
 	UserInfo(ctx context.Context, in *UserInfoReq, opts ...client.CallOption) (*UserInfoRes, error)
+	ForgetPassword(ctx context.Context, in *ForgetPasswordRequest, opts ...client.CallOption) (*ForgetPasswordResponse, error)
+	ModifyPassword(ctx context.Context, in *ModifyPasswordRequest, opts ...client.CallOption) (*ModifyPasswordResponse, error)
 	// User
 	ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error)
 	GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, opts ...client.CallOption) (*LoginUserInfoRes, error)
+	BindMail(ctx context.Context, in *BindMailRequest, opts ...client.CallOption) (*BindMailResponse, error)
+	VertifyBindMail(ctx context.Context, in *VertifyBindMailRequest, opts ...client.CallOption) (*VertifyBindMailResponse, error)
 	// Admin
 	AdminUserList(ctx context.Context, in *UserListRequest, opts ...client.CallOption) (*UserListResponse, error)
 	AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...client.CallOption) (*AdminCommonResponse, error)
@@ -112,6 +116,26 @@ func (c *userService) UserInfo(ctx context.Context, in *UserInfoReq, opts ...cli
 	return out, nil
 }
 
+func (c *userService) ForgetPassword(ctx context.Context, in *ForgetPasswordRequest, opts ...client.CallOption) (*ForgetPasswordResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.ForgetPassword", in)
+	out := new(ForgetPasswordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) ModifyPassword(ctx context.Context, in *ModifyPasswordRequest, opts ...client.CallOption) (*ModifyPasswordResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.ModifyPassword", in)
+	out := new(ModifyPasswordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userService) ChangePassword(ctx context.Context, in *UpdatePasswordReq, opts ...client.CallOption) (*UpdatePasswordRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.ChangePassword", in)
 	out := new(UpdatePasswordRes)
@@ -125,6 +149,26 @@ func (c *userService) ChangePassword(ctx context.Context, in *UpdatePasswordReq,
 func (c *userService) GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, opts ...client.CallOption) (*LoginUserInfoRes, error) {
 	req := c.c.NewRequest(c.name, "UserService.GetLoginUserInfo", in)
 	out := new(LoginUserInfoRes)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) BindMail(ctx context.Context, in *BindMailRequest, opts ...client.CallOption) (*BindMailResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.BindMail", in)
+	out := new(BindMailResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) VertifyBindMail(ctx context.Context, in *VertifyBindMailRequest, opts ...client.CallOption) (*VertifyBindMailResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.VertifyBindMail", in)
+	out := new(VertifyBindMailResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -181,9 +225,13 @@ type UserServiceHandler interface {
 	Signup(context.Context, *SignupReq, *SignupRes) error
 	GetUserImages(context.Context, *GetUserImagesReqByNameReq, *GetUserImagesRes) error
 	UserInfo(context.Context, *UserInfoReq, *UserInfoRes) error
+	ForgetPassword(context.Context, *ForgetPasswordRequest, *ForgetPasswordResponse) error
+	ModifyPassword(context.Context, *ModifyPasswordRequest, *ModifyPasswordResponse) error
 	// User
 	ChangePassword(context.Context, *UpdatePasswordReq, *UpdatePasswordRes) error
 	GetLoginUserInfo(context.Context, *LoginUserInfoReq, *LoginUserInfoRes) error
+	BindMail(context.Context, *BindMailRequest, *BindMailResponse) error
+	VertifyBindMail(context.Context, *VertifyBindMailRequest, *VertifyBindMailResponse) error
 	// Admin
 	AdminUserList(context.Context, *UserListRequest, *UserListResponse) error
 	AdminDeleteUser(context.Context, *DeleteUserRequest, *AdminCommonResponse) error
@@ -198,8 +246,12 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Signup(ctx context.Context, in *SignupReq, out *SignupRes) error
 		GetUserImages(ctx context.Context, in *GetUserImagesReqByNameReq, out *GetUserImagesRes) error
 		UserInfo(ctx context.Context, in *UserInfoReq, out *UserInfoRes) error
+		ForgetPassword(ctx context.Context, in *ForgetPasswordRequest, out *ForgetPasswordResponse) error
+		ModifyPassword(ctx context.Context, in *ModifyPasswordRequest, out *ModifyPasswordResponse) error
 		ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error
 		GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, out *LoginUserInfoRes) error
+		BindMail(ctx context.Context, in *BindMailRequest, out *BindMailResponse) error
+		VertifyBindMail(ctx context.Context, in *VertifyBindMailRequest, out *VertifyBindMailResponse) error
 		AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error
 		AdminDeleteUser(ctx context.Context, in *DeleteUserRequest, out *AdminCommonResponse) error
 		AdminUpdateUser(ctx context.Context, in *UpdateUserRoleRequest, out *AdminCommonResponse) error
@@ -232,12 +284,28 @@ func (h *userServiceHandler) UserInfo(ctx context.Context, in *UserInfoReq, out 
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
 }
 
+func (h *userServiceHandler) ForgetPassword(ctx context.Context, in *ForgetPasswordRequest, out *ForgetPasswordResponse) error {
+	return h.UserServiceHandler.ForgetPassword(ctx, in, out)
+}
+
+func (h *userServiceHandler) ModifyPassword(ctx context.Context, in *ModifyPasswordRequest, out *ModifyPasswordResponse) error {
+	return h.UserServiceHandler.ModifyPassword(ctx, in, out)
+}
+
 func (h *userServiceHandler) ChangePassword(ctx context.Context, in *UpdatePasswordReq, out *UpdatePasswordRes) error {
 	return h.UserServiceHandler.ChangePassword(ctx, in, out)
 }
 
 func (h *userServiceHandler) GetLoginUserInfo(ctx context.Context, in *LoginUserInfoReq, out *LoginUserInfoRes) error {
 	return h.UserServiceHandler.GetLoginUserInfo(ctx, in, out)
+}
+
+func (h *userServiceHandler) BindMail(ctx context.Context, in *BindMailRequest, out *BindMailResponse) error {
+	return h.UserServiceHandler.BindMail(ctx, in, out)
+}
+
+func (h *userServiceHandler) VertifyBindMail(ctx context.Context, in *VertifyBindMailRequest, out *VertifyBindMailResponse) error {
+	return h.UserServiceHandler.VertifyBindMail(ctx, in, out)
 }
 
 func (h *userServiceHandler) AdminUserList(ctx context.Context, in *UserListRequest, out *UserListResponse) error {

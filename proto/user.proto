@@ -9,6 +9,56 @@ import "google/protobuf/timestamp.proto";
 import "proto/common.proto";
 import "proto/file.proto";
 
+message ForgetPasswordRequest {
+    //@inject_tag: form:"username" json:"username"
+    string username = 1;
+    //@inject_tag: form:"email" json:"email"
+    string email = 2;
+}
+
+message ForgetPasswordResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message ModifyPasswordRequest {
+    //@inject_tag: form:"tx" json:"tx"
+    string random = 2;
+    //@inject_tag: form:"password" json:"password"
+    string password = 1;
+    //@inject_tag: form:"email" json:"email"
+    string email = 3;
+}
+
+message ModifyPasswordResponse {
+    bool success = 1;
+    string error = 2;
+    int64 code = 3;
+}
+
+message BindMailRequest {
+    //@inject_tag: form:"mail" json:"mail"
+    string mail = 1;
+    string userid = 2;  
+}
+
+message BindMailResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message VertifyBindMailRequest {
+    //@inject_tag: form:"tx" json:"tx"
+    string random = 1;
+    string userid = 2;
+}
+
+message VertifyBindMailResponse {
+    bool success = 1;
+    string error = 2;
+    int64 code = 3;
+}
+
 message UserListRequest {
     //@inject_tag: json:"offset" form:"offset"
     int64 offset = 1;
@@ -129,10 +179,14 @@ service UserService {
     rpc Signup(SignupReq) returns(SignupRes);
     rpc GetUserImages(GetUserImagesReqByNameReq) returns(kira.micro.service.file.GetUserImagesRes);
     rpc UserInfo(UserInfoReq) returns(UserInfoRes);
+    rpc ForgetPassword(ForgetPasswordRequest) returns(ForgetPasswordResponse);
+    rpc ModifyPassword(ModifyPasswordRequest) returns(ModifyPasswordResponse);
 
     // User
     rpc ChangePassword(UpdatePasswordReq) returns (UpdatePasswordRes);
     rpc GetLoginUserInfo(LoginUserInfoReq) returns (LoginUserInfoRes);
+    rpc BindMail(BindMailRequest) returns(BindMailResponse);
+    rpc VertifyBindMail(VertifyBindMailRequest) returns(VertifyBindMailResponse);
 
     // Admin
     rpc AdminUserList(UserListRequest) returns(UserListResponse);
